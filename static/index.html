@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Muxammadrizo.dev | Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <!-- Version v=37.0 forces fresh CSS loading -->
-    <link rel="stylesheet" href="/static/style.css?v=37.0">
+    <!-- Version v=38.0 forces fresh CSS loading -->
+    <link rel="stylesheet" href="/static/style.css?v=38.0">
 </head>
 <body class="no-scroll">
 
@@ -190,7 +190,7 @@
                 <h3 data-i18n="titleCubeIsland">Project Cube Island</h3>
                 <p data-i18n="descCubeIsland">Open-world survival game contrasting realistic volcanic biomes with abstract geometric cubes.</p>
             </div>
-            <button class="btn-secondary" onclick="openProjectModal('Project Cube Island', 'Unreal Engine 5.8', 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-cars-42996-large.mp4', 'Developing an indie grant MVP vertical slice in UE 5.8. Features a volcanic tropical island, PCG jungle systems, and non-lethal blaster mechanics.', 'Unreal Engine 5.8, PCG Foliage, Lumen Lighting', 'https://github.com/azammuhammadrizo924-debug', '')" data-i18n="btnReadPitch">Read Details &rarr;</button>
+            <button class="btn-secondary" onclick="window.location.href='/detail?type=project&title=Project+Cube+Island'" data-i18n="btnReadPitch">View Details ↗</button>
         </div>
 
         <div class="project-card h-card" data-category="python">
@@ -199,7 +199,7 @@
                 <h3 data-i18n="titleStorefront">Local Business Storefront</h3>
                 <p data-i18n="descStorefront">A fast web application built for a retail shop with clean catalog browsing and real-time inventory tracking.</p>
             </div>
-            <button class="btn-secondary" onclick="openProjectModal('Local Business Storefront', 'Python / FastAPI', 'https://via.placeholder.com/800x450/151c2e/38bdf8?text=Storefront+Preview', 'Designed and built a complete e-commerce storefront for a local retail shop.', 'Python, FastAPI, SQLite', 'https://github.com/azammuhammadrizo924-debug', 'https://example.com')" data-i18n="btnViewDetails">View Details &rarr;</button>
+            <button class="btn-secondary" onclick="window.location.href='/detail?type=project&title=Local+Business+Storefront'" data-i18n="btnViewDetails">View Details ↗</button>
         </div>
     </div>
 
@@ -212,28 +212,28 @@
                 <h3 data-i18n="titleHackathon">Hackathon IT School Fergana</h3>
                 <p data-i18n="descHackathon">Recognized for top academic performance and active backend project development.</p>
             </div>
-            <button class="btn-secondary" onclick="openProjectModal('Hackathon IT School Recognition', 'Achievements', 'https://via.placeholder.com/800x450/151c2e/38bdf8?text=IT+School+Certificate', 'Active developer and student at Hackathon IT School in Fergana.', 'Algorithms, Python', '', '')" data-i18n="btnViewProof">View Proof &rarr;</button>
+            <button class="btn-secondary" onclick="window.location.href='/detail?type=proof&title=Hackathon+IT+School+Fergana'" data-i18n="btnViewProof">View Proof ↗</button>
         </div>
     </div>
 
     <!-- 8. DEVLOG & STUDIO UPDATES SECTION (#blog) -->
     <h2 class="section-title" id="blog" data-i18n="titleBlog">DevLog & Studio Updates</h2>
     <div class="horizontal-scroll-row">
-        <div class="journey-card h-card">
+        <div class="journey-card h-card" onclick="window.location.href='/detail?type=blog&title=Project+Cube+Island+-+Procedural+Biomes'" style="cursor: pointer;">
             <span class="journey-badge" data-i18n="blogBadge1">DevLog #04 • UE 5.8</span>
             <div class="journey-date" data-i18n="blogDate1">July 2026</div>
             <h3 data-i18n="blogTitle1">Project Cube Island - Procedural Biomes</h3>
             <p data-i18n="blogDesc1">Optimized PCG foliage networks and volumetric Lumen fog for volcanic tropical biomes in Unreal Engine 5.8.</p>
         </div>
 
-        <div class="journey-card h-card">
+        <div class="journey-card h-card" onclick="window.location.href='/detail?type=blog&title=Real-Time+WebSockets+\%26+2FA+Architecture'" style="cursor: pointer;">
             <span class="journey-badge" data-i18n="blogBadge2">DevLog #03 • FastAPI</span>
             <div class="journey-date" data-i18n="blogDate2">June 2026</div>
             <h3 data-i18n="blogTitle2">Real-Time WebSockets & 2FA Architecture</h3>
             <p data-i18n="blogDesc2">Engineered asynchronous WebSocket broadcasting and Gmail 2FA OTP verification for secure admin controls.</p>
         </div>
 
-        <div class="journey-card h-card">
+        <div class="journey-card h-card" onclick="window.location.href='/detail?type=blog&title=Automated+Telegram+Ping+Bot'" style="cursor: pointer;">
             <span class="journey-badge" data-i18n="blogBadge3">DevLog #02 • Telegram</span>
             <div class="journey-date" data-i18n="blogDate3">May 2026</div>
             <h3 data-i18n="blogTitle3">Automated Telegram Ping Bot</h3>

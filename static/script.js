@@ -9,6 +9,16 @@ let clientTelegramVerified = 0;
 let clientTelegramAvatar = null;
 let currentAuthToken = null;
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 const translations = {
     en: {
         navAbout: "About",
@@ -508,9 +518,9 @@ function applyStage2FormMorph(name, username, photoUrl) {
     if (usernameGroup) usernameGroup.style.display = 'flex';
 
     // Initial Badge Fallback if user has no Telegram profile photo
-    const firstInitial = name ? name.charAt(0).toUpperCase() : 'M';
+    const firstInitial = name ? escapeHTML(name.charAt(0).toUpperCase()) : 'M';
     const avatarMedia = photoUrl
-        ? `<img src="${photoUrl}" class="stage2-avatar" onerror="this.outerHTML='<div class=\\'review-avatar\\'>${firstInitial}</div>';" alt="${name}">`
+        ? `<img src="${escapeHTML(photoUrl)}" class="stage2-avatar" onerror="this.outerHTML='<div class=\\'review-avatar\\'>${firstInitial}</div>';" alt="${escapeHTML(name)}">`
         : `<div class="review-avatar" style="width:44px; height:44px; font-size:1.1rem;">${firstInitial}</div>`;
 
     const headerBox = document.getElementById('form-header-box');
@@ -519,8 +529,8 @@ function applyStage2FormMorph(name, username, photoUrl) {
             <div class="stage2-header-profile">
                 ${avatarMedia}
                 <div>
-                    <strong style="color: #f1f5f9; font-size: 1.05rem; display: block;">${name}</strong>
-                    <span style="font-size: 0.8rem; color: #38bdf8;">✓ Verified via Telegram (${username || 'Account'})</span>
+                    <strong style="color: #f1f5f9; font-size: 1.05rem; display: block;">${escapeHTML(name)}</strong>
+                    <span style="font-size: 0.8rem; color: #38bdf8;">✓ Verified via Telegram (${escapeHTML(username) || 'Account'})</span>
                 </div>
             </div>
         `;
@@ -569,13 +579,13 @@ function renderReviewList() {
         const cleanUsername = r.username ? r.username.replace('@', '') : '';
         const initials = r.avatar_initials || (r.name ? r.name.substring(0, 1).toUpperCase() : 'M');
 
-        // Clean Avatar Rendering: If photoUrl exists and loads -> img, else clean letter circle
+        // Clean Avatar Rendering with XSS Escaping
         const avatarHtml = r.avatar_url
-            ? `<img src="${r.avatar_url}" class="review-avatar-img" onerror="this.outerHTML='<div class=\\'review-avatar\\'>${initials}</div>';" alt="${r.name}">`
-            : `<div class="review-avatar">${initials}</div>`;
+            ? `<img src="${escapeHTML(r.avatar_url)}" class="review-avatar-img" onerror="this.outerHTML='<div class=\\'review-avatar\\'>${escapeHTML(initials)}</div>';" alt="${escapeHTML(r.name)}">`
+            : `<div class="review-avatar">${escapeHTML(initials)}</div>`;
 
         const usernameHtml = cleanUsername
-            ? `<div style="font-size: 0.8rem; color: #38bdf8;"><a href="https://t.me/${cleanUsername}" target="_blank" style="color:#38bdf8; text-decoration:none;">@${cleanUsername}</a></div>`
+            ? `<div style="font-size: 0.8rem; color: #38bdf8;"><a href="https://t.me/${escapeHTML(cleanUsername)}" target="_blank" style="color:#38bdf8; text-decoration:none;">@${escapeHTML(cleanUsername)}</a></div>`
             : '';
 
         const verifiedBadgeHtml = r.is_telegram_verified
@@ -589,7 +599,7 @@ function renderReviewList() {
         const ratingStars = '⭐'.repeat(r.rating || 5);
         const isLiked = likedArray.includes(Number(r.id));
         const likeClass = isLiked ? 'like-btn liked' : 'like-btn';
-        const dateStamp = r.created_at || "July 31, 2026";
+        const dateStamp = escapeHTML(r.created_at || "July 31, 2026");
 
         return `
             <div class="${cardExtraClass}">
@@ -597,14 +607,14 @@ function renderReviewList() {
                     <div class="review-user-info">
                         ${avatarHtml}
                         <div>
-                            <strong style="color: #f1f5f9;">${r.name}</strong>
+                            <strong style="color: #f1f5f9;">${escapeHTML(r.name)}</strong>
                             ${usernameHtml}
                             ${verifiedBadgeHtml}
                         </div>
                     </div>
                     <span class="review-date-tag">${dateStamp}</span>
                 </div>
-                <p style="font-size: 0.92rem; color: #94a3b8; line-height: 1.5; margin-top: 4px;">"${r.message}"</p>
+                <p style="font-size: 0.92rem; color: #94a3b8; line-height: 1.5; margin-top: 4px;">"${escapeHTML(r.message)}"</p>
                 <div class="review-footer-row">
                     <span class="star-rating-display">${ratingStars}</span>
                     <button class="${likeClass}" onclick="likeReview(${r.id})">
@@ -786,37 +796,7 @@ connectWebSocket();
    9. MODALS & PROJECT FILTERS
    ========================================================================== */
 window.openProjectModal = function(title, category, mediaUrl, description, tech, github, live) {
-    document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-category').textContent = category;
-    document.getElementById('modal-description').textContent = description;
-    document.getElementById('modal-tech').textContent = tech;
-
-    const mediaContainer = document.getElementById('modal-media-container');
-
-    if (mediaUrl.endsWith('.mp4')) {
-        mediaContainer.innerHTML = `<video src="${mediaUrl}" autoplay loop muted playsinline style="width:100%; border-radius:10px;"></video>`;
-    } else {
-        mediaContainer.innerHTML = `<img src="${mediaUrl}" style="width:100%; border-radius:10px;" alt="${title}">`;
-    }
-
-    const ghBtn = document.getElementById('modal-github-link');
-    const liveBtn = document.getElementById('modal-live-link');
-
-    if (github) {
-        ghBtn.href = github;
-        ghBtn.style.display = 'inline-block';
-    } else {
-        ghBtn.style.display = 'none';
-    }
-
-    if (live) {
-        liveBtn.href = live;
-        liveBtn.style.display = 'inline-block';
-    } else {
-        liveBtn.style.display = 'none';
-    }
-
-    document.getElementById('project-modal').style.display = 'flex';
+    window.location.href = `/detail?type=project&title=${encodeURIComponent(title)}`;
 };
 
 window.closeProjectModal = function() {

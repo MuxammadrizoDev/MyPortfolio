@@ -36,6 +36,7 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "YOUR_TELEGRAM_CHAT_ID_HERE")
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "YourBotUsername")
 
 otp_session = {}
+admin_sessions = {}  # Active admin session tokens: token -> expiry timestamp
 telegram_auth_tokens = {}  # Temporary token store: token -> user profile info
 
 # -------------------------------------------------------------
@@ -253,8 +254,20 @@ def fetch_telegram_avatar_url(user_id: int) -> Optional[str]:
 
 
 def verify_admin_key(x_admin_key: Optional[str] = Header(None)):
-    if x_admin_key != ADMIN_SECRET_KEY:
-        raise HTTPException(status_code=401, detail="Unauthorized: Invalid Admin Key!")
+    """Validates Admin Session Token (or raw secret fallback) safely."""
+    if not x_admin_key:
+        raise HTTPException(status_code=401, detail="Unauthorized: Missing Admin Token!")
+
+    if x_admin_key == ADMIN_SECRET_KEY:
+        return
+
+    if x_admin_key in admin_sessions:
+        if time.time() < admin_sessions[x_admin_key]:
+            return
+        else:
+            del admin_sessions[x_admin_key]
+
+    raise HTTPException(status_code=401, detail="Unauthorized: Invalid or Expired Session Token!")
 
 
 # PYDANTIC SCHEMAS
@@ -318,7 +331,7 @@ class ContactMessage(BaseModel):
 
 
 # -------------------------------------------------------------
-# 4. BACKGROUND TELEGRAM POLLER (WORKS LOCALLY & IN PRODUCTION)
+# 4. BACKGROUND TELEGRAM POLLER
 # -------------------------------------------------------------
 async def telegram_polling_loop():
     """Polls Telegram for button clicks and /start verification commands."""
@@ -340,7 +353,6 @@ async def telegram_polling_loop():
                         for update in data.get("result", []):
                             offset = update["update_id"] + 1
 
-                            # 1. Process Telegram /start <token> verification
                             if "message" in update and "text" in update["message"]:
                                 msg_text = update["message"]["text"]
                                 user_from = update["message"]["from"]
@@ -357,7 +369,7 @@ async def telegram_polling_loop():
                                                 "first_name": user_from.get("first_name", ""),
                                                 "last_name": user_from.get("last_name", ""),
                                                 "username": user_from.get("username", ""),
-                                                "photo_url": real_photo  # None if no photo
+                                                "photo_url": real_photo
                                             }
                                         }
 
@@ -367,7 +379,6 @@ async def telegram_polling_loop():
                                                 "text": "✓ Verification successful! Return to Muxammadrizo's portfolio page to submit your review."
                                             })
 
-                            # 2. Process Telegram Inline Button Clicks (Approve / Reject)
                             if "callback_query" in update:
                                 callback = update["callback_query"]
                                 callback_id = callback["id"]
@@ -446,6 +457,13 @@ def read_root():
     return {"status": "Frontend index.html not found"}
 
 
+@app.get("/detail")
+def serve_detail_page():
+    if os.path.exists("detail.html"):
+        return FileResponse("detail.html")
+    return {"status": "detail.html not found"}
+
+
 @app.get("/admin")
 def read_admin():
     if os.path.exists("admin.html"):
@@ -482,7 +500,7 @@ def check_telegram_auth_token(token: str):
 
 
 # -------------------------------------------------------------
-# 7. AUTHENTICATION (GMAIL 2FA)
+# 7. AUTHENTICATION (GMAIL 2FA & RATE-LIMITED SESSION TOKEN)
 # -------------------------------------------------------------
 @app.post("/api/admin/request-otp")
 def request_otp(req: RequestOTP):
@@ -492,6 +510,7 @@ def request_otp(req: RequestOTP):
     otp = str(random.randint(100000, 999999))
     otp_session["code"] = otp
     otp_session["expires_at"] = time.time() + 300
+    otp_session["attempts"] = 0  # Reset attempt counter
 
     if send_email_otp(GMAIL_USER, otp):
         return {"status": "success", "message": "2FA Code sent to Gmail!"}
@@ -504,13 +523,27 @@ def request_otp(req: RequestOTP):
 def verify_otp(req: VerifyOTP):
     if "code" not in otp_session:
         raise HTTPException(status_code=400, detail="No active 2FA session.")
+
     if time.time() > otp_session["expires_at"]:
         otp_session.clear()
         raise HTTPException(status_code=400, detail="2FA Code expired.")
-    if req.otp_code != otp_session["code"]:
-        raise HTTPException(status_code=401, detail="Invalid 2FA Code.")
 
-    return {"status": "verified", "admin_key": ADMIN_SECRET_KEY}
+    # Brute-force rate limit protection
+    otp_session["attempts"] = otp_session.get("attempts", 0) + 1
+    if otp_session["attempts"] > 5:
+        otp_session.clear()
+        raise HTTPException(status_code=429, detail="Too many failed attempts. OTP session invalidated.")
+
+    if req.otp_code != otp_session["code"]:
+        attempts_left = 5 - otp_session["attempts"]
+        raise HTTPException(status_code=401, detail=f"Invalid 2FA Code. {attempts_left} attempts remaining.")
+
+    # Verification successful! Generate short-lived session token (Never leak secret key)
+    session_token = str(uuid.uuid4())
+    admin_sessions[session_token] = time.time() + 7200  # 2-hour admin session
+    otp_session.clear()
+
+    return {"status": "verified", "admin_token": session_token}
 
 
 # -------------------------------------------------------------
@@ -539,7 +572,7 @@ def ai_parse_project(data: AIPrompt):
 
 
 # -------------------------------------------------------------
-# 9. DYNAMIC CRUD API ROUTES (PROJECTS, ACHIEVEMENTS, SKILLS, REVIEWS)
+# 9. DYNAMIC CRUD API ROUTES
 # -------------------------------------------------------------
 # PROJECTS
 @app.get("/api/projects")
@@ -699,7 +732,7 @@ async def like_review(review_id: int, db: Session = Depends(get_db)):
     return {"status": "success", "likes": review.likes}
 
 
-# CLEAR ALL TEST REVIEWS ROUTE (For Admin Testing)
+# CLEAR ALL TEST REVIEWS ROUTE
 @app.delete("/api/admin/reviews/clear-all", dependencies=[Depends(verify_admin_key)])
 async def clear_all_reviews(db: Session = Depends(get_db)):
     db.query(ReviewModel).delete()
