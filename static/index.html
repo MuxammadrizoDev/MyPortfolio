@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Muxammadrizo.dev | Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <!-- Version v=24.0 forces browsers to load fresh CSS -->
-    <link rel="stylesheet" href="/static/style.css?v=24.0">
+    <!-- Version v=37.0 forces fresh CSS loading -->
+    <link rel="stylesheet" href="/static/style.css?v=37.0">
 </head>
 <body class="no-scroll">
 
@@ -245,59 +245,69 @@
     <h2 class="section-title" id="reviews" data-i18n="titleReviews">Client Reviews & Feedback</h2>
 
     <div class="feedback-layout">
-        <div class="reviews-scroll-area" id="public-reviews-list">
-            <div class="review-display-box">
-                <div class="review-header">
-                    <div class="review-avatar">RS</div>
-                    <div>
-                        <strong style="color: #f1f5f9;" data-i18n="reviewClient1">Retail Store Client</strong>
-                        <div style="font-size: 0.75rem; color: #38bdf8;" data-i18n="reviewBadge1">Verified Client via Telegram</div>
-                    </div>
-                </div>
-                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;" data-i18n="reviewComment1">
-                    "A'zamjonov Muxammadrizo built a fast digital storefront catalog for our shop. Reliable communication and clean code!"
-                </p>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="reviews-scroll-area" id="public-reviews-list">
+                <!-- Dynamic Verified & Approved Reviews load here -->
             </div>
-
-            <div class="review-display-box">
-                <div class="review-header">
-                    <div class="review-avatar">TG</div>
-                    <div>
-                        <strong style="color: #f1f5f9;" data-i18n="reviewClient2">Tech Group Corp</strong>
-                        <div style="font-size: 0.75rem; color: #38bdf8;" data-i18n="reviewBadge2">Verified Client via Telegram</div>
-                    </div>
-                </div>
-                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;" data-i18n="reviewComment2">
-                    "Excellent work on the automated Telegram bot API. Handled our database integration seamlessly."
-                </p>
-            </div>
-
-            <div class="review-display-box">
-                <div class="review-header">
-                    <div class="review-avatar">IN</div>
-                    <div>
-                        <strong style="color: #f1f5f9;" data-i18n="reviewClient3">Indie Dev Team</strong>
-                        <div style="font-size: 0.75rem; color: #38bdf8;" data-i18n="reviewBadge3">Verified Client via Telegram</div>
-                    </div>
-                </div>
-                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;" data-i18n="reviewComment3">
-                    "Consulted with him on Unreal Engine 5 PCG tools. Highly knowledgeable and professional."
-                </p>
-            </div>
+            <button id="show-more-reviews-btn" class="btn btn-secondary" style="display: none; width: 100%;" onclick="toggleShowAllReviews()">
+                Show More Reviews 👇
+            </button>
         </div>
 
-        <div class="review-form-card">
+        <!-- REVIEW FORM CARD -->
+        <div class="review-form-card" id="review-form-card">
             <form id="review-form">
-                <h4 style="margin: 0 0 16px; color: #f1f5f9;" data-i18n="reviewFormTitle">Leave a Comment or Review</h4>
+                <div id="form-header-box" style="margin-bottom: 16px;">
+                    <h4 style="margin: 0; color: #f1f5f9;" data-i18n="reviewFormTitle">Leave a Comment or Review</h4>
+                </div>
+
                 <div class="form-group">
                     <label for="review-name" data-i18n="labelReviewName">Your Name or Company</label>
                     <input type="text" id="review-name" placeholder="John Doe or Acme Corp" data-i18n-placeholder="phReviewName" required>
                 </div>
+
+                <div class="form-group" id="username-group" style="display: none;">
+                    <label for="review-username">Telegram Handle (Optional)</label>
+                    <input type="text" id="review-username" placeholder="@john_dev">
+                    <p style="font-size: 0.75rem; color: #38bdf8; margin-top: 4px;">
+                        💡 Note: You can remove or edit your @username if you prefer privacy or don't want people messaging you.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="review-rating">Overall Rating</label>
+                    <select id="review-rating" style="padding: 12px; background: rgba(11, 15, 25, 0.8); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+                        <option value="5">⭐⭐⭐⭐⭐ (5 / 5) - Excellent</option>
+                        <option value="4">⭐⭐⭐⭐ (4 / 5) - Great</option>
+                        <option value="3">⭐⭐⭐ (3 / 5) - Good</option>
+                        <option value="2">⭐⭐ (2 / 5) - Fair</option>
+                        <option value="1">⭐ (1 / 5) - Poor</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label for="review-msg" data-i18n="labelReviewMsg">Your Feedback / Comment</label>
-                    <textarea id="review-msg" rows="5" placeholder="Share your experience working together..." data-i18n-placeholder="phReviewMsg" required></textarea>
+                    <textarea id="review-msg" rows="4" placeholder="Share your experience working together..." data-i18n-placeholder="phReviewMsg" required></textarea>
                 </div>
-                <button type="submit" class="btn btn-secondary" id="review-submit-btn" data-i18n="btnSubmitReview">Submit Review 💬</button>
+
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-secondary" id="review-submit-btn" style="flex: 1;" data-i18n="btnSubmitReview">Submit Review 💬</button>
+
+                    <div style="display: flex; align-items: center; gap: 6px; flex: 1.1;">
+                        <button type="button" id="telegram-connect-btn" class="btn btn-primary" style="width: 100%; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; font-size: 0.82rem; gap: 6px;" onclick="startTelegramBotVerification()">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="#38bdf8"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.65-.53.81-1.08.5l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.05 5.56-5.02c.24-.22-.05-.34-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.65-.64.13-.95l11.57-4.46c.53-.19 1 .13.85.94z"/></svg>
+                            <span>🔵 Verify via Telegram Bot</span>
+                        </button>
+
+                        <!-- REVIEWS TELEGRAM INFO TOOLTIP -->
+                        <div class="info-tooltip-container">
+                            <span class="info-icon" tabindex="0">ⓘ</span>
+                            <div class="info-tooltip-popup" data-i18n="tooltipTelegramVerify">
+                                We offer Telegram verification so visitors know client feedback is 100% authentic and trustworthy.
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -310,10 +320,22 @@
                 <label for="contact-name" data-i18n="labelName">Your Name</label>
                 <input type="text" id="contact-name" placeholder="John Doe" data-i18n-placeholder="phContactName" required>
             </div>
+
             <div class="form-group">
-                <label for="contact-email" data-i18n="labelEmail">Email or Telegram (@username)</label>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <label for="contact-email" data-i18n="labelEmail">Email or Telegram (@username)</label>
+
+                    <!-- CONTACT INFO TOOLTIP -->
+                    <div class="info-tooltip-container">
+                        <span class="info-icon" tabindex="0">ⓘ</span>
+                        <div class="info-tooltip-popup" data-i18n="tooltipContactInfo">
+                            Your contact info is strictly used to reply to your inquiry as soon as your message arrives.
+                        </div>
+                    </div>
+                </div>
                 <input type="text" id="contact-email" placeholder="@john_dev" data-i18n-placeholder="phContactEmail" required>
             </div>
+
             <div class="form-group">
                 <label for="contact-message" data-i18n="labelMessage">Project Details</label>
                 <textarea id="contact-message" rows="4" placeholder="Hi Muxammadrizo..." data-i18n-placeholder="phContactMsg" required></textarea>

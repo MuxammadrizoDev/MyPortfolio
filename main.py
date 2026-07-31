@@ -4,9 +4,16 @@ import time
 import json
 import smtplib
 import requests
+import sqlite3
+import uuid
+import httpx
+import asyncio
+from datetime import datetime
 from typing import List, Optional
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
-from fastapi import FastAPI, HTTPException, Depends, status, Header, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Depends, status, Header, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
@@ -24,10 +31,12 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", "super_secret_admin_pass_123")
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN_HERE")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "YOUR_TELEGRAM_CHAT_ID_HERE")
+TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "YourBotUsername")
 
 otp_session = {}
+telegram_auth_tokens = {}  # Temporary token store: token -> user profile info
 
 # -------------------------------------------------------------
 # 1. DATABASE SETUP (SQLAlchemy + SQLite)
@@ -72,19 +81,49 @@ class ReviewModel(Base):
     __tablename__ = "reviews"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    username = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
     avatar_initials = Column(String, nullable=False, default="CL")
     message = Column(Text, nullable=False)
+    rating = Column(Integer, default=5)
+    likes = Column(Integer, default=0)
+    is_telegram_verified = Column(Integer, default=0)
     is_approved = Column(Integer, default=0)
+    created_at = Column(String, default=lambda: datetime.now().strftime("%B %d, %Y"))
 
 
 Base.metadata.create_all(bind=engine)
 
+
+def auto_migrate_db():
+    conn = engine.raw_connection()
+    cursor = conn.cursor()
+    columns = [
+        ("username", "TEXT"),
+        ("avatar_url", "TEXT"),
+        ("rating", "INTEGER DEFAULT 5"),
+        ("likes", "INTEGER DEFAULT 0"),
+        ("is_telegram_verified", "INTEGER DEFAULT 0"),
+        ("created_at", "TEXT")
+    ]
+    for col_name, col_type in columns:
+        try:
+            cursor.execute(f"ALTER TABLE reviews ADD COLUMN {col_name} {col_type}")
+        except Exception:
+            pass
+    cursor.execute("UPDATE reviews SET likes = 0 WHERE likes IS NULL")
+    cursor.execute("UPDATE reviews SET is_telegram_verified = 0 WHERE is_telegram_verified IS NULL")
+    cursor.execute("UPDATE reviews SET rating = 5 WHERE rating IS NULL")
+    conn.commit()
+    conn.close()
+
+
+auto_migrate_db()
+
 app = FastAPI(title="Developer Portfolio API")
 
-# Initialize Gemini Client if Key Exists
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
-# Mount Static Assets
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -159,6 +198,60 @@ def send_email_otp(to_email: str, otp_code: str):
         return False
 
 
+def send_telegram_review_approval_ping(review_id: int, name: str, username: str, message: str, rating: int):
+    if not TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN_HERE":
+        return
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    text = (
+        f"💬 <b>New Review Pending Approval!</b>\n\n"
+        f"👤 <b>Client:</b> {name} ({username or 'Unverified'})\n"
+        f"⭐ <b>Rating:</b> {'⭐' * rating}\n"
+        f"📝 <b>Feedback:</b> {message}\n\n"
+        f"<i>Tap below to approve or reject for your live website:</i>"
+    )
+
+    reply_markup = {
+        "inline_keyboard": [
+            [
+                {"text": "Approve 🟢", "callback_data": f"approve_{review_id}"},
+                {"text": "Reject 🔴", "callback_data": f"reject_{review_id}"}
+            ]
+        ]
+    }
+
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML",
+        "reply_markup": reply_markup
+    }
+
+    try:
+        requests.post(url, json=payload, timeout=5)
+    except Exception as e:
+        print(f"Error sending Telegram approval ping: {e}")
+
+
+def fetch_telegram_avatar_url(user_id: int) -> Optional[str]:
+    """Fetches real Telegram profile photo via Telegram Bot API."""
+    if not TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN_HERE":
+        return None
+    try:
+        photos_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUserProfilePhotos?user_id={user_id}&limit=1"
+        res = requests.get(photos_url, timeout=5).json()
+        if res.get("ok") and res["result"]["total_count"] > 0:
+            file_id = res["result"]["photos"][0][0]["file_id"]
+            file_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getFile?file_id={file_id}"
+            file_res = requests.get(file_url, timeout=5).json()
+            if file_res.get("ok"):
+                file_path = file_res["result"]["file_path"]
+                return f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}"
+    except Exception as e:
+        print("Error fetching Telegram user photo:", e)
+    return None
+
+
 def verify_admin_key(x_admin_key: Optional[str] = Header(None)):
     if x_admin_key != ADMIN_SECRET_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized: Invalid Admin Key!")
@@ -199,7 +292,11 @@ class SkillSchema(BaseModel):
 
 class ReviewSchema(BaseModel):
     name: str
+    username: Optional[str] = None
+    avatar_url: Optional[str] = None
     message: str
+    rating: Optional[int] = 5
+    auth_token: Optional[str] = None
 
 
 class AIPrompt(BaseModel):
@@ -221,7 +318,112 @@ class ContactMessage(BaseModel):
 
 
 # -------------------------------------------------------------
-# 4. WEBSOCKET & CORE ROUTING
+# 4. BACKGROUND TELEGRAM POLLER (WORKS LOCALLY & IN PRODUCTION)
+# -------------------------------------------------------------
+async def telegram_polling_loop():
+    """Polls Telegram for button clicks and /start verification commands."""
+    if not TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN_HERE":
+        print("⚠️ Telegram Bot Token not set. Polling loop skipped.")
+        return
+
+    offset = 0
+    print("🚀 Telegram Bot Poller active. Ready for local /start commands & button approvals!")
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        while True:
+            try:
+                url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates?offset={offset}&timeout=5"
+                response = await client.get(url)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("ok"):
+                        for update in data.get("result", []):
+                            offset = update["update_id"] + 1
+
+                            # 1. Process Telegram /start <token> verification
+                            if "message" in update and "text" in update["message"]:
+                                msg_text = update["message"]["text"]
+                                user_from = update["message"]["from"]
+                                user_id = user_from.get("id")
+
+                                if msg_text.startswith("/start "):
+                                    token = msg_text.split(" ")[1].strip()
+                                    if token in telegram_auth_tokens:
+                                        real_photo = fetch_telegram_avatar_url(user_id) if user_id else None
+
+                                        telegram_auth_tokens[token] = {
+                                            "status": "verified",
+                                            "user": {
+                                                "first_name": user_from.get("first_name", ""),
+                                                "last_name": user_from.get("last_name", ""),
+                                                "username": user_from.get("username", ""),
+                                                "photo_url": real_photo  # None if no photo
+                                            }
+                                        }
+
+                                        await client.post(
+                                            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage", json={
+                                                "chat_id": update["message"]["chat"]["id"],
+                                                "text": "✓ Verification successful! Return to Muxammadrizo's portfolio page to submit your review."
+                                            })
+
+                            # 2. Process Telegram Inline Button Clicks (Approve / Reject)
+                            if "callback_query" in update:
+                                callback = update["callback_query"]
+                                callback_id = callback["id"]
+                                callback_data = callback["data"]
+                                message = callback["message"]
+                                message_id = message["message_id"]
+                                chat_id = message["chat"]["id"]
+
+                                db = SessionLocal()
+                                try:
+                                    if callback_data.startswith("approve_"):
+                                        review_id = int(callback_data.split("_")[1])
+                                        review = db.query(ReviewModel).filter(ReviewModel.id == review_id).first()
+                                        if review:
+                                            review.is_approved = 1
+                                            db.commit()
+                                            await ws_manager.broadcast("update_reviews")
+                                        updated_text = message[
+                                                           "text"] + "\n\n✅ <b>VERIFIED & APPROVED FOR LIVE WEBSITE!</b>"
+                                    elif callback_data.startswith("reject_"):
+                                        review_id = int(callback_data.split("_")[1])
+                                        review = db.query(ReviewModel).filter(ReviewModel.id == review_id).first()
+                                        if review:
+                                            db.delete(review)
+                                            db.commit()
+                                            await ws_manager.broadcast("update_reviews")
+                                        updated_text = message["text"] + "\n\n❌ <b>REJECTED & DELETED.</b>"
+                                    else:
+                                        updated_text = message["text"]
+                                finally:
+                                    db.close()
+
+                                await client.post(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/editMessageText",
+                                                  json={
+                                                      "chat_id": chat_id,
+                                                      "message_id": message_id,
+                                                      "text": updated_text,
+                                                      "parse_mode": "HTML"
+                                                  })
+                                await client.post(
+                                    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery", json={
+                                        "callback_query_id": callback_id,
+                                        "text": "Status updated!"
+                                    })
+            except Exception as e:
+                pass
+            await asyncio.sleep(2)
+
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(telegram_polling_loop())
+
+
+# -------------------------------------------------------------
+# 5. WEBSOCKET & CORE ROUTING
 # -------------------------------------------------------------
 @app.websocket("/ws")
 @app.websocket("/ws/status")
@@ -259,7 +461,28 @@ def health_check():
 
 
 # -------------------------------------------------------------
-# 5. AUTHENTICATION (GMAIL 2FA)
+# 6. REAL TELEGRAM BOT AUTHENTICATION ENDPOINTS
+# -------------------------------------------------------------
+@app.post("/api/reviews/gen-token")
+def generate_telegram_auth_token():
+    token = str(uuid.uuid4())[:8]
+    telegram_auth_tokens[token] = {"status": "pending", "expires_at": time.time() + 600}
+    clean_bot_name = TELEGRAM_BOT_USERNAME.replace("@", "")
+    bot_link = f"https://t.me/{clean_bot_name}?start={token}"
+    return {"status": "success", "token": token, "bot_link": bot_link}
+
+
+@app.get("/api/reviews/check-token/{token}")
+def check_telegram_auth_token(token: str):
+    if token in telegram_auth_tokens:
+        data = telegram_auth_tokens[token]
+        if data.get("status") == "verified":
+            return {"verified": True, "user": data.get("user")}
+    return {"verified": False}
+
+
+# -------------------------------------------------------------
+# 7. AUTHENTICATION (GMAIL 2FA)
 # -------------------------------------------------------------
 @app.post("/api/admin/request-otp")
 def request_otp(req: RequestOTP):
@@ -291,7 +514,7 @@ def verify_otp(req: VerifyOTP):
 
 
 # -------------------------------------------------------------
-# 6. AI FORM PARSER (GEMINI INTEGRATION)
+# 8. AI FORM PARSER (GEMINI INTEGRATION)
 # -------------------------------------------------------------
 @app.post("/api/admin/ai-parse", dependencies=[Depends(verify_admin_key)])
 def ai_parse_project(data: AIPrompt):
@@ -316,7 +539,7 @@ def ai_parse_project(data: AIPrompt):
 
 
 # -------------------------------------------------------------
-# 7. DYNAMIC CRUD API ROUTES (PROJECTS, ACHIEVEMENTS, SKILLS, REVIEWS)
+# 9. DYNAMIC CRUD API ROUTES (PROJECTS, ACHIEVEMENTS, SKILLS, REVIEWS)
 # -------------------------------------------------------------
 # PROJECTS
 @app.get("/api/projects")
@@ -399,31 +622,100 @@ async def delete_skill(item_id: int, db: Session = Depends(get_db)):
     return {"status": "deleted"}
 
 
-# REVIEWS
+# REVIEWS (SORTED BY VERIFIED FIRST, LIKES DESC, ID DESC)
 @app.get("/api/reviews")
 def get_reviews(db: Session = Depends(get_db)):
-    return db.query(ReviewModel).filter(ReviewModel.is_approved == 1).all()
+    reviews = db.query(ReviewModel) \
+        .filter(ReviewModel.is_approved == 1) \
+        .order_by(ReviewModel.is_telegram_verified.desc(), ReviewModel.likes.desc(), ReviewModel.id.desc()) \
+        .all()
+    return {"reviews": reviews}
 
 
 @app.post("/api/reviews")
 async def submit_review(data: ReviewSchema, db: Session = Depends(get_db)):
     initials = "".join([part[0].upper() for part in data.name.split()[:2]]) if data.name else "CL"
-    new_review = ReviewModel(name=data.name, avatar_initials=initials, message=data.message, is_approved=1)
+
+    clean_username = data.username.strip() if data.username else None
+    if clean_username and not clean_username.startswith("@"):
+        clean_username = f"@{clean_username}"
+
+    is_verified = 0
+    avatar_url = data.avatar_url
+
+    # Check if authorized via Telegram Bot Session
+    if data.auth_token and data.auth_token in telegram_auth_tokens:
+        token_data = telegram_auth_tokens[data.auth_token]
+        if token_data.get("status") == "verified":
+            is_verified = 1
+            user_info = token_data.get("user", {})
+            if user_info.get("username"):
+                clean_username = f"@{user_info.get('username')}"
+            avatar_url = user_info.get("photo_url", avatar_url)
+
+    new_review = ReviewModel(
+        name=data.name,
+        username=clean_username,
+        avatar_url=avatar_url,
+        avatar_initials=initials,
+        message=data.message,
+        rating=data.rating or 5,
+        likes=0,
+        is_telegram_verified=is_verified,
+        is_approved=0,  # Needs Admin Approval
+        created_at=datetime.now().strftime("%B %d, %Y")
+    )
     db.add(new_review)
     db.commit()
     db.refresh(new_review)
+
+    send_telegram_review_approval_ping(
+        review_id=new_review.id,
+        name=new_review.name,
+        username=clean_username,
+        message=new_review.message,
+        rating=new_review.rating
+    )
+
+    return {"status": "pending_approval",
+            "message": "Review submitted! It will appear on the website after admin verification."}
+
+
+@app.post("/api/reviews/{review_id}/like")
+async def like_review(review_id: int, db: Session = Depends(get_db)):
+    review = db.query(ReviewModel).filter(ReviewModel.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    # Ensure review.likes is never None when adding 1
+    if review.likes is None:
+        review.likes = 0
+
+    review.likes += 1
+    db.commit()
+    db.refresh(review)
+
     await ws_manager.broadcast("update_reviews")
-    return {"status": "success", "item": new_review}
+    return {"status": "success", "likes": review.likes}
+
+
+# CLEAR ALL TEST REVIEWS ROUTE (For Admin Testing)
+@app.delete("/api/admin/reviews/clear-all", dependencies=[Depends(verify_admin_key)])
+async def clear_all_reviews(db: Session = Depends(get_db)):
+    db.query(ReviewModel).delete()
+    db.commit()
+    await ws_manager.broadcast("update_reviews")
+    return {"status": "success", "message": "All reviews cleared from database."}
 
 
 # -------------------------------------------------------------
-# 8. CONTACT FORM & TELEGRAM DISPATCHER
+# 10. CONTACT FORM & TELEGRAM DISPATCHER
 # -------------------------------------------------------------
 @app.post("/api/contact")
 def send_contact_message(data: ContactMessage):
     contact = data.get_contact_field()
 
-    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID and TELEGRAM_BOT_TOKEN != "YOUR_TELEGRAM_BOT_TOKEN_HERE":
         contact_link = f"https://t.me/{contact.replace('@', '')}" if contact.startswith("@") else f"mailto:{contact}"
         telegram_text = (
             f"📩 <b>New Portfolio Message!</b>\n\n"
@@ -448,8 +740,12 @@ def chat_with_gemini(request: ChatRequest):
         raise HTTPException(status_code=500, detail="Gemini API Key missing")
     try:
         system_instruction = (
-            "You are an AI assistant for Muxammadrizo A'zamjonov's portfolio. "
-            "Be polite, concise, and highlight his skills in Python, FastAPI backends, and Unreal Engine 5.8."
+            "You are a friendly, witty, and human-like AI assistant for Muxammadrizo A'zamjonov's portfolio. "
+            "Conversational Guidelines:\n"
+            "1. Talk naturally like a supportive software engineering peer.\n"
+            "2. Feel free to discuss general programming, FastAPI, Unreal Engine 5.8, or computer science concepts freely when asked.\n"
+            "3. Only bring up Muxammadrizo's specific background, student freelance rates, or location when the user explicitly asks about him.\n"
+            "4. About Muxammadrizo: He is 16 y/o studying at Hackathon IT School in Fergana, Uzbekistan. As a student starting out in freelancing, his rates are budget-friendly and project-based."
         )
         response = client.models.generate_content(
             model='gemini-2.5-flash',

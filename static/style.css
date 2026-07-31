@@ -37,7 +37,7 @@ section, .section-title, #about, #journey, #skills, #projects, #achievements, #b
 }
 
 /* ==========================================================================
-   2. TERMINAL LOADER (FIXED INSET COVERAGE)
+   2. TERMINAL LOADER
    ========================================================================== */
 #loader {
     position: fixed;
@@ -248,7 +248,6 @@ nav {
     margin-bottom: 12px;
 }
 
-/* Holographic Teleportation Container with Overflow Visible */
 .greeting-wrapper {
     display: inline-flex;
     align-items: baseline;
@@ -271,7 +270,6 @@ nav {
     overflow: visible;
 }
 
-/* Holographic Teleportation Morph (Unclipped Light Ambient Glow) */
 .holo-greeting.teleport {
     animation: holoTeleportMorph 0.52s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -353,10 +351,10 @@ nav {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 24px;
-    height: 48px;
+    padding: 0 20px;
+    height: 46px;
     border-radius: 10px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     text-decoration: none;
     box-sizing: border-box;
@@ -410,7 +408,6 @@ nav {
     margin-bottom: 40px;
 }
 
-/* Comfortable, Sleek Custom Horizontal Scrollbars */
 .horizontal-scroll-row::-webkit-scrollbar,
 .reviews-scroll-area::-webkit-scrollbar {
     height: 7px;
@@ -471,7 +468,7 @@ nav {
 }
 
 /* ==========================================================================
-   5. TRUE HOLOGRAPHIC CHART (16PX FLAT BASE STUB + 2.2S PACED RISE)
+   5. TRUE HOLOGRAPHIC CHART
    ========================================================================== */
 .hologram-chart-wrapper {
     display: flex;
@@ -708,7 +705,7 @@ nav {
 }
 
 /* ==========================================================================
-   7. REVIEWS & FORMS
+   7. REVIEWS & STAGE 2 ADVANCED FORM MORPH STYLES
    ========================================================================== */
 .feedback-layout {
     display: grid;
@@ -723,7 +720,7 @@ nav {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    max-height: 480px;
+    max-height: 520px;
     overflow-y: auto;
     padding-right: 16px;
 }
@@ -736,12 +733,37 @@ nav {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.review-display-box:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.review-display-box.verified-card {
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
 }
 
 .review-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+}
+
+.review-user-info {
+    display: flex;
+    align-items: center;
     gap: 12px;
+}
+
+.review-avatar-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
 }
 
 .review-avatar {
@@ -757,15 +779,155 @@ nav {
     border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
+.telegram-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(0, 136, 204, 0.15);
+    border: 1px solid rgba(0, 136, 204, 0.4);
+    color: #38bdf8;
+    font-size: 0.73rem;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.review-date-tag {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.review-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.star-rating-display {
+    color: #fbbf24;
+    font-size: 0.88rem;
+    letter-spacing: 2px;
+}
+
+.like-btn {
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: #38bdf8;
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.like-btn:hover {
+    background: rgba(56, 189, 248, 0.2);
+    transform: scale(1.04);
+}
+
+.like-btn.liked {
+    background: #38bdf8;
+    color: #0b0f19;
+    border-color: #38bdf8;
+}
+
 .review-form-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    padding: 40px 32px;
+    padding: 28px 24px;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    transition: all 0.3s ease;
+}
+
+/* Stage 2 Header Profile Morph Box */
+.stage2-header-profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 12px;
+}
+
+.stage2-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+/* SLEEK INTERACTIVE TOOLTIP POPUP */
+.info-tooltip-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.info-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.info-icon:hover, .info-icon:focus {
+    background: rgba(56, 189, 248, 0.3);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.info-tooltip-popup {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 130%;
+    right: 0;
+    width: 230px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #f1f5f9;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    transform: translateY(6px);
+}
+
+.info-tooltip-container:hover .info-tooltip-popup,
+.info-icon:focus + .info-tooltip-popup {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .contact-card {
@@ -779,8 +941,8 @@ nav {
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
+    gap: 6px;
+    margin-bottom: 16px;
 }
 
 .form-group label {
@@ -790,14 +952,15 @@ nav {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: rgba(11, 15, 25, 0.8);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     color: var(--text-main);
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
 .form-group textarea {
@@ -805,7 +968,8 @@ nav {
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
     outline: none;
     border-color: var(--accent-color);
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);

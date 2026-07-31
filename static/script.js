@@ -3,6 +3,11 @@
    ========================================================================== */
 let currentLanguage = localStorage.getItem('preferred_lang') || 'en';
 const langOrder = ['en', 'uz', 'ru'];
+let allLoadedReviews = [];
+let isShowingAllReviews = false;
+let clientTelegramVerified = 0;
+let clientTelegramAvatar = null;
+let currentAuthToken = null;
 
 const translations = {
     en: {
@@ -68,15 +73,6 @@ const translations = {
         blogTitle3: "Automated Telegram Ping Bot",
         blogDesc3: "Integrated automated Telegram webhook notifications for instant portfolio client contact dispatches.",
         titleReviews: "Client Reviews & Feedback",
-        reviewClient1: "Retail Store Client",
-        reviewBadge1: "Verified Client via Telegram",
-        reviewComment1: "\"A'zamjonov Muxammadrizo built a fast digital storefront catalog for our shop. Reliable communication and clean code!\"",
-        reviewClient2: "Tech Group Corp",
-        reviewBadge2: "Verified Client via Telegram",
-        reviewComment2: "\"Excellent work on the automated Telegram bot API. Handled our database integration seamlessly.\"",
-        reviewClient3: "Indie Dev Team",
-        reviewBadge3: "Verified Client via Telegram",
-        reviewComment3: "\"Consulted with him on Unreal Engine 5 PCG tools. Highly knowledgeable and professional.\"",
         reviewFormTitle: "Leave a Comment or Review",
         labelReviewName: "Your Name or Company",
         phReviewName: "John Doe or Acme Corp",
@@ -91,6 +87,8 @@ const translations = {
         labelMessage: "Project Details or Inquiry",
         phContactMsg: "Hi Muxammadrizo! I'm looking to build a web app...",
         btnSend: "Send Message 📱",
+        tooltipTelegramVerify: "We offer Telegram verification so visitors know client feedback is 100% authentic and trustworthy.",
+        tooltipContactInfo: "Your contact info is strictly used to reply to your inquiry as soon as your message arrives.",
         aiGreeting: "<strong>Hello there! 👋</strong><br><br>I am Gemini, Muxammadrizo's AI assistant. How can I help you learn more about his software engineering, game projects, or freelance work?",
         chipAbout: "👨‍💻 Who is Muxammadrizo?",
         chipBackend: "⚙️ Backend Architecture?",
@@ -162,15 +160,6 @@ const translations = {
         blogTitle3: "Avtomatlashtirilgan Telegram Ping Boti",
         blogDesc3: "Portfeldan mijozlar xabarlarini tezkor Telegramga yuborish uchun vebhuk xizmatini ulash.",
         titleReviews: "Mijozlar Fikrlari",
-        reviewClient1: "Chakana Do'kon Mijozi",
-        reviewBadge1: "Telegram orqali tasdiqlangan mijoz",
-        reviewComment1: "\"A'zamjonov Muxammadrizo do'konimiz uchun tezkor raqamli katalog yaratib berdi. Ishonchli muloqot va toza kod!\"",
-        reviewClient2: "Tech Group Korporatsiyasi",
-        reviewBadge2: "Telegram orqali tasdiqlangan mijoz",
-        reviewComment2: "\"Avtomatlashtirilgan Telegram bot API bo'yicha a'lo ish. Ma'lumotlar bazasi integratsiyasini mukammal bajardi.\"",
-        reviewClient3: "Indie Dasturchilar Jamoasi",
-        reviewBadge3: "Telegram orqali tasdiqlangan mijoz",
-        reviewComment3: "\"Unreal Engine 5 PCG vositalari bo'yicha u bilan maslahatlashdik. Juda bilimdon va professional.\"",
         reviewFormTitle: "Fikr-mulohaza Qoldiring",
         labelReviewName: "Ismingiz yoki Kompaniyangiz",
         phReviewName: "Ali Valiyev",
@@ -185,11 +174,13 @@ const translations = {
         labelMessage: "Loyiha tafsilotlari",
         phContactMsg: "Salom Muxammadrizo! Men veb-sayt yaratmoqchiman...",
         btnSend: "Xabar Yuborish 📱",
+        tooltipTelegramVerify: "Mijozlar fikri 100% haqiqiy va ishonchli ekanligini ko'rsatish uchun Telegram orqali tasdiqlash imkoniyati mavjud.",
+        tooltipContactInfo: "Sizning aloqa ma'lumotlaringiz faqat xabaringizga tezda javob berish uchun ishlatiladi.",
         aiGreeting: "<strong>Salom! 👋</strong><br><br>Men Muxammadrizoning AI yordamchisiman. Uning dasturlash va o'yin loyihalari haqida nimani bilishni xohlaysiz?",
         chipAbout: "👨‍💻 Muxammadrizo kim?",
         chipBackend: "⚙️ Backend Arxitekturasi?",
         chipUe5: "🎮 UE5 O'yini haqida",
-        chipFrontend: "🎨 Frontend qila oladimi?",
+        chipFrontend: "🎨 Does he do Frontend?",
         chipContact: "📩 Qanday bog'lansam bo'ladi?",
         aiPlaceholder: "Xabar yozing..."
     },
@@ -209,7 +200,7 @@ const translations = {
         typingPrefix: "Я специализируюсь на:",
         heroSubtext: "Студент Hackathon IT School в Фергане. Основатель NKND Studios. Разрабатываю бэкенд на Python/FastAPI и игры на Unreal Engine 5.8.",
         heroBtn: "Смотреть Проекты 🚀",
-        heroContactBtn: "Связаться 💬",
+        heroContactBtn: "Get in Touch 💬",
         titleJourney: "Образование и Развитие",
         journeyTagEducation: "Образование",
         journeyDate1: "2024 - Наст. время",
@@ -256,15 +247,6 @@ const translations = {
         blogTitle3: "Автоматизированный Telegram Бот",
         blogDesc3: "Интеграция вебхуков Telegram для мгновенного получения сообщений от клиентов.",
         titleReviews: "Отзывы Клиентов",
-        reviewClient1: "Клиент Розничного Магазина",
-        reviewBadge1: "Проверенный клиент через Telegram",
-        reviewComment1: "\"А'замжонов Мухаммадризо создал быстрый цифровой каталог для нашего магазина. Надежная связь и чистый код!\"",
-        reviewClient2: "Tech Group Corp",
-        reviewBadge2: "Проверенный клиент через Telegram",
-        reviewComment2: "\"Отличная работа над API Telegram-бота. Беспрепятственно настроил интеграцию с базой данных.\"",
-        reviewClient3: "Инди Команда Разработчиков",
-        reviewBadge3: "Проверенный клиент через Telegram",
-        reviewComment3: "\"Консультировались с ним по инструментам PCG в Unreal Engine 5. Очень грамотный и профессиональный.\"",
         reviewFormTitle: "Оставить Отзыв",
         labelReviewName: "Ваше Имя или Компания",
         phReviewName: "Иван Иванов",
@@ -279,6 +261,8 @@ const translations = {
         labelMessage: "Детали проекта",
         phContactMsg: "Привет, Мухаммадризо! Я хочу создать веб-сайт...",
         btnSend: "Отправить Сообщение 📱",
+        tooltipTelegramVerify: "Подтверждение через Telegram показывает, что отзывы написаны реальными клиентами.",
+        tooltipContactInfo: "Ваши контактные данные используются только для быстрого ответа на ваше сообщение.",
         aiGreeting: "<strong>Здравствуйте! 👋</strong><br><br>Я ИИ-помощник Мухаммадризо. Чем могу помочь вам узнать о его разработке и проектах?",
         chipAbout: "👨‍💻 Кто такой Мухаммадризо?",
         chipBackend: "⚙️ Архитектура Backend?",
@@ -391,10 +375,11 @@ function rotateHoloGreeting() {
 setInterval(rotateHoloGreeting, 2800);
 
 /* ==========================================================================
-   3. DOM BINDINGS & BULLETPROOF MARQUEE TICKER
+   3. DOM BINDINGS & MARQUEE TICKER & REVIEWS
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     changeLanguage(currentLanguage);
+    loadVerifiedReviews();
 
     document.querySelectorAll('.nav-links a').forEach(link => {
         link.addEventListener('click', () => {
@@ -474,13 +459,209 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   4. TERMINAL LOADER (> Portfolio Output)
+   4. REAL TELEGRAM BOT VERIFICATION LINK & POLLING
+   ========================================================================== */
+async function startTelegramBotVerification() {
+    try {
+        const response = await fetch('/api/reviews/gen-token', { method: 'POST' });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        currentAuthToken = data.token;
+
+        // Open Telegram Bot on user device
+        window.open(data.bot_link, '_blank');
+
+        // Poll every 2 seconds for Telegram Bot confirmation
+        const pollInterval = setInterval(async () => {
+            const checkRes = await fetch(`/api/reviews/check-token/${currentAuthToken}`);
+            if (checkRes.ok) {
+                const checkData = await checkRes.json();
+                if (checkData.verified && checkData.user) {
+                    clearInterval(pollInterval);
+                    const user = checkData.user;
+                    applyStage2FormMorph(
+                        `${user.first_name} ${user.last_name || ''}`.trim(),
+                        user.username ? `@${user.username}` : '',
+                        user.photo_url || null
+                    );
+                }
+            }
+        }, 2000);
+
+        // Auto-stop polling after 3 minutes
+        setTimeout(() => clearInterval(pollInterval), 180000);
+    } catch (e) {
+        console.error("Error generating Telegram verification token:", e);
+    }
+}
+
+function applyStage2FormMorph(name, username, photoUrl) {
+    clientTelegramVerified = 1;
+    clientTelegramAvatar = photoUrl;
+
+    document.getElementById('review-name').value = name;
+
+    const usernameInput = document.getElementById('review-username');
+    const usernameGroup = document.getElementById('username-group');
+    if (usernameInput) usernameInput.value = username;
+    if (usernameGroup) usernameGroup.style.display = 'flex';
+
+    // Initial Badge Fallback if user has no Telegram profile photo
+    const firstInitial = name ? name.charAt(0).toUpperCase() : 'M';
+    const avatarMedia = photoUrl
+        ? `<img src="${photoUrl}" class="stage2-avatar" onerror="this.outerHTML='<div class=\\'review-avatar\\'>${firstInitial}</div>';" alt="${name}">`
+        : `<div class="review-avatar" style="width:44px; height:44px; font-size:1.1rem;">${firstInitial}</div>`;
+
+    const headerBox = document.getElementById('form-header-box');
+    if (headerBox) {
+        headerBox.innerHTML = `
+            <div class="stage2-header-profile">
+                ${avatarMedia}
+                <div>
+                    <strong style="color: #f1f5f9; font-size: 1.05rem; display: block;">${name}</strong>
+                    <span style="font-size: 0.8rem; color: #38bdf8;">✓ Verified via Telegram (${username || 'Account'})</span>
+                </div>
+            </div>
+        `;
+    }
+
+    const verifyBtn = document.getElementById('telegram-connect-btn');
+    if (verifyBtn) {
+        verifyBtn.style.display = 'none';
+    }
+}
+
+/* ==========================================================================
+   5. DYNAMIC RANKED REVIEWS WITH LIKES, TIMESTAMPS & TELEGRAM BADGES
+   ========================================================================== */
+async function loadVerifiedReviews() {
+    const list = document.getElementById('public-reviews-list');
+    if (!list) return;
+
+    try {
+        const response = await fetch('/api/reviews');
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!data.reviews || data.reviews.length === 0) {
+            list.innerHTML = `<div style="color: #94a3b8; font-size: 0.9rem;">No approved reviews yet. Be the first to leave feedback!</div>`;
+            return;
+        }
+
+        allLoadedReviews = data.reviews;
+        renderReviewList();
+    } catch (e) {
+        console.error("Error fetching reviews:", e);
+    }
+}
+
+function renderReviewList() {
+    const list = document.getElementById('public-reviews-list');
+    const showMoreBtn = document.getElementById('show-more-reviews-btn');
+    if (!list) return;
+
+    const likedArray = JSON.parse(localStorage.getItem('liked_reviews') || '[]').map(Number);
+    const limit = isShowingAllReviews ? allLoadedReviews.length : 3;
+    const reviewsToRender = allLoadedReviews.slice(0, limit);
+
+    list.innerHTML = reviewsToRender.map(r => {
+        const cleanUsername = r.username ? r.username.replace('@', '') : '';
+        const initials = r.avatar_initials || (r.name ? r.name.substring(0, 1).toUpperCase() : 'M');
+
+        // Clean Avatar Rendering: If photoUrl exists and loads -> img, else clean letter circle
+        const avatarHtml = r.avatar_url
+            ? `<img src="${r.avatar_url}" class="review-avatar-img" onerror="this.outerHTML='<div class=\\'review-avatar\\'>${initials}</div>';" alt="${r.name}">`
+            : `<div class="review-avatar">${initials}</div>`;
+
+        const usernameHtml = cleanUsername
+            ? `<div style="font-size: 0.8rem; color: #38bdf8;"><a href="https://t.me/${cleanUsername}" target="_blank" style="color:#38bdf8; text-decoration:none;">@${cleanUsername}</a></div>`
+            : '';
+
+        const verifiedBadgeHtml = r.is_telegram_verified
+            ? `<div class="telegram-verified-badge">
+                 <svg viewBox="0 0 24 24" width="12" height="12" fill="#38bdf8"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.65-.53.81-1.08.5l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.05 5.56-5.02c.24-.22-.05-.34-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.65-.64.13-.95l11.57-4.46c.53-.19 1 .13.85.94z"/></svg>
+                 <span>Verified via Telegram</span>
+               </div>`
+            : '';
+
+        const cardExtraClass = r.is_telegram_verified ? 'review-display-box verified-card' : 'review-display-box';
+        const ratingStars = '⭐'.repeat(r.rating || 5);
+        const isLiked = likedArray.includes(Number(r.id));
+        const likeClass = isLiked ? 'like-btn liked' : 'like-btn';
+        const dateStamp = r.created_at || "July 31, 2026";
+
+        return `
+            <div class="${cardExtraClass}">
+                <div class="review-header">
+                    <div class="review-user-info">
+                        ${avatarHtml}
+                        <div>
+                            <strong style="color: #f1f5f9;">${r.name}</strong>
+                            ${usernameHtml}
+                            ${verifiedBadgeHtml}
+                        </div>
+                    </div>
+                    <span class="review-date-tag">${dateStamp}</span>
+                </div>
+                <p style="font-size: 0.92rem; color: #94a3b8; line-height: 1.5; margin-top: 4px;">"${r.message}"</p>
+                <div class="review-footer-row">
+                    <span class="star-rating-display">${ratingStars}</span>
+                    <button class="${likeClass}" onclick="likeReview(${r.id})">
+                        👍 Helpful (${r.likes || 0})
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (showMoreBtn) {
+        if (allLoadedReviews.length > 3) {
+            showMoreBtn.style.display = 'inline-flex';
+            showMoreBtn.textContent = isShowingAllReviews ? 'Show Less 👆' : `Show More Reviews (${allLoadedReviews.length - 3}) 👇`;
+        } else {
+            showMoreBtn.style.display = 'none';
+        }
+    }
+}
+
+window.toggleShowAllReviews = function() {
+    isShowingAllReviews = !isShowingAllReviews;
+    renderReviewList();
+};
+
+window.likeReview = async function(reviewId) {
+    const numericId = Number(reviewId);
+    let likedArray = JSON.parse(localStorage.getItem('liked_reviews') || '[]').map(Number);
+
+    // Check if valid review ID exists in currently loaded reviews list
+    const reviewExists = allLoadedReviews.some(r => Number(r.id) === numericId);
+    if (!reviewExists) return;
+
+    if (likedArray.includes(numericId)) {
+        alert("You have already liked this feedback!");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/reviews/${numericId}/like`, { method: 'POST' });
+        if (response.ok) {
+            likedArray.push(numericId);
+            localStorage.setItem('liked_reviews', JSON.stringify(likedArray));
+            loadVerifiedReviews();
+        }
+    } catch (e) {
+        console.error("Error liking review:", e);
+    }
+};
+
+/* ==========================================================================
+   6. TERMINAL LOADER (> Portfolio Output)
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     const typedText = document.getElementById('typed-text');
     const loader = document.getElementById('loader');
 
-    // Updated Intro Output: Prints "> P" -> Pause -> "ortfolio" (Output: > Portfolio)
     const lines = [
         { text: "P", speed: 150, pause: 700 },
         { text: "ortfolio", speed: 120, pause: 800 }
@@ -517,7 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   5. TYPEWRITER (HERO SECTION)
+   7. TYPEWRITER (HERO SECTION)
    ========================================================================== */
 const phrases = [
     "Python FastAPI Backends",
@@ -560,7 +741,7 @@ function typeEffect() {
 document.addEventListener('DOMContentLoaded', typeEffect);
 
 /* ==========================================================================
-   6. WEBSOCKET SERVER PING
+   8. WEBSOCKET SERVER PING
    ========================================================================== */
 function connectWebSocket() {
     const statusText = document.getElementById('server-status-text');
@@ -577,7 +758,11 @@ function connectWebSocket() {
         };
 
         ws.onmessage = (event) => {
-            if (statusText) statusText.textContent = `Online (${event.data})`;
+            if (event.data === "update_reviews") {
+                loadVerifiedReviews();
+            } else if (statusText) {
+                statusText.textContent = `Online (${event.data})`;
+            }
         };
 
         ws.onerror = () => {
@@ -598,7 +783,7 @@ function connectWebSocket() {
 connectWebSocket();
 
 /* ==========================================================================
-   7. MODALS & PROJECT FILTERS
+   9. MODALS & PROJECT FILTERS
    ========================================================================== */
 window.openProjectModal = function(title, category, mediaUrl, description, tech, github, live) {
     document.getElementById('modal-title').textContent = title;
@@ -658,7 +843,7 @@ window.filterProjects = function(category) {
 };
 
 /* ==========================================================================
-   8. FORM SUBMISSIONS WITH TIMER GUARD
+   10. FORM SUBMISSIONS WITH TIMER GUARD & REVIEWS DISPATCH
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     const contactForm = document.getElementById('contact-form');
@@ -714,24 +899,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const reviewSubmitBtn = document.getElementById('review-submit-btn');
 
     if (reviewForm && reviewSubmitBtn) {
-        reviewForm.addEventListener('submit', (e) => {
+        reviewForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            const name = document.getElementById('review-name').value.trim();
+            const usernameInput = document.getElementById('review-username');
+            const username = usernameInput ? usernameInput.value.trim() : '';
+            const rating = parseInt(document.getElementById('review-rating').value, 10);
+            const message = document.getElementById('review-msg').value.trim();
+
             reviewSubmitBtn.disabled = true;
-            reviewSubmitBtn.textContent = 'Submitting... ⌛';
+            reviewSubmitBtn.textContent = 'Submitting Review... ⌛';
 
-            alert('Thank you! Your review has been submitted for admin approval.');
-            reviewForm.reset();
+            try {
+                const response = await fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        username: username,
+                        avatar_url: clientTelegramAvatar,
+                        rating: rating,
+                        message: message,
+                        auth_token: currentAuthToken
+                    })
+                });
 
-            setTimeout(() => {
-                reviewSubmitBtn.disabled = false;
-                reviewSubmitBtn.textContent = translations[currentLanguage].btnSubmitReview || 'Submit Review 💬';
-            }, 3000);
+                if (response.ok) {
+                    const resData = await response.json();
+                    alert(resData.message || 'Thank you! Your review has been submitted for admin verification.');
+                    reviewForm.reset();
+                    clientTelegramVerified = 0;
+                    clientTelegramAvatar = null;
+                } else {
+                    alert('Thank you! Your feedback has been submitted for admin approval.');
+                    reviewForm.reset();
+                }
+            } catch (err) {
+                alert('Thank you! Your review has been submitted for admin approval.');
+                reviewForm.reset();
+            } finally {
+                setTimeout(() => {
+                    reviewSubmitBtn.disabled = false;
+                    reviewSubmitBtn.textContent = translations[currentLanguage].btnSubmitReview || 'Submit Review 💬';
+                }, 3000);
+            }
         });
     }
 });
 
 /* ==========================================================================
-   9. FLOATING AI CHATBOT WIDGET (CONVERSATIONAL HUMAN-LIKE ASSISTANT)
+   11. FLOATING AI CHATBOT WIDGET
    ========================================================================== */
 const aiKnowledge = {
     en: {
@@ -891,7 +1109,6 @@ function processUserChat(text) {
             } else if (hasKeyword(['contact', 'work', 'aloqa', 'контакт', 'связаться'])) {
                 replyText = aiKnowledge[responseLang].contact;
             } else {
-                // Natural conversational fallbacks
                 if (responseLang === 'uz') {
                     replyText = "Men Muxammadrizoning AI yordamchisiman! U Python, FastAPI backend va Unreal Engine 5.8 bo'yicha kuchli tajribaga ega. U bilan loyihalar bo'yicha ishlash, narxlar yoki bog'lanish haqida so'rashingiz mumkin!";
                 } else if (responseLang === 'ru') {
