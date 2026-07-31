@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .admin-container { max-width: 950px; margin: 30px auto; padding: 20px; }
+        .admin-card { background: #151c2e; border: 1px solid #232d42; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+        .admin-form { display: flex; flex-direction: column; gap: 14px; }
+        .admin-form input, .admin-form textarea, .admin-form select {
+            background: #0b0f19; border: 1px solid #232d42; color: #fff; padding: 12px; border-radius: 8px; outline: none; font-size: 0.95rem;
+        }
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { background: #151c2e; border: 1px solid #232d42; color: #94a3b8; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background: #38bdf8; color: #0b0f19; }
+
+        /* 2FA AUTH MODAL */
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(11, 15, 25, 0.95); backdrop-filter: blur(10px); z-index: 99999;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .auth-box {
+            background: #151c2e; border: 1px solid #38bdf8; padding: 32px; border-radius: 16px;
+            width: 90%; max-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
+        }
+        .auth-box input {
+            width: 100%; background: #0b0f19; border: 1px solid #232d42; color: #fff;
+            padding: 12px; border-radius: 8px; margin: 16px 0; outline: none; text-align: center; font-size: 1.1rem;
+        }
+
+        /* AI DRAFT BOX */
+        .ai-draft-card {
+            background: rgba(56, 189, 248, 0.05); border: 1px dashed #38bdf8; padding: 18px; border-radius: 10px; margin-bottom: 20px;
+        }
+
+        .item-list { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .item-row { background: #0b0f19; border: 1px solid #232d42; padding: 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-delete { background: #ef4444; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-delete:hover { background: #dc2626; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 2FA AUTH GATEWAY -->
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-box">
+            <h2 id="auth-title">🔒 Admin Authentication</h2>
+            <p id="auth-desc" style="color: #94a3b8; font-size: 0.9rem; margin-top: 6px;">Enter your Admin Password to request 2FA code.</p>
+
+            <input type="password" id="auth-input" placeholder="Enter Admin Password">
+            <button class="btn" id="auth-btn" onclick="handleAuthStep()" style="width: 100%;">Continue &rarr;</button>
+            <p id="auth-status" style="margin-top: 12px; font-size: 0.85rem; font-weight: 600;"></p>
+        </div>
+    </div>
+
+    <!-- 2. NAVBAR -->
+    <nav>
+        <div class="logo">Dev<span>Admin Panel</span></div>
+        <a href="/" class="btn" style="padding: 6px 16px; font-size: 0.85rem;">&larr; View Live Site</a>
+    </nav>
+
+    <!-- 3. DASHBOARD CONTENTS -->
+    <div class="admin-container" id="admin-main" style="display: none;">
+
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchTab('projects-sec')">🚀 Manage Projects</button>
+            <button class="tab-btn" onclick="switchTab('achievements-sec')">🏆 Manage Achievements</button>
+            <button class="tab-btn" onclick="switchTab('skills-sec')">⚡ Manage Skills</button>
+        </div>
+
+        <!-- PROJECTS SECTION -->
+        <div id="projects-sec" class="admin-card">
+
+            <!-- AI ASSISTANT PROMPT-TO-FORM BOX -->
+            <div class="ai-draft-card">
+                <h4 style="color: #38bdf8; display: flex; align-items: center; gap: 8px;">✨ AI Project Form Assistant</h4>
+                <p style="color: #94a3b8; font-size: 0.85rem; margin: 4px 0 12px;">Describe what you built in plain English/Uzbek, and AI will fill out the fields below for your review!</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="ai-prompt-input" placeholder="e.g. Built an online catalog shop for a retail business with Python, FastAPI and Maps API." style="flex: 1; background: #0b0f19; border: 1px solid #232d42; color: #fff; padding: 10px; border-radius: 6px; outline: none;">
+                    <button class="btn" onclick="generateWithAI()" style="padding: 10px 18px; font-size: 0.85rem;">Fill Form</button>
+                </div>
+            </div>
+
+            <h3>Publish New Project</h3>
+            <form class="admin-form" id="project-form" style="margin-top: 14px;">
+                <input type="text" id="p-title" placeholder="Project Title" required>
+                <textarea id="p-desc" placeholder="Description..." rows="3" required></textarea>
+                <input type="text" id="p-stack" placeholder="Tech Stack (e.g. Python, FastAPI, SQLite)" required>
+                <input type="url" id="p-image" placeholder="Image / Preview URL">
+                <input type="url" id="p-github" placeholder="GitHub Repository Link">
+                <input type="url" id="p-live" placeholder="Live Website Link">
+                <button type="submit" class="btn">Publish Project to Database</button>
+            </form>
+
+            <h3 style="margin-top: 30px; border-top: 1px solid #232d42; padding-top: 20px;">Existing Database Projects</h3>
+            <div id="projects-list" class="item-list">Loading items...</div>
+        </div>
+
+        <!-- ACHIEVEMENTS SECTION -->
+        <div id="achievements-sec" class="admin-card" style="display: none;">
+            <h3>Add New Achievement / Client Proof</h3>
+            <form class="admin-form" id="achievement-form" style="margin-top: 14px;">
+                <input type="text" id="a-title" placeholder="Achievement Title" required>
+                <select id="a-cat" required>
+                    <option value="Client Work 🏪">Client Work 🏪</option>
+                    <option value="Certification 📜">Certification 📜</option>
+                    <option value="Milestone 🎯">Milestone 🎯</option>
+                </select>
+                <textarea id="a-desc" placeholder="Description..." rows="3" required></textarea>
+                <input type="url" id="a-photo" placeholder="Photo / Badge URL">
+                <input type="url" id="a-link" placeholder="Live Link">
+                <button type="submit" class="btn">Add Achievement</button>
+            </form>
+
+            <h3 style="margin-top: 30px; border-top: 1px solid #232d42; padding-top: 20px;">Existing Database Achievements</h3>
+            <div id="achievements-list" class="item-list">Loading items...</div>
+        </div>
+
+        <!-- SKILLS SECTION -->
+        <div id="skills-sec" class="admin-card" style="display: none;">
+            <h3>Add New Skill or Program</h3>
+            <form class="admin-form" id="skill-form" style="margin-top: 14px;">
+                <input type="text" id="s-name" placeholder="Skill Name (e.g. Unreal Engine 5)" required>
+                <input type="number" id="s-percent" min="1" max="100" placeholder="Proficiency Percentage (1-100)" required>
+                <input type="text" id="s-cat" placeholder="Category (e.g. Game Dev, Backend)" required>
+                <button type="submit" class="btn">Add Skill</button>
+            </form>
+
+            <h3 style="margin-top: 30px; border-top: 1px solid #232d42; padding-top: 20px;">Existing Database Skills</h3>
+            <div id="skills-list" class="item-list">Loading items...</div>
+        </div>
+
+    </div>
+
+    <script>
+        let authStep = 1; // Step 1: Password, Step 2: 2FA Gmail Code
+        let verifiedAdminKey = localStorage.getItem('adminKey') || '';
+
+        if (verifiedAdminKey) {
+            unlockAdmin();
+        }
+
+        async function handleAuthStep() {
+            const inputVal = document.getElementById('auth-input').value.trim();
+            const statusEl = document.getElementById('auth-status');
+
+            if (!inputVal) return;
+
+            if (authStep === 1) {
+                statusEl.innerText = "Verifying password...";
+                statusEl.style.color = "#38bdf8";
+
+                const res = await fetch('/api/admin/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: inputVal })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    authStep = 2;
+                    document.getElementById('auth-title').innerText = "📩 Check Your Gmail";
+                    document.getElementById('auth-desc').innerText = "Enter the 6-digit 2FA code sent to your email.";
+                    document.getElementById('auth-input').value = "";
+                    document.getElementById('auth-input').placeholder = "Enter 6-Digit Code";
+                    statusEl.innerText = "✅ " + data.message;
+                    statusEl.style.color = "#22c55e";
+                } else {
+                    statusEl.innerText = "❌ " + (data.detail || "Incorrect Password!");
+                    statusEl.style.color = "#ef4444";
+                }
+            } else if (authStep === 2) {
+                statusEl.innerText = "Verifying 2FA code...";
+                const res = await fetch('/api/admin/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp_code: inputVal })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    verifiedAdminKey = data.admin_key;
+                    localStorage.setItem('adminKey', verifiedAdminKey);
+                    unlockAdmin();
+                } else {
+                    statusEl.innerText = "❌ " + (data.detail || "Invalid Code!");
+                    statusEl.style.color = "#ef4444";
+                }
+            }
+        }
+
+        function unlockAdmin() {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('admin-main').style.display = 'block';
+            loadAllItems();
+        }
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'x-admin-key': verifiedAdminKey
+            };
+        }
+
+        function switchTab(sectionId) {
+            document.getElementById('projects-sec').style.display = 'none';
+            document.getElementById('achievements-sec').style.display = 'none';
+            document.getElementById('skills-sec').style.display = 'none';
+            document.getElementById(sectionId).style.display = 'block';
+
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // GENERATE DRAFT WITH AI
+        async function generateWithAI() {
+            const prompt = document.getElementById('ai-prompt-input').value.trim();
+            if (!prompt) return alert("Type a quick description first!");
+
+            const btn = event.target;
+            btn.innerText = "AI Thinking...";
+
+            try {
+                const res = await fetch('/api/admin/ai-parse', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('p-title').value = data.title || "";
+                    document.getElementById('p-desc').value = data.description || "";
+                    document.getElementById('p-stack').value = data.tech_stack || "";
+                    alert("✨ AI filled the fields below! Review and edit before clicking Publish.");
+                } else {
+                    alert("AI Error: " + (data.detail || "Could not parse details."));
+                }
+            } catch (err) {
+                alert("Error connecting to AI service.");
+            } finally {
+                btn.innerText = "Fill Form";
+            }
+        }
+
+        // LOAD DATABASE ITEMS
+        async function loadAllItems() {
+            // Projects
+            const pRes = await fetch('/api/projects');
+            const projects = await pRes.json();
+            const pList = document.getElementById('projects-list');
+            pList.innerHTML = projects.length === 0 ? '<p style="color:#94a3b8;">No projects in database.</p>' : '';
+            projects.forEach(p => {
+                pList.innerHTML += `
+                    <div class="item-row">
+                        <div>
+                            <strong>${p.title}</strong>
+                            <p style="font-size:0.85rem; color:#94a3b8;">${p.tech_stack}</p>
+                        </div>
+                        <button class="btn-delete" onclick="deleteItem('/api/projects/${p.id}')">Delete</button>
+                    </div>
+                `;
+            });
+
+            // Achievements
+            const aRes = await fetch('/api/achievements');
+            const achievements = await aRes.json();
+            const aList = document.getElementById('achievements-list');
+            aList.innerHTML = achievements.length === 0 ? '<p style="color:#94a3b8;">No achievements in database.</p>' : '';
+            achievements.forEach(a => {
+                aList.innerHTML += `
+                    <div class="item-row">
+                        <div>
+                            <strong>${a.title}</strong> (${a.category})
+                        </div>
+                        <button class="btn-delete" onclick="deleteItem('/api/achievements/${a.id}')">Delete</button>
+                    </div>
+                `;
+            });
+
+            // Skills
+            const sRes = await fetch('/api/skills');
+            const skills = await sRes.json();
+            const sList = document.getElementById('skills-list');
+            sList.innerHTML = skills.length === 0 ? '<p style="color:#94a3b8;">No custom skills in database.</p>' : '';
+            skills.forEach(s => {
+                sList.innerHTML += `
+                    <div class="item-row">
+                        <div>
+                            <strong>${s.name}</strong> - ${s.percentage}% (${s.category})
+                        </div>
+                        <button class="btn-delete" onclick="deleteItem('/api/skills/${s.id}')">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        // DELETE ITEM
+        async function deleteItem(endpoint) {
+            if (!confirm("Are you sure you want to delete this item?")) return;
+            const res = await fetch(endpoint, { method: 'DELETE', headers: getHeaders() });
+            if (res.ok) { alert("Deleted successfully!"); loadAllItems(); }
+            else { alert("Error deleting item."); }
+        }
+
+        // PUBLISH FORMS
+        document.getElementById('project-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                title: document.getElementById('p-title').value,
+                description: document.getElementById('p-desc').value,
+                tech_stack: document.getElementById('p-stack').value,
+                image_url: document.getElementById('p-image').value,
+                github_link: document.getElementById('p-github').value,
+                live_link: document.getElementById('p-live').value
+            };
+            const res = await fetch('/api/projects', { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+            if (res.ok) { alert('Project Published!'); e.target.reset(); loadAllItems(); }
+            else { alert('Error publishing project.'); }
+        });
+
+        document.getElementById('achievement-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                title: document.getElementById('a-title').value,
+                category: document.getElementById('a-cat').value,
+                description: document.getElementById('a-desc').value,
+                photo_url: document.getElementById('a-photo').value,
+                website_link: document.getElementById('a-link').value
+            };
+            const res = await fetch('/api/achievements', { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+            if (res.ok) { alert('Achievement Added!'); e.target.reset(); loadAllItems(); }
+            else { alert('Error adding achievement.'); }
+        });
+
+        document.getElementById('skill-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                name: document.getElementById('s-name').value,
+                percentage: parseInt(document.getElementById('s-percent').value),
+                category: document.getElementById('s-cat').value
+            };
+            const res = await fetch('/api/skills', { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+            if (res.ok) { alert('Skill Added!'); e.target.reset(); loadAllItems(); }
+            else { alert('Error adding skill.'); }
+        });
+    </script>
+</body>
+</html>

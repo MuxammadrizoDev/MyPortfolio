@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Muxammadrizo.dev | Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <!-- Version v=24.0 forces browsers to load fresh CSS -->
+    <link rel="stylesheet" href="/static/style.css?v=24.0">
+</head>
+<body class="no-scroll">
+
+    <!-- 1. TERMINAL INTRO LOADER -->
+    <div id="loader">
+        <div class="terminal-simple">
+            <span class="prompt">&gt;&nbsp;</span><span id="typed-text"></span><span class="cursor">_</span>
+        </div>
+    </div>
+
+    <!-- 2. NAVBAR WITH BULLETPROOF LANG & HAMBURGER BUTTONS -->
+    <nav>
+        <div class="logo">Muxammadrizo<span>.dev</span></div>
+
+        <div class="nav-links" id="nav-links">
+            <a href="#about" data-i18n="navAbout">About</a>
+            <a href="#journey" data-i18n="navJourney">Journey</a>
+            <a href="#skills" data-i18n="navSkills">Skills</a>
+            <a href="#projects" data-i18n="navProjects">Projects</a>
+            <a href="#achievements" data-i18n="navProof">Proof</a>
+            <a href="#blog" data-i18n="navBlog">DevLog</a>
+            <a href="#reviews" data-i18n="navReviews">Reviews</a>
+            <a href="#contact" data-i18n="navContact">Contact</a>
+        </div>
+
+        <!-- RIGHT HEADER GROUP -->
+        <div class="nav-right-group">
+            <button class="lang-btn single-lang-btn" id="lang-toggle-btn" type="button" onclick="cycleLanguage()">🌐 EN</button>
+            <div class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation" role="button" tabindex="0" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 3. HERO SECTION WITH TELEPORTING HOLOGRAPHIC GREETINGS -->
+    <section class="hero" id="about">
+        <div class="hero-badges">
+            <span class="badge-hero" data-i18n="heroBadge">16 y/o • Hackathon IT School Fergana</span>
+            <div class="server-status-badge">
+                <span class="status-dot-hero" id="status-dot-hero"></span>
+                <span><span data-i18n="serverLabel">Server:</span> <strong id="server-status-text">Checking...</strong></span>
+            </div>
+        </div>
+
+        <h1>
+            <span class="greeting-wrapper">
+                <span id="holo-greeting" class="holo-greeting">Hi</span><span id="hero-suffix" data-i18n="heroSuffix">, I'm</span>
+            </span> <br>
+            <span data-i18n="heroName" class="gradient-text">A'zamjonov Muxammadrizo</span>
+        </h1>
+
+        <p class="typing-container" style="margin-top: 10px;">
+            <span data-i18n="typingPrefix">I specialize in:</span>
+            <span id="typewriter-text" class="typewriter-highlight"></span><span class="typewriter-cursor">|</span>
+        </p>
+
+        <p data-i18n="heroSubtext" style="max-width: 680px; margin: 24px 0;">
+            Developer studying at <strong>Hackathon IT School in Fergana, Uzbekistan</strong>. Founder of <strong>NKND Studios</strong>. I architect fast Python/FastAPI backends and build interactive open-world games in Unreal Engine 5.8.
+        </p>
+
+        <!-- WIRED SOCIAL LINKS -->
+        <div class="hero-social-icons">
+            <a href="https://t.me/muxammadrizo0125" target="_blank" class="icon-link" title="Telegram">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.65-.53.81-1.08.5l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.05 5.56-5.02c.24-.22-.05-.34-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.65-.64.13-.95l11.57-4.46c.53-.19 1 .13.85.94z"/></svg>
+            </a>
+            <a href="https://github.com/azammuhammadrizo924-debug" target="_blank" class="icon-link" title="GitHub">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            </a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=azammuhammadrizo924@gmail.com" target="_blank" class="icon-link" title="Compose Gmail">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </a>
+        </div>
+
+        <div class="hero-cta-group">
+            <a href="#projects" class="btn btn-primary" data-i18n="heroBtn">Explore Projects 🚀</a>
+            <a href="#contact" class="btn btn-secondary" data-i18n="heroContactBtn">Get in Touch 💬</a>
+        </div>
+    </section>
+
+    <!-- 4. DEV JOURNEY -->
+    <h2 class="section-title" id="journey" data-i18n="titleJourney">Dev Journey & Education</h2>
+    <div class="horizontal-scroll-row">
+        <div class="journey-card h-card">
+            <span class="journey-badge" data-i18n="journeyTagEducation">Education</span>
+            <div class="journey-date" data-i18n="journeyDate1">2024 - Present</div>
+            <h3 data-i18n="journeySchoolTitle">Hackathon IT School (Fergana)</h3>
+            <p data-i18n="journeySchoolDesc">Deep-diving into computer science fundamentals, algorithms, software engineering, and regional coding competitions.</p>
+        </div>
+
+        <div class="journey-card h-card">
+            <span class="journey-badge" data-i18n="journeyTagStudio">Game Studio</span>
+            <div class="journey-date" data-i18n="journeyDate2">2024 - Present</div>
+            <h3 data-i18n="journeyStudioTitle">Founder & Lead — NKND Studios</h3>
+            <p data-i18n="journeyStudioDesc">Architecting Project Cube Island in Unreal Engine 5.8. Designing Game Design Documents, PCG foliage, and non-lethal mechanics.</p>
+        </div>
+
+        <div class="journey-card h-card">
+            <span class="journey-badge" data-i18n="journeyTagBackend">Backend Systems</span>
+            <div class="journey-date" data-i18n="journeyDate3">2023 - Present</div>
+            <h3 data-i18n="journeyBackendTitle">Full-Stack Engineering</h3>
+            <p data-i18n="journeyBackendDesc">Built production REST APIs using FastAPI, SQLite, WebSockets, 2FA Gmail OTP gateways, and automated Telegram bots.</p>
+        </div>
+    </div>
+
+    <!-- 5. TRUE HOLOGRAPHIC SKILL CHART DIAGRAM -->
+    <h2 class="section-title" id="skills" data-i18n="titleSkills">Technical Proficiency</h2>
+    <div class="hologram-chart-wrapper" id="skills-chart-wrapper">
+        <div class="chart-gridlines">
+            <div class="gridline"></div>
+            <div class="gridline"></div>
+            <div class="gridline"></div>
+            <div class="gridline"></div>
+        </div>
+
+        <div class="y-axis">
+            <span>100%</span>
+            <span>75%</span>
+            <span>50%</span>
+            <span>25%</span>
+            <span style="margin-bottom: -5px;">0%</span>
+        </div>
+
+        <div class="chart-marquee-container" id="chart-marquee-container">
+            <div class="chart-marquee-track">
+                <!-- GROUP 1 -->
+                <div class="marquee-group">
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="92%"><span class="hologram-percent" data-target="92">0%</span></div></div><span class="hologram-label">Python</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="88%"><span class="hologram-percent" data-target="88">0%</span></div></div><span class="hologram-label">FastAPI</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="80%"><span class="hologram-percent" data-target="80">0%</span></div></div><span class="hologram-label">UE 5.8</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="90%"><span class="hologram-percent" data-target="90">0%</span></div></div><span class="hologram-label">Telegram Bots</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="85%"><span class="hologram-percent" data-target="85">0%</span></div></div><span class="hologram-label">SQLite & APIs</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="82%"><span class="hologram-percent" data-target="82">0%</span></div></div><span class="hologram-label">HTML/CSS</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="92%"><span class="hologram-percent" data-target="92">0%</span></div></div><span class="hologram-label">Python</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="88%"><span class="hologram-percent" data-target="88">0%</span></div></div><span class="hologram-label">FastAPI</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="80%"><span class="hologram-percent" data-target="80">0%</span></div></div><span class="hologram-label">UE 5.8</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="90%"><span class="hologram-percent" data-target="90">0%</span></div></div><span class="hologram-label">Telegram Bots</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="85%"><span class="hologram-percent" data-target="85">0%</span></div></div><span class="hologram-label">SQLite & APIs</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="82%"><span class="hologram-percent" data-target="82">0%</span></div></div><span class="hologram-label">HTML/CSS</span></div>
+                </div>
+
+                <!-- GROUP 2 -->
+                <div class="marquee-group" aria-hidden="true">
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="92%"><span class="hologram-percent" data-target="92">0%</span></div></div><span class="hologram-label">Python</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="88%"><span class="hologram-percent" data-target="88">0%</span></div></div><span class="hologram-label">FastAPI</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="80%"><span class="hologram-percent" data-target="80">0%</span></div></div><span class="hologram-label">UE 5.8</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="90%"><span class="hologram-percent" data-target="90">0%</span></div></div><span class="hologram-label">Telegram Bots</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="85%"><span class="hologram-percent" data-target="85">0%</span></div></div><span class="hologram-label">SQLite & APIs</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="82%"><span class="hologram-percent" data-target="82">0%</span></div></div><span class="hologram-label">HTML/CSS</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="92%"><span class="hologram-percent" data-target="92">0%</span></div></div><span class="hologram-label">Python</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="88%"><span class="hologram-percent" data-target="88">0%</span></div></div><span class="hologram-label">FastAPI</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="80%"><span class="hologram-percent" data-target="80">0%</span></div></div><span class="hologram-label">UE 5.8</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="90%"><span class="hologram-percent" data-target="90">0%</span></div></div><span class="hologram-label">Telegram Bots</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="85%"><span class="hologram-percent" data-target="85">0%</span></div></div><span class="hologram-label">SQLite & APIs</span></div>
+                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="82%"><span class="hologram-percent" data-target="82">0%</span></div></div><span class="hologram-label">HTML/CSS</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. FEATURED PROJECTS -->
+    <h2 class="section-title" id="projects" data-i18n="titleProjects">Featured Projects</h2>
+    <div class="project-filters">
+        <button class="filter-btn active" onclick="filterProjects('all')" data-i18n="filterAll">All</button>
+        <button class="filter-btn" onclick="filterProjects('python')" data-i18n="filterPython">Python / FastAPI</button>
+        <button class="filter-btn" onclick="filterProjects('ue5')" data-i18n="filterUe5">Unreal Engine 5</button>
+        <button class="filter-btn" onclick="filterProjects('bot')" data-i18n="filterBot">Telegram Bots</button>
+    </div>
+
+    <div class="horizontal-scroll-row" id="projects-container">
+        <div class="project-card h-card" data-category="ue5">
+            <div class="media-preview-container">
+                <video class="media-preview" autoplay loop muted playsinline>
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-cars-42996-large.mp4" type="video/mp4">
+                </video>
+                <span class="tech-spec-badge">UE 5.8 • PCG • Lumen</span>
+            </div>
+            <div>
+                <span class="project-tag" data-i18n="tagCubeIsland">Active Game MVP 🌋</span>
+                <h3 data-i18n="titleCubeIsland">Project Cube Island</h3>
+                <p data-i18n="descCubeIsland">Open-world survival game contrasting realistic volcanic biomes with abstract geometric cubes.</p>
+            </div>
+            <button class="btn-secondary" onclick="openProjectModal('Project Cube Island', 'Unreal Engine 5.8', 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-cars-42996-large.mp4', 'Developing an indie grant MVP vertical slice in UE 5.8. Features a volcanic tropical island, PCG jungle systems, and non-lethal blaster mechanics.', 'Unreal Engine 5.8, PCG Foliage, Lumen Lighting', 'https://github.com/azammuhammadrizo924-debug', '')" data-i18n="btnReadPitch">Read Details &rarr;</button>
+        </div>
+
+        <div class="project-card h-card" data-category="python">
+            <div>
+                <span class="project-tag" data-i18n="tagStorefront">Active Development 🚀</span>
+                <h3 data-i18n="titleStorefront">Local Business Storefront</h3>
+                <p data-i18n="descStorefront">A fast web application built for a retail shop with clean catalog browsing and real-time inventory tracking.</p>
+            </div>
+            <button class="btn-secondary" onclick="openProjectModal('Local Business Storefront', 'Python / FastAPI', 'https://via.placeholder.com/800x450/151c2e/38bdf8?text=Storefront+Preview', 'Designed and built a complete e-commerce storefront for a local retail shop.', 'Python, FastAPI, SQLite', 'https://github.com/azammuhammadrizo924-debug', 'https://example.com')" data-i18n="btnViewDetails">View Details &rarr;</button>
+        </div>
+    </div>
+
+    <!-- 7. ACHIEVEMENTS & PROOF -->
+    <h2 class="section-title" id="achievements" data-i18n="titleProof">Achievements & Proof</h2>
+    <div class="horizontal-scroll-row" id="proof-container">
+        <div class="project-card h-card">
+            <div>
+                <span class="project-tag" data-i18n="tagHackathon">Academic & Hackathons 🏆</span>
+                <h3 data-i18n="titleHackathon">Hackathon IT School Fergana</h3>
+                <p data-i18n="descHackathon">Recognized for top academic performance and active backend project development.</p>
+            </div>
+            <button class="btn-secondary" onclick="openProjectModal('Hackathon IT School Recognition', 'Achievements', 'https://via.placeholder.com/800x450/151c2e/38bdf8?text=IT+School+Certificate', 'Active developer and student at Hackathon IT School in Fergana.', 'Algorithms, Python', '', '')" data-i18n="btnViewProof">View Proof &rarr;</button>
+        </div>
+    </div>
+
+    <!-- 8. DEVLOG & STUDIO UPDATES SECTION (#blog) -->
+    <h2 class="section-title" id="blog" data-i18n="titleBlog">DevLog & Studio Updates</h2>
+    <div class="horizontal-scroll-row">
+        <div class="journey-card h-card">
+            <span class="journey-badge" data-i18n="blogBadge1">DevLog #04 • UE 5.8</span>
+            <div class="journey-date" data-i18n="blogDate1">July 2026</div>
+            <h3 data-i18n="blogTitle1">Project Cube Island - Procedural Biomes</h3>
+            <p data-i18n="blogDesc1">Optimized PCG foliage networks and volumetric Lumen fog for volcanic tropical biomes in Unreal Engine 5.8.</p>
+        </div>
+
+        <div class="journey-card h-card">
+            <span class="journey-badge" data-i18n="blogBadge2">DevLog #03 • FastAPI</span>
+            <div class="journey-date" data-i18n="blogDate2">June 2026</div>
+            <h3 data-i18n="blogTitle2">Real-Time WebSockets & 2FA Architecture</h3>
+            <p data-i18n="blogDesc2">Engineered asynchronous WebSocket broadcasting and Gmail 2FA OTP verification for secure admin controls.</p>
+        </div>
+
+        <div class="journey-card h-card">
+            <span class="journey-badge" data-i18n="blogBadge3">DevLog #02 • Telegram</span>
+            <div class="journey-date" data-i18n="blogDate3">May 2026</div>
+            <h3 data-i18n="blogTitle3">Automated Telegram Ping Bot</h3>
+            <p data-i18n="blogDesc3">Integrated automated Telegram webhook notifications for instant portfolio client contact dispatches.</p>
+        </div>
+    </div>
+
+    <!-- 9. REVIEWS & FEEDBACK -->
+    <h2 class="section-title" id="reviews" data-i18n="titleReviews">Client Reviews & Feedback</h2>
+
+    <div class="feedback-layout">
+        <div class="reviews-scroll-area" id="public-reviews-list">
+            <div class="review-display-box">
+                <div class="review-header">
+                    <div class="review-avatar">RS</div>
+                    <div>
+                        <strong style="color: #f1f5f9;" data-i18n="reviewClient1">Retail Store Client</strong>
+                        <div style="font-size: 0.75rem; color: #38bdf8;" data-i18n="reviewBadge1">Verified Client via Telegram</div>
+                    </div>
+                </div>
+                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;" data-i18n="reviewComment1">
+                    "A'zamjonov Muxammadrizo built a fast digital storefront catalog for our shop. Reliable communication and clean code!"
+                </p>
+            </div>
+
+            <div class="review-display-box">
+                <div class="review-header">
+                    <div class="review-avatar">TG</div>
+                    <div>
+                        <strong style="color: #f1f5f9;" data-i18n="reviewClient2">Tech Group Corp</strong>
+                        <div style="font-size: 0.75rem; color: #38bdf8;" data-i18n="reviewBadge2">Verified Client via Telegram</div>
+                    </div>
+                </div>
+                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;" data-i18n="reviewComment2">
+                    "Excellent work on the automated Telegram bot API. Handled our database integration seamlessly."
+                </p>
+            </div>
+
+            <div class="review-display-box">
+                <div class="review-header">
+                    <div class="review-avatar">IN</div>
+                    <div>
+                        <strong style="color: #f1f5f9;" data-i18n="reviewClient3">Indie Dev Team</strong>
+                        <div style="font-size: 0.75rem; color: #38bdf8;" data-i18n="reviewBadge3">Verified Client via Telegram</div>
+                    </div>
+                </div>
+                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;" data-i18n="reviewComment3">
+                    "Consulted with him on Unreal Engine 5 PCG tools. Highly knowledgeable and professional."
+                </p>
+            </div>
+        </div>
+
+        <div class="review-form-card">
+            <form id="review-form">
+                <h4 style="margin: 0 0 16px; color: #f1f5f9;" data-i18n="reviewFormTitle">Leave a Comment or Review</h4>
+                <div class="form-group">
+                    <label for="review-name" data-i18n="labelReviewName">Your Name or Company</label>
+                    <input type="text" id="review-name" placeholder="John Doe or Acme Corp" data-i18n-placeholder="phReviewName" required>
+                </div>
+                <div class="form-group">
+                    <label for="review-msg" data-i18n="labelReviewMsg">Your Feedback / Comment</label>
+                    <textarea id="review-msg" rows="5" placeholder="Share your experience working together..." data-i18n-placeholder="phReviewMsg" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-secondary" id="review-submit-btn" data-i18n="btnSubmitReview">Submit Review 💬</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 10. CONTACT FORM -->
+    <h2 class="section-title" id="contact" data-i18n="titleContact">Get In Touch</h2>
+    <div class="contact-card">
+        <form id="contact-form">
+            <div class="form-group">
+                <label for="contact-name" data-i18n="labelName">Your Name</label>
+                <input type="text" id="contact-name" placeholder="John Doe" data-i18n-placeholder="phContactName" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-email" data-i18n="labelEmail">Email or Telegram (@username)</label>
+                <input type="text" id="contact-email" placeholder="@john_dev" data-i18n-placeholder="phContactEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-message" data-i18n="labelMessage">Project Details</label>
+                <textarea id="contact-message" rows="4" placeholder="Hi Muxammadrizo..." data-i18n-placeholder="phContactMsg" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" id="contact-submit-btn" data-i18n="btnSend">Send Message 📱</button>
+            <p id="contact-status-msg" style="margin-top: 12px; font-size: 0.9rem; font-weight: 600;"></p>
+        </form>
+    </div>
+
+    <!-- MODAL OVERLAY -->
+    <div id="project-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+            <div id="modal-media-container"></div>
+            <span id="modal-category" class="project-tag" style="margin-top: 16px; display: inline-block;"></span>
+            <h2 id="modal-title" style="margin: 8px 0 12px; font-size: 1.8rem;"></h2>
+            <p id="modal-description" style="color: #94a3b8; line-height: 1.7; font-size: 1rem; margin-bottom: 20px;"></p>
+            <div style="margin-bottom: 24px;">
+                <strong style="font-size: 0.9rem; color: #38bdf8; font-family: 'Fira Code', monospace;">TECH STACK:</strong>
+                <p id="modal-tech" style="font-size: 0.95rem; font-weight: 600; margin-top: 4px;"></p>
+            </div>
+            <div class="modal-actions">
+                <a id="modal-github-link" href="#" target="_blank" class="btn" style="display: none; background: #334155; color: #fff;">View Code ↗</a>
+                <a id="modal-live-link" href="#" target="_blank" class="btn" style="display: none;">Visit Site ↗</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 A'zamjonov Muxammadrizo. All rights reserved.</p>
+    </footer>
+
+    <!-- AI WIDGET -->
+    <div id="ai-widget-container">
+        <div id="chat-window" class="chat-hidden">
+            <div class="chat-header">
+                <div class="ai-status">
+                    <span class="status-dot"></span>
+                    <span>Gemini AI Assistant</span>
+                </div>
+                <button id="close-chat-btn">&times;</button>
+            </div>
+
+            <div class="chat-body" id="chat-body">
+                <div class="message bot-message" id="ai-greeting" data-i18n="aiGreeting">
+                    <strong>Hello there! 👋</strong><br><br>I am Gemini, Muxammadrizo's AI assistant. How can I help you learn more about his software engineering, game projects, or freelance work?
+                </div>
+
+                <div class="quick-replies">
+                    <span class="chip" onclick="triggerQuickReply('about')" data-i18n="chipAbout">👨‍💻 Who is Muxammadrizo?</span>
+                    <span class="chip" onclick="triggerQuickReply('backend')" data-i18n="chipBackend">⚙️ Backend Architecture?</span>
+                    <span class="chip" onclick="triggerQuickReply('game')" data-i18n="chipUe5">🎮 Explain the UE5 Game</span>
+                    <span class="chip" onclick="triggerQuickReply('frontend')" data-i18n="chipFrontend">🎨 Does he do Frontend?</span>
+                    <span class="chip" onclick="triggerQuickReply('contact')" data-i18n="chipContact">📩 How do I contact him?</span>
+                </div>
+            </div>
+
+            <div class="chat-footer">
+                <input type="text" id="chat-input" placeholder="Type a message..." data-i18n-placeholder="aiPlaceholder" autocomplete="off">
+                <button id="send-chat-btn">➤</button>
+            </div>
+        </div>
+
+        <button id="ai-toggle-btn" title="Chat with AI Assistant">
+            <div class="cube-scene">
+                <div class="cube">
+                    <div class="face front"></div>
+                    <div class="face back"></div>
+                    <div class="face right"></div>
+                    <div class="face left"></div>
+                    <div class="face top"></div>
+                    <div class="face bottom"></div>
+                </div>
+            </div>
+            <span class="ai-text-badge">AI</span>
+        </button>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
