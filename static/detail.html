@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title id="page-title">Item Details | Muxammadrizo.dev</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <!-- Version v=49.0 forces fresh CSS loading -->
-    <link rel="stylesheet" href="/static/style.css?v=49.0">
+    <!-- Version v=60.0 forces fresh CSS loading -->
+    <link rel="stylesheet" href="/static/style.css?v=60.0">
+    <style>
+        .detail-card-wrapper {
+            opacity: 0;
+            transition: opacity 0.25s ease-in-out;
+        }
+        .detail-card-wrapper.loaded {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- NAVBAR WITH LANGUAGE SWITCHER ONLY -->
+    <!-- NAVBAR WITH LANGUAGE SWITCHER -->
     <nav>
         <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">Muxammadrizo<span>.dev</span></a></div>
         <div class="nav-right-group">
@@ -20,21 +29,19 @@
 
     <!-- DETAIL CONTAINER SECTION -->
     <section class="hero" style="padding-top: 40px;">
-        <div style="max-width: 850px; margin: 0 auto;">
+        <div class="detail-card-wrapper" id="detail-card-wrapper" style="max-width: 850px; margin: 0 auto;">
 
-            <!-- CLEAN BACK TO PORTFOLIO LINK DIRECTLY ABOVE CATEGORY BADGE -->
             <a href="/" style="color: var(--accent-color); text-decoration: none; font-size: 0.95rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px;" data-i18n="textBackHome">← Back to Portfolio</a>
             <br>
-            <span id="detail-category" class="project-tag" style="display: inline-block; margin-bottom: 12px;">Loading...</span>
-            <h1 id="detail-title" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin-bottom: 16px;">Loading Title...</h1>
+            <span id="detail-category" class="project-tag" style="display: inline-block; margin-bottom: 12px;">LOADING...</span>
+            <h1 id="detail-title" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin-bottom: 16px;">...</h1>
 
-            <!-- MEDIA CONTAINER (ONLY SHOWN IF VALID MEDIA IS PRESENT) -->
             <div id="detail-media-container" style="display: none; width: 100%; max-height: 480px; border-radius: 14px; overflow: hidden; margin: 24px 0; border: 1px solid var(--border-color); background: var(--card-bg);">
             </div>
 
             <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; margin-bottom: 30px;">
                 <h3 style="color: var(--accent-color); font-family: 'Fira Code', monospace; font-size: 1rem; margin-bottom: 12px;" data-i18n="detailOverviewTitle">OVERVIEW & ARCHITECTURE</h3>
-                <div id="detail-description" style="color: #94a3b8; line-height: 1.8; font-size: 1.05rem; margin-bottom: 24px;">Loading description...</div>
+                <div id="detail-description" style="color: #94a3b8; line-height: 1.8; font-size: 1.05rem; margin-bottom: 24px;">Loading details...</div>
 
                 <div id="tech-stack-wrapper" style="margin-bottom: 24px;">
                     <strong style="font-size: 0.85rem; color: #38bdf8; font-family: 'Fira Code', monospace;" data-i18n="detailTechTitle">TECH STACK & TOOLS:</strong>
@@ -56,12 +63,12 @@
     <script src="/static/script.js"></script>
     <script>
         function renderDetailMedia(container, url, title) {
+            if (!container) return;
             if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/static/'))) {
-                container.style.display = 'block';
                 if (url.endsWith('.mp4')) {
-                    container.innerHTML = `<video src="${escapeHTML(url)}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.style.display='none';"></video>`;
+                    container.innerHTML = `<video src="${escapeHTML(url)}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover;" onloadeddata="this.parentNode.style.display='block';" onerror="this.parentNode.style.display='none';"></video>`;
                 } else {
-                    container.innerHTML = `<img src="${escapeHTML(url)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.style.display='none';" alt="${escapeHTML(title)}">`;
+                    container.innerHTML = `<img src="${escapeHTML(url)}" style="width:100%; height:100%; object-fit:cover;" onload="this.parentNode.style.display='block';" onerror="this.parentNode.style.display='none';" alt="${escapeHTML(title)}">`;
                 }
             } else {
                 container.style.display = 'none';
@@ -70,17 +77,23 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            const wrapper = document.getElementById('detail-card-wrapper');
             const params = new URLSearchParams(window.location.search);
             const type = params.get('type') || 'project';
             const id = params.get('id') || '1';
             const titleParam = params.get('title');
+
+            if (titleParam) {
+                document.getElementById('detail-title').textContent = titleParam;
+                document.getElementById('page-title').textContent = `${escapeHTML(titleParam)} | Muxammadrizo.dev`;
+            }
 
             if (type === 'project') {
                 try {
                     const res = await fetch('/api/projects');
                     if (res.ok) {
                         const projects = await res.json();
-                        const proj = projects.find(p => p.id == id || p.title === titleParam) || projects[0];
+                        const proj = projects.find(p => p.id == id || p.title === titleParam);
                         if (proj) {
                             document.getElementById('page-title').textContent = `${escapeHTML(proj.title)} | Muxammadrizo.dev`;
                             document.getElementById('detail-category').textContent = escapeHTML(proj.category.toUpperCase());
@@ -94,6 +107,8 @@
                             const liveBtn = document.getElementById('detail-live-link');
                             if (proj.github_link) { ghBtn.href = proj.github_link; ghBtn.style.display = 'inline-block'; }
                             if (proj.live_link) { liveBtn.href = proj.live_link; liveBtn.style.display = 'inline-block'; }
+
+                            if (wrapper) wrapper.classList.add('loaded');
                             return;
                         }
                     }
@@ -101,13 +116,21 @@
                     console.error("Error loading project detail:", e);
                 }
 
-                // Default Fallback project view
-                document.getElementById('page-title').textContent = "Unreal Engine 3D Game Project | Muxammadrizo.dev";
-                document.getElementById('detail-category').textContent = "UNREAL ENGINE 5.8";
-                document.getElementById('detail-title').textContent = "Unreal Engine 3D Game Project";
-                document.getElementById('detail-description').textContent = "Developing an open-world survival game vertical slice featuring procedural foliage systems, volcanic landscapes, and interactive mechanics in Unreal Engine 5.8.";
-                document.getElementById('detail-tech').textContent = "Unreal Engine 5.8, PCG Foliage, Lumen Lighting, C++";
-                renderDetailMedia(document.getElementById('detail-media-container'), null, "Unreal Engine 3D Game Project");
+                if (titleParam === 'Local Business Storefront') {
+                    document.getElementById('page-title').textContent = "Local Business Storefront | Muxammadrizo.dev";
+                    document.getElementById('detail-category').textContent = "PYTHON / FASTAPI";
+                    document.getElementById('detail-title').textContent = "Local Business Storefront";
+                    document.getElementById('detail-description').textContent = "Designed and built a complete e-commerce storefront for a local retail shop featuring fast catalog browsing, real-time inventory tracking, and RESTful API endpoints.";
+                    document.getElementById('detail-tech').textContent = "Python, FastAPI, SQLite, HTML/CSS";
+                    renderDetailMedia(document.getElementById('detail-media-container'), null, "Local Business Storefront");
+                } else {
+                    document.getElementById('page-title').textContent = "Unreal Engine 3D Game Project | Muxammadrizo.dev";
+                    document.getElementById('detail-category').textContent = "UNREAL ENGINE 5.8";
+                    document.getElementById('detail-title').textContent = "Unreal Engine 3D Game Project";
+                    document.getElementById('detail-description').textContent = "Developing an open-world survival game vertical slice featuring procedural foliage systems, volcanic landscapes, and interactive mechanics in Unreal Engine 5.8.";
+                    document.getElementById('detail-tech').textContent = "Unreal Engine 5.8, PCG Foliage, Lumen Lighting, C++";
+                    renderDetailMedia(document.getElementById('detail-media-container'), "https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-cars-42996-large.mp4", "Unreal Engine 3D Game Project");
+                }
 
             } else if (type === 'blog') {
                 document.getElementById('page-title').textContent = `${escapeHTML(titleParam) || 'My Blog'} | Muxammadrizo.dev`;
@@ -123,7 +146,7 @@
                     </ul>
                 `;
                 document.getElementById('detail-tech').textContent = "Unreal Engine 5.8, PCG Foliage, Lumen Lighting, C++";
-                renderDetailMedia(document.getElementById('detail-media-container'), null, titleParam || "UE5 Game - Procedural Biomes");
+                renderDetailMedia(document.getElementById('detail-media-container'), "https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-cars-42996-large.mp4", titleParam || "UE5 Game - Procedural Biomes");
 
             } else if (type === 'proof') {
                 document.getElementById('page-title').textContent = `${escapeHTML(titleParam) || 'Achievements'} | Muxammadrizo.dev`;
@@ -133,6 +156,8 @@
                 document.getElementById('detail-tech').textContent = "Python, Computer Science Fundamentals, Algorithms";
                 renderDetailMedia(document.getElementById('detail-media-container'), null, titleParam || "Hackathon IT School Fergana");
             }
+
+            if (wrapper) wrapper.classList.add('loaded');
         });
     </script>
 </body>

@@ -332,7 +332,6 @@ window.changeLanguage = function(lang) {
     });
 };
 
-/* Bulletproof Mobile Menu Toggle + Automatic AI Widget & Lang Button Vanishing */
 window.toggleMobileMenu = function() {
     const navLinks = document.getElementById('nav-links');
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -369,17 +368,17 @@ const holoGreetings = [
     "Hi",
     "Salom",
     "Привет",
-    "안녕하세요", // Korean
-    "こんにちは", // Japanese
+    "안녕하세요",
+    "こんにちは",
     "¡Hola!",
     "Bonjour",
-    "مرحبا",    // Arabic
+    "مرحبا",
     "Ciao",
     "Namaste",
-    "你好",      // Chinese
-    "Guten Tag", // German
-    "สวัสดี",    // Thai
-    "שלום"      // Hebrew
+    "你好",
+    "Guten Tag",
+    "สวัสดี",
+    "שלום"
 ];
 let holoGreetingIndex = 0;
 
@@ -429,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (marqueeContainer) {
         function animateCounter(counter, targetVal) {
-            const duration = 2200; // Paced 2.2s count-up
+            const duration = 2200;
             const startTime = performance.now();
 
             function update(currentTime) {
@@ -499,10 +498,8 @@ async function startTelegramBotVerification() {
         const data = await response.json();
         currentAuthToken = data.token;
 
-        // Open Telegram Bot on user device
         window.open(data.bot_link, '_blank');
 
-        // Poll every 2 seconds for Telegram Bot confirmation
         const pollInterval = setInterval(async () => {
             const checkRes = await fetch(`/api/reviews/check-token/${currentAuthToken}`);
             if (checkRes.ok) {
@@ -519,7 +516,6 @@ async function startTelegramBotVerification() {
             }
         }, 2000);
 
-        // Auto-stop polling after 3 minutes
         setTimeout(() => clearInterval(pollInterval), 180000);
     } catch (e) {
         console.error("Error generating Telegram verification token:", e);
@@ -537,7 +533,6 @@ function applyStage2FormMorph(name, username, photoUrl) {
     if (usernameInput) usernameInput.value = username;
     if (usernameGroup) usernameGroup.style.display = 'flex';
 
-    // Initial Badge Fallback if user has no Telegram profile photo
     const firstInitial = name ? escapeHTML(name.charAt(0).toUpperCase()) : 'M';
     const avatarMedia = photoUrl
         ? `<img src="${escapeHTML(photoUrl)}" class="stage2-avatar" onerror="this.outerHTML='<div class=\\'review-avatar\\'>${firstInitial}</div>';" alt="${escapeHTML(name)}">`
@@ -563,7 +558,7 @@ function applyStage2FormMorph(name, username, photoUrl) {
 }
 
 /* ==========================================================================
-   5. DYNAMIC RANKED REVIEWS WITH LIKES, TIMESTAMPS & TELEGRAM BADGES
+   5. DYNAMIC RANKED REVIEWS WITH 80-CHAR READ MORE TRUNCATION
    ========================================================================== */
 async function loadVerifiedReviews() {
     const list = document.getElementById('public-reviews-list');
@@ -620,6 +615,22 @@ function renderReviewList() {
         const likeClass = isLiked ? 'like-btn liked' : 'like-btn';
         const dateStamp = escapeHTML(r.created_at || "July 31, 2026");
 
+        // TRUNCATION AT 80 CHARACTERS FOR RELIABLE READ MORE DISPLAY
+        const rawMsg = r.message || '';
+        let msgHtml = '';
+        if (rawMsg.length > 80) {
+            const truncated = escapeHTML(rawMsg.substring(0, 80));
+            const full = escapeHTML(rawMsg);
+            msgHtml = `
+                <div class="review-msg-container">
+                    <span class="short-msg">"${truncated}..." <span class="read-more-btn" onclick="toggleReviewMsg(this)">Read More</span></span>
+                    <span class="full-msg" style="display:none;">"${full}" <span class="read-more-btn" onclick="toggleReviewMsg(this)">Show Less</span></span>
+                </div>
+            `;
+        } else {
+            msgHtml = `<div class="review-msg-container">"${escapeHTML(rawMsg)}"</div>`;
+        }
+
         return `
             <div class="${cardExtraClass}">
                 <div class="review-header">
@@ -633,7 +644,9 @@ function renderReviewList() {
                     </div>
                     <span class="review-date-tag">${dateStamp}</span>
                 </div>
-                <p style="font-size: 0.92rem; color: #94a3b8; line-height: 1.5; margin-top: 4px;">"${escapeHTML(r.message)}"</p>
+
+                ${msgHtml}
+
                 <div class="review-footer-row">
                     <span class="star-rating-display">${ratingStars}</span>
                     <button class="${likeClass}" onclick="likeReview(${r.id})">
@@ -653,6 +666,38 @@ function renderReviewList() {
         }
     }
 }
+
+window.toggleReviewMsg = function(btn) {
+    const container = btn.closest('.review-msg-container');
+    const card = btn.closest('.review-display-box');
+    if (!container || !card) return;
+
+    const shortSpan = container.querySelector('.short-msg');
+    const fullSpan = container.querySelector('.full-msg');
+    const isMobile = window.innerWidth <= 768;
+
+    if (shortSpan && fullSpan) {
+        if (shortSpan.style.display === 'none') {
+            shortSpan.style.display = 'inline';
+            fullSpan.style.display = 'none';
+            container.classList.remove('expanded');
+            if (isMobile) {
+                card.style.height = '250px';
+            } else {
+                card.style.height = 'auto';
+                card.style.minHeight = '190px';
+            }
+        } else {
+            shortSpan.style.display = 'none';
+            fullSpan.style.display = 'inline';
+            if (isMobile) {
+                container.classList.add('expanded');
+            } else {
+                card.style.height = 'auto';
+            }
+        }
+    }
+};
 
 window.toggleShowAllReviews = function() {
     isShowingAllReviews = !isShowingAllReviews;
@@ -1114,7 +1159,6 @@ async function processUserChat(text) {
         return;
     }
 
-    // LOCK CONTROLS
     isAiThinking = true;
 
     const chatBody = document.getElementById('chat-body');
@@ -1132,7 +1176,6 @@ async function processUserChat(text) {
     }
 
     if (chatBody) {
-        // Render User Message
         const userDiv = document.createElement('div');
         userDiv.className = 'message user-message';
         userDiv.textContent = originalText;
@@ -1143,7 +1186,6 @@ async function processUserChat(text) {
 
         setControlsState(true);
 
-        // SHOW "Thinking... 💭" TEMPORARY BOT MESSAGE
         const thinkingDiv = document.createElement('div');
         thinkingDiv.className = 'message bot-message thinking';
         thinkingDiv.id = 'ai-thinking-indicator';
@@ -1151,7 +1193,6 @@ async function processUserChat(text) {
         chatBody.appendChild(thinkingDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
 
-        // Client-side fallback check
         const lowerMsg = originalText.toLowerCase();
         const portfolioKeywords = [
             'muxammadrizo', 'portfolio', 'project', 'backend', 'fastapi',
@@ -1170,7 +1211,6 @@ async function processUserChat(text) {
                 body: JSON.stringify({ message: originalText })
             });
 
-            // REMOVE THINKING INDICATOR ON RESPONSE
             const activeThinkingMsg = document.getElementById('ai-thinking-indicator');
             if (activeThinkingMsg) activeThinkingMsg.remove();
 
@@ -1185,7 +1225,7 @@ async function processUserChat(text) {
                     localStorage.setItem('off_topic_ai_count', offTopicAiCount.toString());
 
                     if (offTopicAiCount >= 10) {
-                        const lockUntil = Date.now() + 10 * 60 * 1000; // 10-minute block
+                        const lockUntil = Date.now() + 10 * 60 * 1000;
                         localStorage.setItem('ai_locked_until', lockUntil.toString());
 
                         const chatWindow = document.getElementById('chat-window');
@@ -1196,7 +1236,7 @@ async function processUserChat(text) {
                         isAiThinking = false;
                         setControlsState(false);
                         return;
-                    } else if (offTopicAiCount >= 8) { // Warning when 2 questions remain
+                    } else if (offTopicAiCount >= 8) {
                         const remaining = 10 - offTopicAiCount;
                         replyMessage = `${data.response}\n\n⚠️ Note: You have ${remaining} non-portfolio question(s) remaining before AI Assistant locks. Feel free to ask about Muxammadrizo's projects!`;
                     }
@@ -1211,6 +1251,20 @@ async function processUserChat(text) {
                 if (!isClientPortfolio && originalText.length > 3) {
                     offTopicAiCount++;
                     localStorage.setItem('off_topic_ai_count', offTopicAiCount.toString());
+
+                    if (offTopicAiCount >= 10) {
+                        const lockUntil = Date.now() + 10 * 60 * 1000;
+                        localStorage.setItem('ai_locked_until', lockUntil.toString());
+
+                        const chatWindow = document.getElementById('chat-window');
+                        if (chatWindow) chatWindow.classList.add('chat-hidden');
+
+                        checkAiLockoutState();
+                        alert("⛓️🔒 You have reached the 10 non-portfolio question limit. The AI Assistant is locked for 10 minutes.");
+                        isAiThinking = false;
+                        setControlsState(false);
+                        return;
+                    }
                 }
 
                 typeAiMessage("I am currently experiencing network latency. Feel free to reach Muxammadrizo directly on Telegram @muxammadrizo0125!", () => {
@@ -1225,6 +1279,20 @@ async function processUserChat(text) {
             if (!isClientPortfolio && originalText.length > 3) {
                 offTopicAiCount++;
                 localStorage.setItem('off_topic_ai_count', offTopicAiCount.toString());
+
+                if (offTopicAiCount >= 10) {
+                    const lockUntil = Date.now() + 10 * 60 * 1000;
+                    localStorage.setItem('ai_locked_until', lockUntil.toString());
+
+                    const chatWindow = document.getElementById('chat-window');
+                    if (chatWindow) chatWindow.classList.add('chat-hidden');
+
+                    checkAiLockoutState();
+                    alert("⛓️🔒 You have reached the 10 non-portfolio question limit. The AI Assistant is locked for 10 minutes.");
+                    isAiThinking = false;
+                    setControlsState(false);
+                    return;
+                }
             }
 
             typeAiMessage("I am Muxammadrizo's AI assistant! Feel free to ask me about his software engineering, game projects, or freelance work!", () => {

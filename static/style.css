@@ -109,7 +109,6 @@ section, .section-title, #about, #journey, #skills, #projects, #achievements, #b
     font-family: 'Fira Code', monospace;
 }
 
-/* NATURAL BLINKING TYPEWRITER CURSOR */
 .typewriter-cursor {
     color: #38bdf8;
     font-weight: 700;
@@ -445,26 +444,30 @@ nav {
 }
 
 .horizontal-scroll-row::-webkit-scrollbar,
-.reviews-scroll-area::-webkit-scrollbar {
-    height: 7px;
-    width: 7px;
+.reviews-scroll-area::-webkit-scrollbar,
+.review-msg-container::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
 }
 
 .horizontal-scroll-row::-webkit-scrollbar-track,
-.reviews-scroll-area::-webkit-scrollbar-track {
+.reviews-scroll-area::-webkit-scrollbar-track,
+.review-msg-container::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.03);
     border-radius: 10px;
 }
 
 .horizontal-scroll-row::-webkit-scrollbar-thumb,
-.reviews-scroll-area::-webkit-scrollbar-thumb {
+.reviews-scroll-area::-webkit-scrollbar-thumb,
+.review-msg-container::-webkit-scrollbar-thumb {
     background: rgba(56, 189, 248, 0.4);
     border-radius: 10px;
     transition: background 0.2s ease;
 }
 
 .horizontal-scroll-row::-webkit-scrollbar-thumb:hover,
-.reviews-scroll-area::-webkit-scrollbar-thumb:hover {
+.reviews-scroll-area::-webkit-scrollbar-thumb:hover,
+.review-msg-container::-webkit-scrollbar-thumb:hover {
     background: rgba(56, 189, 248, 0.7);
 }
 
@@ -511,7 +514,7 @@ nav {
 }
 
 /* ==========================================================================
-   5. TRUE HOLOGRAPHIC CHART (EXPANDED TOP BREATHING ROOM)
+   5. TRUE HOLOGRAPHIC CHART
    ========================================================================== */
 .hologram-chart-wrapper {
     display: flex;
@@ -562,7 +565,7 @@ nav {
     position: relative;
     height: 100%;
     padding-left: 20px;
-    padding-top: 35px; /* Added breathing room so 100% badges never clip */
+    padding-top: 35px;
     mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
     z-index: 2;
 }
@@ -759,6 +762,9 @@ nav {
     padding: 0 8%;
     margin-bottom: 60px;
     align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .reviews-scroll-area {
@@ -768,27 +774,60 @@ nav {
     max-height: 520px;
     overflow-y: auto;
     padding-right: 16px;
+    min-width: 0;
+    width: 100%;
 }
 
 .review-display-box {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 24px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: 12px;
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    transition: all 0.25s ease;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    height: auto;
+    min-height: 190px;
 }
 
 .review-display-box:hover {
     border-color: rgba(56, 189, 248, 0.3);
 }
 
-/* WORD WRAP OVERFLOW FIX FOR LONG UNBROKEN STRINGS */
-.review-display-box p {
+.review-msg-container {
+    flex: 1;
+    overflow-y: hidden;
+    overflow-x: hidden;
     overflow-wrap: anywhere;
     word-break: break-word;
+    color: #94a3b8;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    max-height: none;
+}
+
+.review-msg-container.expanded {
+    max-height: none;
+}
+
+.read-more-btn {
+    color: #38bdf8;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: 6px;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    user-select: none;
+    display: inline-block;
+}
+
+.read-more-btn:hover {
+    color: #f1f5f9;
 }
 
 .review-display-box.verified-card {
@@ -800,12 +839,15 @@ nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
+    flex-wrap: nowrap;
 }
 
 .review-user-info {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
 }
 
 .review-avatar-img {
@@ -815,6 +857,7 @@ nav {
     object-fit: cover;
     border: 1px solid rgba(56, 189, 248, 0.4);
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    flex-shrink: 0;
 }
 
 .review-avatar {
@@ -828,6 +871,7 @@ nav {
     font-weight: 700;
     color: #38bdf8;
     border: 1px solid rgba(56, 189, 248, 0.3);
+    flex-shrink: 0;
 }
 
 .telegram-verified-badge {
@@ -842,19 +886,22 @@ nav {
     font-size: 0.73rem;
     font-weight: 700;
     margin-top: 4px;
+    white-space: nowrap; /* PREVENTS VERIFIED BADGE SQUISHING */
 }
 
 .review-date-tag {
     font-size: 0.75rem;
     color: #64748b;
     font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .review-footer-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 6px;
+    margin-top: auto;
     padding-top: 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -898,6 +945,10 @@ nav {
     flex-direction: column;
     justify-content: center;
     transition: all 0.3s ease;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .review-form-action-row {
@@ -905,15 +956,37 @@ nav {
     gap: 12px;
     align-items: center;
     flex-wrap: wrap;
+    width: 100%;
 }
 
-/* TELEGRAM VERIFY BUTTON NO-WRAP STYLING */
+.telegram-verify-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1.2;
+    min-width: 0;
+    width: 100%;
+}
+
+#review-submit-btn {
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 20px !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    width: 100%;
+}
+
 #telegram-connect-btn {
     white-space: nowrap;
     font-size: 0.8rem;
     padding: 0 14px;
     height: 46px;
-    width: 100%;
+    flex: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -924,7 +997,6 @@ nav {
     border-radius: 10px;
 }
 
-/* Stage 2 Header Profile Morph Box */
 .stage2-header-profile {
     display: flex;
     align-items: center;
@@ -945,11 +1017,11 @@ nav {
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
 }
 
-/* SLEEK INTERACTIVE TOOLTIP POPUP */
 .info-tooltip-container {
     position: relative;
     display: inline-flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .info-icon {
@@ -1051,7 +1123,7 @@ nav {
 }
 
 /* ==========================================================================
-   8. FLOATING AI CHATBOT WIDGET, THINKING STATE & CROSSED-CHAINS LOCK OVERLAY
+   8. FLOATING AI CHATBOT WIDGET
    ========================================================================== */
 #ai-widget-container {
     position: fixed;
@@ -1180,7 +1252,6 @@ nav {
     border: 1px solid rgba(255,255,255,0.05);
 }
 
-/* THINKING STATE INDICATOR */
 .bot-message.thinking {
     opacity: 0.8;
     font-style: italic;
@@ -1344,7 +1415,7 @@ footer {
 }
 
 /* ==========================================================================
-   9. NATIVE MOBILE OPTIMIZATION (@media Max-Width 768px & 480px)
+   9. NATIVE MOBILE OPTIMIZATION
    ========================================================================== */
 @media (max-width: 900px) {
     .feedback-layout {
@@ -1422,20 +1493,85 @@ footer {
         padding: 20px;
     }
 
+    .feedback-layout {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+        gap: 24px;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
     .reviews-scroll-area {
         flex-direction: row;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         scroll-snap-type: x mandatory;
         max-height: none;
         padding-right: 0;
         padding-bottom: 12px;
         gap: 14px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
+    /* MOBILE REVIEW CARD: 250PX HEIGHT */
     .review-display-box {
-        min-width: 82vw;
-        max-width: 85vw;
+        width: 82vw;
+        min-width: 280px;
+        max-width: 82vw;
+        height: 250px !important;
         scroll-snap-align: start;
+        flex-shrink: 0;
+        box-sizing: border-box;
+    }
+
+    /* MOBILE PREVIEW TEXT CONTAINER - NO SCROLLBAR UNTIL EXPANDED */
+    .review-msg-container {
+        max-height: 70px;
+        overflow: hidden;
+    }
+
+    .review-msg-container.expanded {
+        max-height: 105px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .review-form-card {
+        margin: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 20px 16px;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    /* MOBILE ACTION ROW STACK WITH RIGHT-ALIGNED INFO TOOLTIP */
+    .review-form-action-row {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .telegram-verify-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 8px;
+    }
+
+    #telegram-connect-btn {
+        flex: 1;
+        width: auto;
+        box-sizing: border-box;
+    }
+
+    .info-tooltip-container {
         flex-shrink: 0;
     }
 
@@ -1455,14 +1591,9 @@ footer {
         width: 40px;
     }
 
-    .contact-card,
-    .review-form-card {
+    .contact-card {
         margin: 0 20px 30px;
         padding: 28px 20px;
-    }
-
-    .feedback-layout {
-        padding: 0;
     }
 
     #ai-widget-container {

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Muxammadrizo.dev | Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <!-- Version v=49.0 forces fresh CSS loading -->
-    <link rel="stylesheet" href="/static/style.css?v=49.0">
+    <!-- Version v=60.0 forces fresh CSS loading -->
+    <link rel="stylesheet" href="/static/style.css?v=60.0">
 </head>
 <body class="no-scroll">
 
@@ -66,7 +66,7 @@
         </p>
 
         <p data-i18n="heroSubtext" style="max-width: 680px; margin: 24px 0;">
-            Developer studying at <strong>Hackathon IT School in Fergana, Uzbekistan</strong>. Indie game developer. I architect fast Python/FastAPI backends and build interactive open-world games in Unreal Engine 5.8.
+            Developer studying at <strong>Hackathon IT School in Fergana, Uzbekistan</strong>. Founder of <strong>NKND Studios</strong>. I architect fast Python/FastAPI backends and build interactive open-world games in Unreal Engine 5.8.
         </p>
 
         <!-- WIRED SOCIAL LINKS -->
@@ -248,7 +248,7 @@
     <h2 class="section-title" id="reviews" data-i18n="titleReviews">Client Reviews & Feedback</h2>
 
     <div class="feedback-layout">
-        <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
             <div class="reviews-scroll-area" id="public-reviews-list">
                 <!-- Dynamic Verified & Approved Reviews load here -->
             </div>
@@ -257,7 +257,7 @@
             </button>
         </div>
 
-        <!-- REVIEW FORM CARD -->
+        <!-- REVIEW FORM CARD WITH MAX 300 CHARACTERS LIMIT -->
         <div class="review-form-card" id="review-form-card">
             <form id="review-form">
                 <div id="form-header-box" style="margin-bottom: 16px;">
@@ -289,14 +289,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="review-msg" data-i18n="labelReviewMsg">Your Feedback / Comment</label>
-                    <textarea id="review-msg" rows="4" placeholder="Share your experience working together..." data-i18n-placeholder="phReviewMsg" required></textarea>
+                    <label for="review-msg" data-i18n="labelReviewMsg">Your Feedback / Comment (Max 300 chars)</label>
+                    <textarea id="review-msg" rows="4" maxlength="300" placeholder="Share your experience working together..." data-i18n-placeholder="phReviewMsg" required></textarea>
                 </div>
 
                 <div class="review-form-action-row">
-                    <button type="submit" class="btn btn-secondary" id="review-submit-btn" style="flex: 1;" data-i18n="btnSubmitReview">Submit Review 💬</button>
+                    <button type="submit" class="btn btn-secondary" id="review-submit-btn" data-i18n="btnSubmitReview">Submit Review 💬</button>
 
-                    <div style="display: flex; align-items: center; gap: 6px; flex: 1.2; min-width: 0;">
+                    <div class="telegram-verify-wrapper">
                         <button type="button" id="telegram-connect-btn" class="btn btn-primary" onclick="startTelegramBotVerification()">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="#38bdf8"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.65-.53.81-1.08.5l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.05 5.56-5.02c.24-.22-.05-.34-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.65-.64.13-.95l11.57-4.46c.53-.19 1 .13.85.94z"/></svg>
                             <span>Verify via Telegram</span>
@@ -371,7 +371,7 @@
         <p>© 2026 A'zamjonov Muxammadrizo. All rights reserved.</p>
     </footer>
 
-    <!-- AI WIDGET WITH DETAILED CROSSED-CHAINS LOCK OVERLAY -->
+    <!-- AI WIDGET -->
     <div id="ai-widget-container">
         <div id="chat-window" class="chat-hidden">
             <div class="chat-header">
@@ -413,7 +413,6 @@
                     <div class="face bottom"></div>
                 </div>
             </div>
-            <!-- DETAILED CROSSED-CHAINS + PADLOCK OVERLAY SVG -->
             <div class="chain-lock-overlay" id="ai-chain-overlay">
                 <svg viewBox="0 0 100 100" width="36" height="36" style="filter: drop-shadow(0 0 6px rgba(239,68,68,0.9));">
                     <line x1="10" y1="10" x2="90" y2="90" stroke="#94a3b8" stroke-width="7" stroke-linecap="round" stroke-dasharray="10 6" />

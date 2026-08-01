@@ -39,6 +39,40 @@ otp_session = {}
 admin_sessions = {}  # Active admin session tokens: token -> expiry timestamp
 telegram_auth_tokens = {}  # Temporary token store: token -> user profile info
 
+
+# -------------------------------------------------------------
+# 0. IN-MEMORY RESPONSE CACHING ENGINE (WITH TTL & AUTO-CLEAR)
+# -------------------------------------------------------------
+class ResponseCache:
+    """High-performance in-memory cache with TTL timer & event invalidation."""
+
+    def __init__(self, default_ttl: int = 60):
+        self._cache = {}
+        self.default_ttl = default_ttl
+
+    def get(self, key: str):
+        if key in self._cache:
+            data, timestamp, ttl = self._cache[key]
+            if time.time() - timestamp < ttl:
+                return data
+            del self._cache[key]
+        return None
+
+    def set(self, key: str, data, ttl: Optional[int] = None):
+        ttl_val = ttl if ttl is not None else self.default_ttl
+        self._cache[key] = (data, time.time(), ttl_val)
+
+    def clear(self, key_prefix: str = ""):
+        if not key_prefix:
+            self._cache.clear()
+        else:
+            keys_to_del = [k for k in self._cache if k.startswith(key_prefix)]
+            for k in keys_to_del:
+                self._cache.pop(k, None)
+
+
+response_cache = ResponseCache(default_ttl=60)
+
 # -------------------------------------------------------------
 # 1. DATABASE SETUP (SQLAlchemy + SQLite)
 # -------------------------------------------------------------
@@ -395,6 +429,7 @@ async def telegram_polling_loop():
                                         if review:
                                             review.is_approved = 1
                                             db.commit()
+                                            response_cache.clear("api_reviews")
                                             await ws_manager.broadcast("update_reviews")
                                         updated_text = message[
                                                            "text"] + "\n\n✅ <b>VERIFIED & APPROVED FOR LIVE WEBSITE!</b>"
@@ -404,6 +439,7 @@ async def telegram_polling_loop():
                                         if review:
                                             db.delete(review)
                                             db.commit()
+                                            response_cache.clear("api_reviews")
                                             await ws_manager.broadcast("update_reviews")
                                         updated_text = message["text"] + "\n\n❌ <b>REJECTED & DELETED.</b>"
                                     else:
@@ -572,12 +608,21 @@ def ai_parse_project(data: AIPrompt):
 
 
 # -------------------------------------------------------------
-# 9. DYNAMIC CRUD API ROUTES (PROJECTS, ACHIEVEMENTS, SKILLS, REVIEWS)
+# 9. DYNAMIC CRUD API ROUTES (WITH CACHING & AUTO-INVALIDATION)
 # -------------------------------------------------------------
 # PROJECTS
 @app.get("/api/projects")
 def get_projects(db: Session = Depends(get_db)):
-    return db.query(ProjectModel).all()
+    cached = response_cache.get("api_projects")
+    if cached is not None:
+        return cached
+
+    projects = db.query(ProjectModel).all()
+    result = [
+        {"id": p.id, "title": p.title, "category": p.category, "description": p.description, "tech_stack": p.tech_stack,
+         "github_link": p.github_link, "live_link": p.live_link, "image_url": p.image_url} for p in projects]
+    response_cache.set("api_projects", result)
+    return result
 
 
 @app.post("/api/projects", dependencies=[Depends(verify_admin_key)])
@@ -586,6 +631,7 @@ async def create_project(data: ProjectSchema, db: Session = Depends(get_db)):
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
+    response_cache.clear("api_projects")
     await ws_manager.broadcast("update_projects")
     return {"status": "success", "item": new_item}
 
@@ -597,6 +643,7 @@ async def delete_project(item_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Not found")
     db.delete(item)
     db.commit()
+    response_cache.clear("api_projects")
     await ws_manager.broadcast("update_projects")
     return {"status": "deleted"}
 
@@ -604,7 +651,16 @@ async def delete_project(item_id: int, db: Session = Depends(get_db)):
 # ACHIEVEMENTS
 @app.get("/api/achievements")
 def get_achievements(db: Session = Depends(get_db)):
-    return db.query(AchievementModel).all()
+    cached = response_cache.get("api_achievements")
+    if cached is not None:
+        return cached
+
+    achievements = db.query(AchievementModel).all()
+    result = [
+        {"id": a.id, "title": a.title, "category": a.category, "description": a.description, "photo_url": a.photo_url,
+         "website_link": a.website_link} for a in achievements]
+    response_cache.set("api_achievements", result)
+    return result
 
 
 @app.post("/api/achievements", dependencies=[Depends(verify_admin_key)])
@@ -613,6 +669,7 @@ async def create_achievement(data: AchievementSchema, db: Session = Depends(get_
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
+    response_cache.clear("api_achievements")
     await ws_manager.broadcast("update_achievements")
     return {"status": "success", "item": new_item}
 
@@ -624,6 +681,7 @@ async def delete_achievement(item_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Not found")
     db.delete(item)
     db.commit()
+    response_cache.clear("api_achievements")
     await ws_manager.broadcast("update_achievements")
     return {"status": "deleted"}
 
@@ -631,7 +689,14 @@ async def delete_achievement(item_id: int, db: Session = Depends(get_db)):
 # SKILLS
 @app.get("/api/skills")
 def get_skills(db: Session = Depends(get_db)):
-    return db.query(SkillModel).all()
+    cached = response_cache.get("api_skills")
+    if cached is not None:
+        return cached
+
+    skills = db.query(SkillModel).all()
+    result = [{"id": s.id, "name": s.name, "percentage": s.percentage, "category": s.category} for s in skills]
+    response_cache.set("api_skills", result)
+    return result
 
 
 @app.post("/api/skills", dependencies=[Depends(verify_admin_key)])
@@ -640,6 +705,7 @@ async def create_skill(data: SkillSchema, db: Session = Depends(get_db)):
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
+    response_cache.clear("api_skills")
     await ws_manager.broadcast("update_skills")
     return {"status": "success", "item": new_item}
 
@@ -651,18 +717,38 @@ async def delete_skill(item_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Not found")
     db.delete(item)
     db.commit()
+    response_cache.clear("api_skills")
     await ws_manager.broadcast("update_skills")
     return {"status": "deleted"}
 
 
-# REVIEWS (SORTED BY VERIFIED FIRST, LIKES DESC, ID DESC)
+# REVIEWS
 @app.get("/api/reviews")
 def get_reviews(db: Session = Depends(get_db)):
+    cached = response_cache.get("api_reviews")
+    if cached is not None:
+        return cached
+
     reviews = db.query(ReviewModel) \
         .filter(ReviewModel.is_approved == 1) \
         .order_by(ReviewModel.is_telegram_verified.desc(), ReviewModel.likes.desc(), ReviewModel.id.desc()) \
         .all()
-    return {"reviews": reviews}
+
+    result = {"reviews": [{
+        "id": r.id,
+        "name": r.name,
+        "username": r.username,
+        "avatar_url": r.avatar_url,
+        "avatar_initials": r.avatar_initials,
+        "message": r.message,
+        "rating": r.rating,
+        "likes": r.likes,
+        "is_telegram_verified": r.is_telegram_verified,
+        "created_at": r.created_at
+    } for r in reviews]}
+
+    response_cache.set("api_reviews", result)
+    return result
 
 
 @app.post("/api/reviews")
@@ -726,6 +812,7 @@ async def like_review(review_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(review)
 
+    response_cache.clear("api_reviews")
     await ws_manager.broadcast("update_reviews")
     return {"status": "success", "likes": review.likes}
 
@@ -735,6 +822,7 @@ async def like_review(review_id: int, db: Session = Depends(get_db)):
 async def clear_all_reviews(db: Session = Depends(get_db)):
     db.query(ReviewModel).delete()
     db.commit()
+    response_cache.clear("api_reviews")
     await ws_manager.broadcast("update_reviews")
     return {"status": "success", "message": "All reviews cleared from database."}
 
@@ -772,7 +860,7 @@ def chat_with_gemini(request: ChatRequest):
     try:
         user_msg = request.message.strip().lower()
 
-        # EXPANDED PORTFOLIO KEYWORDS INCLUDING FREELANCE, RATES, PRICING, AND SERVICES
+        # EXTENDED PORTFOLIO CLASSIFIER KEYWORDS
         portfolio_keywords = [
             'muxammadrizo', 'portfolio', 'project', 'backend', 'fastapi',
             'unreal', 'ue5', 'nknd', 'cube island', 'hire', 'rate', 'rates', 'price',
@@ -789,7 +877,7 @@ def chat_with_gemini(request: ChatRequest):
             "1. When greeted with simple phrases like 'hi', 'hello', or 'hey', respond concisely and executive-like (e.g., 'Hello! How can I assist you today?'). Do NOT dump personal or technical specs immediately.\n"
             "2. Maintain a sleek, executive, and helpful tone.\n"
             "3. Answer technical questions accurately and concisely.\n"
-            "4. PRICING & QUOTES: Muxammadrizo offers highly competitive, budget-friendly rates for students and clients. If asked for exact prices or custom project quotes, inform the user that rates depend on project scope and invite them to reach out directly via Telegram (@muxammadrizo0125) or the Contact Form for a tailored estimate.\n"
+            "4. PRICING & QUOTES: Muxammadrizo offers highly competitive, budget-friendly rates for freelancing. If asked for exact prices or custom project quotes, inform the client that project costs depend on scope and ask them to submit details via the Contact Form or direct Telegram (@muxammadrizo0125) for a specific quote.\n"
             "5. Only provide specific background information about Muxammadrizo (age, school, rates, location, specific projects) when the user explicitly asks about him or his work.\n"
             "6. About Muxammadrizo: He is 16 y/o studying at Hackathon IT School in Fergana, Uzbekistan."
         )
@@ -800,9 +888,9 @@ def chat_with_gemini(request: ChatRequest):
         )
         return {"response": response.text, "is_portfolio": is_portfolio}
     except Exception as e:
-        # Fallback response that still includes portfolio classification state
         return {
             "response": "I am currently experiencing network latency. Feel free to reach Muxammadrizo directly on Telegram @muxammadrizo0125!",
-            "is_portfolio": any(
-                kw in user_msg for kw in ['muxammadrizo', 'portfolio', 'project', 'backend', 'hi', 'hello'])
+            "is_portfolio": any(kw in user_msg for kw in
+                                ['muxammadrizo', 'portfolio', 'project', 'backend', 'hi', 'hello', 'free', 'rate',
+                                 'cost'])
         }
