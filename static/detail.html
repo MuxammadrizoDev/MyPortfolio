@@ -5,42 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title id="page-title">Item Details | Muxammadrizo.dev</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=38.0">
+    <!-- Version v=49.0 forces fresh CSS loading -->
+    <link rel="stylesheet" href="/static/style.css?v=49.0">
 </head>
 <body>
 
-    <!-- NAVBAR -->
+    <!-- NAVBAR WITH LANGUAGE SWITCHER ONLY -->
     <nav>
         <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">Muxammadrizo<span>.dev</span></a></div>
         <div class="nav-right-group">
-            <a href="/" class="btn btn-secondary" style="height: 38px; padding: 0 16px; font-size: 0.85rem;">&larr; Back to Portfolio</a>
+            <button class="lang-btn single-lang-btn" id="lang-toggle-btn" type="button" onclick="cycleLanguage()">🌐 EN</button>
         </div>
     </nav>
 
     <!-- DETAIL CONTAINER SECTION -->
-    <section class="hero" style="padding-top: 50px;">
+    <section class="hero" style="padding-top: 40px;">
         <div style="max-width: 850px; margin: 0 auto;">
-            <a href="/" style="color: var(--accent-color); text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px;">&larr; Back to Home</a>
 
+            <!-- CLEAN BACK TO PORTFOLIO LINK DIRECTLY ABOVE CATEGORY BADGE -->
+            <a href="/" style="color: var(--accent-color); text-decoration: none; font-size: 0.95rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px;" data-i18n="textBackHome">← Back to Portfolio</a>
+            <br>
             <span id="detail-category" class="project-tag" style="display: inline-block; margin-bottom: 12px;">Loading...</span>
             <h1 id="detail-title" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin-bottom: 16px;">Loading Title...</h1>
 
-            <div id="detail-media-container" style="width: 100%; max-height: 480px; border-radius: 14px; overflow: hidden; margin: 24px 0; border: 1px solid var(--border-color); background: var(--card-bg);">
-                <!-- Dynamic Media Renders Here -->
+            <!-- MEDIA CONTAINER (ONLY SHOWN IF VALID MEDIA IS PRESENT) -->
+            <div id="detail-media-container" style="display: none; width: 100%; max-height: 480px; border-radius: 14px; overflow: hidden; margin: 24px 0; border: 1px solid var(--border-color); background: var(--card-bg);">
             </div>
 
             <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; margin-bottom: 30px;">
-                <h3 style="color: var(--accent-color); font-family: 'Fira Code', monospace; font-size: 1rem; margin-bottom: 12px;">OVERVIEW & ARCHITECTURE</h3>
+                <h3 style="color: var(--accent-color); font-family: 'Fira Code', monospace; font-size: 1rem; margin-bottom: 12px;" data-i18n="detailOverviewTitle">OVERVIEW & ARCHITECTURE</h3>
                 <div id="detail-description" style="color: #94a3b8; line-height: 1.8; font-size: 1.05rem; margin-bottom: 24px;">Loading description...</div>
 
                 <div id="tech-stack-wrapper" style="margin-bottom: 24px;">
-                    <strong style="font-size: 0.85rem; color: #38bdf8; font-family: 'Fira Code', monospace;">TECH STACK & TOOLS:</strong>
+                    <strong style="font-size: 0.85rem; color: #38bdf8; font-family: 'Fira Code', monospace;" data-i18n="detailTechTitle">TECH STACK & TOOLS:</strong>
                     <p id="detail-tech" style="font-size: 0.95rem; font-weight: 600; margin-top: 6px; color: #f1f5f9;"></p>
                 </div>
 
                 <div class="modal-actions" style="display: flex; gap: 12px; margin-top: 24px;">
-                    <a id="detail-github-link" href="#" target="_blank" class="btn" style="display: none; background: #334155; color: #fff;">View Source Code ↗</a>
-                    <a id="detail-live-link" href="#" target="_blank" class="btn" style="display: none;">Visit Live Site ↗</a>
+                    <a id="detail-github-link" href="#" target="_blank" class="btn" style="display: none; background: #334155; color: #fff;" data-i18n="detailViewCode">View Source Code ↗</a>
+                    <a id="detail-live-link" href="#" target="_blank" class="btn" style="display: none;" data-i18n="detailVisitSite">Visit Live Site ↗</a>
                 </div>
             </div>
         </div>
@@ -50,10 +53,20 @@
         <p>© 2026 A'zamjonov Muxammadrizo. All rights reserved.</p>
     </footer>
 
+    <script src="/static/script.js"></script>
     <script>
-        function escapeHTML(str) {
-            if (!str) return '';
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        function renderDetailMedia(container, url, title) {
+            if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/static/'))) {
+                container.style.display = 'block';
+                if (url.endsWith('.mp4')) {
+                    container.innerHTML = `<video src="${escapeHTML(url)}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.style.display='none';"></video>`;
+                } else {
+                    container.innerHTML = `<img src="${escapeHTML(url)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.style.display='none';" alt="${escapeHTML(title)}">`;
+                }
+            } else {
+                container.style.display = 'none';
+                container.innerHTML = '';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -69,50 +82,56 @@
                         const projects = await res.json();
                         const proj = projects.find(p => p.id == id || p.title === titleParam) || projects[0];
                         if (proj) {
-                            document.getElementById('page-title').textContent = `${proj.title} | Muxammadrizo.dev`;
-                            document.getElementById('detail-category').textContent = proj.category.toUpperCase();
+                            document.getElementById('page-title').textContent = `${escapeHTML(proj.title)} | Muxammadrizo.dev`;
+                            document.getElementById('detail-category').textContent = escapeHTML(proj.category.toUpperCase());
                             document.getElementById('detail-title').textContent = proj.title;
                             document.getElementById('detail-description').textContent = proj.description;
                             document.getElementById('detail-tech').textContent = proj.tech_stack;
 
-                            const mediaContainer = document.getElementById('detail-media-container');
-                            if (proj.image_url && proj.image_url.endsWith('.mp4')) {
-                                mediaContainer.innerHTML = `<video src="${proj.image_url}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>`;
-                            } else {
-                                mediaContainer.innerHTML = `<img src="${proj.image_url || 'https://via.placeholder.com/800x450/151c2e/38bdf8?text=Project+Preview'}" style="width:100%; height:100%; object-fit:cover;" alt="${escapeHTML(proj.title)}">`;
-                            }
+                            renderDetailMedia(document.getElementById('detail-media-container'), proj.image_url, proj.title);
 
                             const ghBtn = document.getElementById('detail-github-link');
                             const liveBtn = document.getElementById('detail-live-link');
                             if (proj.github_link) { ghBtn.href = proj.github_link; ghBtn.style.display = 'inline-block'; }
                             if (proj.live_link) { liveBtn.href = proj.live_link; liveBtn.style.display = 'inline-block'; }
+                            return;
                         }
                     }
                 } catch (e) {
                     console.error("Error loading project detail:", e);
                 }
+
+                // Default Fallback project view
+                document.getElementById('page-title').textContent = "Unreal Engine 3D Game Project | Muxammadrizo.dev";
+                document.getElementById('detail-category').textContent = "UNREAL ENGINE 5.8";
+                document.getElementById('detail-title').textContent = "Unreal Engine 3D Game Project";
+                document.getElementById('detail-description').textContent = "Developing an open-world survival game vertical slice featuring procedural foliage systems, volcanic landscapes, and interactive mechanics in Unreal Engine 5.8.";
+                document.getElementById('detail-tech').textContent = "Unreal Engine 5.8, PCG Foliage, Lumen Lighting, C++";
+                renderDetailMedia(document.getElementById('detail-media-container'), null, "Unreal Engine 3D Game Project");
+
             } else if (type === 'blog') {
-                document.getElementById('page-title').textContent = `${titleParam || 'DevLog'} | Muxammadrizo.dev`;
-                document.getElementById('detail-category').textContent = "STUDIO DEVLOG";
-                document.getElementById('detail-title').textContent = titleParam || "Project Cube Island - Procedural Biomes";
+                document.getElementById('page-title').textContent = `${escapeHTML(titleParam) || 'My Blog'} | Muxammadrizo.dev`;
+                document.getElementById('detail-category').textContent = "MY BLOG & DEVLOG";
+                document.getElementById('detail-title').textContent = titleParam || "UE5 Game - Procedural Biomes";
                 document.getElementById('detail-description').innerHTML = `
-                    <p style="margin-bottom: 16px;">Detailed studio update on engineering volcanic tropical biomes in Unreal Engine 5.8.</p>
-                    <p style="margin-bottom: 16px;"><strong>Key Enhancements:</strong></p>
+                    <p style="margin-bottom: 16px;">Detailed development update on engineering volcanic tropical biomes in Unreal Engine 5.8.</p>
+                    <p style="margin-bottom: 16px;"><strong>Key Architecture Highlights:</strong></p>
                     <ul style="margin-left: 20px; line-height: 1.8;">
-                        <li>Procedural Content Generation (PCG) foliage spawner rules for tropical palm trees and basalt rocks.</li>
-                        <li>Volumetric Lumen lighting and fog density optimization for smooth 60 FPS performance.</li>
-                        <li>Non-lethal geometric blaster physics and particle interaction.</li>
+                        <li>Procedural Content Generation (PCG) graph spawner rules for tropical palm trees and basalt rock terrain.</li>
+                        <li>Volumetric Lumen lighting and fog density optimization for stable frame rates.</li>
+                        <li>Custom physics interaction and particle effect triggers.</li>
                     </ul>
                 `;
                 document.getElementById('detail-tech').textContent = "Unreal Engine 5.8, PCG Foliage, Lumen Lighting, C++";
-                document.getElementById('detail-media-container').innerHTML = `<video src="https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-cars-42996-large.mp4" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>`;
+                renderDetailMedia(document.getElementById('detail-media-container'), null, titleParam || "UE5 Game - Procedural Biomes");
+
             } else if (type === 'proof') {
-                document.getElementById('page-title').textContent = `${titleParam || 'Achievement'} | Muxammadrizo.dev`;
-                document.getElementById('detail-category').textContent = "ACADEMIC & RECOGNITION";
+                document.getElementById('page-title').textContent = `${escapeHTML(titleParam) || 'Achievements'} | Muxammadrizo.dev`;
+                document.getElementById('detail-category').textContent = "ACHIEVEMENTS & RECOGNITION";
                 document.getElementById('detail-title').textContent = titleParam || "Hackathon IT School Fergana";
                 document.getElementById('detail-description').textContent = "Recognized for top academic performance, advanced algorithmic problem solving, and active backend project deployments at Hackathon IT School in Fergana.";
                 document.getElementById('detail-tech').textContent = "Python, Computer Science Fundamentals, Algorithms";
-                document.getElementById('detail-media-container').innerHTML = `<img src="https://via.placeholder.com/800x450/151c2e/38bdf8?text=Certificate+Proof" style="width:100%; height:100%; object-fit:cover;" alt="Proof">`;
+                renderDetailMedia(document.getElementById('detail-media-container'), null, titleParam || "Hackathon IT School Fergana");
             }
         });
     </script>

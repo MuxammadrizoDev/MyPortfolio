@@ -461,6 +461,8 @@ def read_root():
 def serve_detail_page():
     if os.path.exists("detail.html"):
         return FileResponse("detail.html")
+    elif os.path.exists("static/detail.html"):
+        return FileResponse("static/detail.html")
     return {"status": "detail.html not found"}
 
 
@@ -510,7 +512,7 @@ def request_otp(req: RequestOTP):
     otp = str(random.randint(100000, 999999))
     otp_session["code"] = otp
     otp_session["expires_at"] = time.time() + 300
-    otp_session["attempts"] = 0  # Reset attempt counter
+    otp_session["attempts"] = 0
 
     if send_email_otp(GMAIL_USER, otp):
         return {"status": "success", "message": "2FA Code sent to Gmail!"}
@@ -528,7 +530,6 @@ def verify_otp(req: VerifyOTP):
         otp_session.clear()
         raise HTTPException(status_code=400, detail="2FA Code expired.")
 
-    # Brute-force rate limit protection
     otp_session["attempts"] = otp_session.get("attempts", 0) + 1
     if otp_session["attempts"] > 5:
         otp_session.clear()
@@ -538,9 +539,8 @@ def verify_otp(req: VerifyOTP):
         attempts_left = 5 - otp_session["attempts"]
         raise HTTPException(status_code=401, detail=f"Invalid 2FA Code. {attempts_left} attempts remaining.")
 
-    # Verification successful! Generate short-lived session token (Never leak secret key)
     session_token = str(uuid.uuid4())
-    admin_sessions[session_token] = time.time() + 7200  # 2-hour admin session
+    admin_sessions[session_token] = time.time() + 7200
     otp_session.clear()
 
     return {"status": "verified", "admin_token": session_token}
@@ -560,7 +560,7 @@ def ai_parse_project(data: AIPrompt):
             '"title", "description", "tech_stack". Do not include markdown or codeblocks.'
         )
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             contents=f"{system_instruction}\n\nDescription: {data.prompt}"
         )
 
@@ -572,7 +572,7 @@ def ai_parse_project(data: AIPrompt):
 
 
 # -------------------------------------------------------------
-# 9. DYNAMIC CRUD API ROUTES
+# 9. DYNAMIC CRUD API ROUTES (PROJECTS, ACHIEVEMENTS, SKILLS, REVIEWS)
 # -------------------------------------------------------------
 # PROJECTS
 @app.get("/api/projects")
@@ -676,7 +676,6 @@ async def submit_review(data: ReviewSchema, db: Session = Depends(get_db)):
     is_verified = 0
     avatar_url = data.avatar_url
 
-    # Check if authorized via Telegram Bot Session
     if data.auth_token and data.auth_token in telegram_auth_tokens:
         token_data = telegram_auth_tokens[data.auth_token]
         if token_data.get("status") == "verified":
@@ -695,7 +694,7 @@ async def submit_review(data: ReviewSchema, db: Session = Depends(get_db)):
         rating=data.rating or 5,
         likes=0,
         is_telegram_verified=is_verified,
-        is_approved=0,  # Needs Admin Approval
+        is_approved=0,
         created_at=datetime.now().strftime("%B %d, %Y")
     )
     db.add(new_review)
@@ -720,7 +719,6 @@ async def like_review(review_id: int, db: Session = Depends(get_db)):
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
-    # Ensure review.likes is never None when adding 1
     if review.likes is None:
         review.likes = 0
 
@@ -772,18 +770,39 @@ def chat_with_gemini(request: ChatRequest):
     if not client:
         raise HTTPException(status_code=500, detail="Gemini API Key missing")
     try:
+        user_msg = request.message.strip().lower()
+
+        # EXPANDED PORTFOLIO KEYWORDS INCLUDING FREELANCE, RATES, PRICING, AND SERVICES
+        portfolio_keywords = [
+            'muxammadrizo', 'portfolio', 'project', 'backend', 'fastapi',
+            'unreal', 'ue5', 'nknd', 'cube island', 'hire', 'rate', 'rates', 'price',
+            'prices', 'cost', 'costs', 'cheap', 'budget', 'free', 'contact', 'skill',
+            'blog', 'review', 'fergana', 'school', 'game', 'dev', 'python', 'who',
+            'about', 'work', 'service', 'services', 'help', 'question', 'tell',
+            'explain', 'describe', 'hi', 'hello', 'hey', 'salom', 'привет'
+        ]
+        is_portfolio = any(kw in user_msg for kw in portfolio_keywords) or len(user_msg) <= 3
+
         system_instruction = (
-            "You are a friendly, witty, and human-like AI assistant for Muxammadrizo A'zamjonov's portfolio. "
-            "Conversational Guidelines:\n"
-            "1. Talk naturally like a supportive software engineering peer.\n"
-            "2. Feel free to discuss general programming, FastAPI, Unreal Engine 5.8, or computer science concepts freely when asked.\n"
-            "3. Only bring up Muxammadrizo's specific background, student freelance rates, or location when the user explicitly asks about him.\n"
-            "4. About Muxammadrizo: He is 16 y/o studying at Hackathon IT School in Fergana, Uzbekistan. As a student starting out in freelancing, his rates are budget-friendly and project-based."
+            "You are an executive, polite, intelligent, and highly professional AI assistant for Muxammadrizo A'zamjonov's developer portfolio.\n"
+            "Strict Response Guidelines:\n"
+            "1. When greeted with simple phrases like 'hi', 'hello', or 'hey', respond concisely and executive-like (e.g., 'Hello! How can I assist you today?'). Do NOT dump personal or technical specs immediately.\n"
+            "2. Maintain a sleek, executive, and helpful tone.\n"
+            "3. Answer technical questions accurately and concisely.\n"
+            "4. PRICING & QUOTES: Muxammadrizo offers highly competitive, budget-friendly rates for students and clients. If asked for exact prices or custom project quotes, inform the user that rates depend on project scope and invite them to reach out directly via Telegram (@muxammadrizo0125) or the Contact Form for a tailored estimate.\n"
+            "5. Only provide specific background information about Muxammadrizo (age, school, rates, location, specific projects) when the user explicitly asks about him or his work.\n"
+            "6. About Muxammadrizo: He is 16 y/o studying at Hackathon IT School in Fergana, Uzbekistan."
         )
+
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=f"{system_instruction}\n\nUser Question: {request.message}"
+            model='gemini-3.6-flash',
+            contents=f"{system_instruction}\n\nUser Message: {request.message}"
         )
-        return {"response": response.text}
+        return {"response": response.text, "is_portfolio": is_portfolio}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Fallback response that still includes portfolio classification state
+        return {
+            "response": "I am currently experiencing network latency. Feel free to reach Muxammadrizo directly on Telegram @muxammadrizo0125!",
+            "is_portfolio": any(
+                kw in user_msg for kw in ['muxammadrizo', 'portfolio', 'project', 'backend', 'hi', 'hello'])
+        }

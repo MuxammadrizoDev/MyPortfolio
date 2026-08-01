@@ -36,6 +36,29 @@ section, .section-title, #about, #journey, #skills, #projects, #achievements, #b
     scroll-margin-top: 90px;
 }
 
+/* MEDIA PLACEHOLDER BOX FOR DETAIL PAGE */
+.media-placeholder-box {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, rgba(18, 26, 43, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    border: 1px dashed rgba(56, 189, 248, 0.3);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #38bdf8;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.media-placeholder-box span {
+    font-size: 1rem;
+    color: #f1f5f9;
+    font-family: 'Fira Code', monospace;
+}
+
 /* ==========================================================================
    2. TERMINAL LOADER & NATURAL TYPEWRITER CURSOR
    ========================================================================== */
@@ -457,6 +480,13 @@ nav {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.h-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 10px 25px rgba(56, 189, 248, 0.12);
 }
 
 .journey-card h3 {
@@ -481,22 +511,22 @@ nav {
 }
 
 /* ==========================================================================
-   5. TRUE HOLOGRAPHIC CHART
+   5. TRUE HOLOGRAPHIC CHART (EXPANDED TOP BREATHING ROOM)
    ========================================================================== */
 .hologram-chart-wrapper {
     display: flex;
-    padding: 0 8%;
-    height: 340px;
+    padding: 20px 8% 0;
+    height: 390px;
     margin-bottom: 60px;
     position: relative;
 }
 
 .chart-gridlines {
     position: absolute;
-    top: 20px;
+    top: 60px;
     left: calc(8% + 45px);
     right: 8%;
-    height: 280px;
+    height: 250px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -521,8 +551,8 @@ nav {
     color: #94a3b8;
     font-size: 0.75rem;
     font-family: 'Fira Code', monospace;
-    height: 280px;
-    margin-top: 20px;
+    height: 250px;
+    margin-top: 60px;
     z-index: 2;
 }
 
@@ -532,6 +562,7 @@ nav {
     position: relative;
     height: 100%;
     padding-left: 20px;
+    padding-top: 35px; /* Added breathing room so 100% badges never clip */
     mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
     z-index: 2;
 }
@@ -572,7 +603,7 @@ nav {
 }
 
 .hologram-bar-wrapper {
-    height: 300px;
+    height: 275px;
     width: 100%;
     display: flex;
     align-items: flex-end;
@@ -600,13 +631,14 @@ nav {
 
 .hologram-percent {
     position: absolute;
-    top: -24px;
+    top: -26px;
     color: #00f2fe;
     font-size: 0.85rem;
     font-family: 'Fira Code', monospace;
     font-weight: 800;
     text-shadow: 0 0 8px rgba(0, 242, 254, 0.8);
     white-space: nowrap;
+    z-index: 10;
 }
 
 .hologram-label {
@@ -753,6 +785,12 @@ nav {
     border-color: rgba(56, 189, 248, 0.3);
 }
 
+/* WORD WRAP OVERFLOW FIX FOR LONG UNBROKEN STRINGS */
+.review-display-box p {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
 .review-display-box.verified-card {
     border-color: rgba(56, 189, 248, 0.4);
     box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
@@ -860,6 +898,30 @@ nav {
     flex-direction: column;
     justify-content: center;
     transition: all 0.3s ease;
+}
+
+.review-form-action-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* TELEGRAM VERIFY BUTTON NO-WRAP STYLING */
+#telegram-connect-btn {
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 0 14px;
+    height: 46px;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    border-radius: 10px;
 }
 
 /* Stage 2 Header Profile Morph Box */
@@ -989,7 +1051,7 @@ nav {
 }
 
 /* ==========================================================================
-   8. FLOATING AI CHATBOT WIDGET & AI VANISHING CLASS
+   8. FLOATING AI CHATBOT WIDGET, THINKING STATE & CROSSED-CHAINS LOCK OVERLAY
    ========================================================================== */
 #ai-widget-container {
     position: fixed;
@@ -1048,6 +1110,11 @@ nav {
     box-shadow: 0 0 8px #38bdf8;
 }
 
+.status-dot.status-dot-locked {
+    background: #ef4444 !important;
+    box-shadow: 0 0 10px #ef4444 !important;
+}
+
 #close-chat-btn {
     background: none;
     border: none;
@@ -1075,6 +1142,11 @@ nav {
     margin-top: 4px;
 }
 
+.quick-replies.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
 .chip {
     background: rgba(56, 189, 248, 0.1);
     border: 1px solid rgba(56, 189, 248, 0.3);
@@ -1097,6 +1169,8 @@ nav {
     border-radius: 12px;
     max-width: 85%;
     line-height: 1.4;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .bot-message {
@@ -1104,6 +1178,16 @@ nav {
     color: #f1f5f9;
     align-self: flex-start;
     border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* THINKING STATE INDICATOR */
+.bot-message.thinking {
+    opacity: 0.8;
+    font-style: italic;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .user-message {
@@ -1130,6 +1214,11 @@ nav {
     font-size: 0.9rem;
 }
 
+.chat-footer input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .chat-footer button {
     background: var(--accent-color);
     border: none;
@@ -1138,6 +1227,12 @@ nav {
     border-radius: 8px;
     cursor: pointer;
     font-size: 1.1rem;
+}
+
+.chat-footer button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
 }
 
 #ai-toggle-btn {
@@ -1155,6 +1250,7 @@ nav {
     box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
     perspective: 800px;
     transform-style: preserve-3d;
+    transition: all 0.3s ease;
 }
 
 .cube-scene {
@@ -1201,6 +1297,41 @@ nav {
     font-weight: 800;
     padding: 2px 6px;
     border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.chain-lock-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.4);
+    backdrop-filter: blur(3px);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+    animation: lockPulse 2s infinite alternate;
+}
+
+@keyframes lockPulse {
+    0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+    100% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.95); }
+}
+
+#ai-toggle-btn.ai-locked {
+    border-color: #ef4444;
+}
+
+#ai-toggle-btn.ai-locked .chain-lock-overlay {
+    display: flex;
+}
+
+#ai-toggle-btn.ai-locked .ai-text-badge {
+    background: #ef4444;
+    color: #ffffff;
 }
 
 /* FOOTER */
@@ -1310,7 +1441,7 @@ footer {
 
     .hologram-chart-wrapper {
         padding: 0 20px;
-        height: 280px;
+        height: 300px;
     }
 
     .chart-gridlines {

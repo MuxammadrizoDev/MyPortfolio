@@ -8,6 +8,7 @@ let isShowingAllReviews = false;
 let clientTelegramVerified = 0;
 let clientTelegramAvatar = null;
 let currentAuthToken = null;
+let isAiThinking = false;
 
 function escapeHTML(str) {
     if (!str) return '';
@@ -25,10 +26,12 @@ const translations = {
         navJourney: "Journey",
         navSkills: "Skills",
         navProjects: "Projects",
-        navProof: "Proof",
-        navBlog: "DevLog",
+        navProof: "Achievements",
+        navBlog: "My Blog",
         navReviews: "Reviews",
         navContact: "Contact",
+        navBackHome: "← Back to Portfolio",
+        textBackHome: "← Back to Portfolio",
         heroBadge: "16 y/o • Hackathon IT School Fergana",
         serverLabel: "Server:",
         heroSuffix: ", I'm",
@@ -44,8 +47,8 @@ const translations = {
         journeySchoolDesc: "Deep-diving into computer science fundamentals, algorithms, software engineering, and regional coding competitions.",
         journeyTagStudio: "Game Studio",
         journeyDate2: "2024 - Present",
-        journeyStudioTitle: "Founder & Lead — NKND Studios",
-        journeyStudioDesc: "Architecting Project Cube Island in Unreal Engine 5.8. Designing Game Design Documents, PCG foliage, and non-lethal mechanics.",
+        journeyStudioTitle: "Founder & Lead — Indie Game Development",
+        journeyStudioDesc: "Architecting 3D game projects in Unreal Engine 5.8. Designing Game Design Documents, PCG foliage, and interactive gameplay mechanics.",
         journeyTagBackend: "Backend Systems",
         journeyDate3: "2023 - Present",
         journeyBackendTitle: "Full-Stack Engineering",
@@ -57,22 +60,22 @@ const translations = {
         filterUe5: "Unreal Engine 5",
         filterBot: "Telegram Bots",
         tagCubeIsland: "Active Game MVP 🌋",
-        titleCubeIsland: "Project Cube Island",
-        descCubeIsland: "Open-world survival game contrasting realistic volcanic biomes with abstract geometric cubes.",
-        btnReadPitch: "Read Details &rarr;",
+        titleCubeIsland: "Unreal Engine 3D Game Project",
+        descCubeIsland: "Open-world survival game prototype built with Unreal Engine 5.8 featuring procedural terrain generation.",
+        btnReadPitch: "View Details ↗",
         tagStorefront: "Active Development 🚀",
         titleStorefront: "Local Business Storefront",
         descStorefront: "A fast web application built for a retail shop with clean catalog browsing and real-time inventory tracking.",
-        btnViewDetails: "View Details &rarr;",
-        titleProof: "Achievements & Proof",
+        btnViewDetails: "View Details ↗",
+        titleProof: "Achievements",
         tagHackathon: "Academic & Hackathons 🏆",
         titleHackathon: "Hackathon IT School Fergana",
         descHackathon: "Recognized for top academic performance and active backend project development.",
-        btnViewProof: "View Proof &rarr;",
-        titleBlog: "DevLog & Studio Updates",
+        btnViewProof: "View Details ↗",
+        titleBlog: "DevLog & My Blog",
         blogBadge1: "DevLog #04 • UE 5.8",
         blogDate1: "July 2026",
-        blogTitle1: "Project Cube Island - Procedural Biomes",
+        blogTitle1: "UE5 Game - Procedural Biomes",
         blogDesc1: "Optimized PCG foliage networks and volumetric Lumen fog for volcanic tropical biomes in Unreal Engine 5.8.",
         blogBadge2: "DevLog #03 • FastAPI",
         blogDate2: "June 2026",
@@ -99,6 +102,10 @@ const translations = {
         btnSend: "Send Message 📱",
         tooltipTelegramVerify: "We offer Telegram verification so visitors know client feedback is 100% authentic and trustworthy.",
         tooltipContactInfo: "Your contact info is strictly used to reply to your inquiry as soon as your message arrives.",
+        detailOverviewTitle: "OVERVIEW & ARCHITECTURE",
+        detailTechTitle: "TECH STACK & TOOLS:",
+        detailViewCode: "View Source Code ↗",
+        detailVisitSite: "Visit Live Site ↗",
         aiGreeting: "<strong>Hello there! 👋</strong><br><br>I am Gemini, Muxammadrizo's AI assistant. How can I help you learn more about his software engineering, game projects, or freelance work?",
         chipAbout: "👨‍💻 Who is Muxammadrizo?",
         chipBackend: "⚙️ Backend Architecture?",
@@ -113,15 +120,17 @@ const translations = {
         navSkills: "Ko'nikmalar",
         navProjects: "Loyihalar",
         navProof: "Yutuqlar",
-        navBlog: "Mening blogim",
+        navBlog: "Mening Blogim",
         navReviews: "Fikrlar",
         navContact: "Aloqa",
+        navBackHome: "← Portfelga Qaytish",
+        textBackHome: "← Portfelga Qaytish",
         heroBadge: "16 yosh • Hackathon IT School Farg'ona",
         serverLabel: "Server:",
         heroSuffix: ", men",
         heroName: "A'zamjonov Muxammadrizo",
         typingPrefix: "Mening yo'nalishlarim:",
-        heroSubtext: "Farg'ona Hackathon IT School o'quvchisi. NKND Studios asoschisi. Men Python/FastAPI backend Tizimlarini va Unreal Engine 5.8 da o'yinlarni yarataman.",
+        heroSubtext: "Farg'ona Hackathon IT School o'quvchisi. Men Python/FastAPI backend Tizimlarini va Unreal Engine 5.8 da o'yinlarni yarataman.",
         heroBtn: "Loyihalarni ko'rish 🚀",
         heroContactBtn: "Bog'lanish 💬",
         titleJourney: "Ta'lim va Rivojlanish Yo'li",
@@ -131,8 +140,8 @@ const translations = {
         journeySchoolDesc: "Dasturlash asoslari, algoritmlar va musobaqalarga tayyorgarlik.",
         journeyTagStudio: "O'yin Studiyasi",
         journeyDate2: "2024 - Hozirgacha",
-        journeyStudioTitle: "Asoschi va Yetakchi — NKND Studios",
-        journeyStudioDesc: "Unreal Engine 5.8 da Project Cube Island o'yinini yaratish va mexanikalarni loyihalash.",
+        journeyStudioTitle: "Asoschi va Yetakchi — Indie Game Development",
+        journeyStudioDesc: "Unreal Engine 5.8 da 3D o'yin loyihalarini yaratish va mexanikalarni loyihalash.",
         journeyTagBackend: "Backend Tizimlar",
         journeyDate3: "2023 - Hozirgacha",
         journeyBackendTitle: "Full-Stack va Backend Muhandislik",
@@ -144,22 +153,22 @@ const translations = {
         filterUe5: "Unreal Engine 5",
         filterBot: "Telegram Botlar",
         tagCubeIsland: "Faol O'yin MVP 🌋",
-        titleCubeIsland: "Project Cube Island",
+        titleCubeIsland: "Unreal Engine 3D Game Project",
         descCubeIsland: "Realistik biomlar va geometrik kublarni birlashtirgan omon qolish o'yini.",
-        btnReadPitch: "Batafsil O'qish &rarr;",
+        btnReadPitch: "Batafsil O'qish ↗",
         tagStorefront: "Faol Rivojlanish 🚀",
         titleStorefront: "Mahalliy Do'kon Veb-sayti",
         descStorefront: "Tezkor katalog va real vaqtda omborni kuzatish tizimiga ega veb-ilova.",
-        btnViewDetails: "Batafsil Ko'rish &rarr;",
-        titleProof: "Yutuqlar va Isbotlar",
+        btnViewDetails: "Batafsil Ko'rish ↗",
+        titleProof: "Yutuqlar va Sertifikatlar",
         tagHackathon: "Akademik va Xakatonlar 🏆",
         titleHackathon: "Hackathon IT School Farg'ona",
         descHackathon: "Yuqori akademik ko'rsatkichlar va faol backend loyihalar uchun e'tirof etilgan.",
-        btnViewProof: "Isbotni Ko'rish &rarr;",
-        titleBlog: "Mening blogim va Studiya Yangiliklari",
+        btnViewProof: "Batafsil O'qish ↗",
+        titleBlog: "DevLog va Mening Blogim",
         blogBadge1: "DevLog #04 • UE 5.8",
         blogDate1: "Iyul 2026",
-        blogTitle1: "Project Cube Island - Prosedural Biomlar",
+        blogTitle1: "UE5 Game - Procedural Biomes",
         blogDesc1: "Unreal Engine 5.8 da vulqonli tropik biomlar uchun PCG va Lumen tuman tizimlarini optimallashtirish.",
         blogBadge2: "DevLog #03 • FastAPI",
         blogDate2: "Iyun 2026",
@@ -186,6 +195,10 @@ const translations = {
         btnSend: "Xabar Yuborish 📱",
         tooltipTelegramVerify: "Mijozlar fikri 100% haqiqiy va ishonchli ekanligini ko'rsatish uchun Telegram orqali tasdiqlash imkoniyati mavjud.",
         tooltipContactInfo: "Sizning aloqa ma'lumotlaringiz faqat xabaringizga tezda javob berish uchun ishlatiladi.",
+        detailOverviewTitle: "UMUMIY MA'LUMOT VA ME'MORCHILIK",
+        detailTechTitle: "TEXNOLOGIK STEK VA QUROLAR:",
+        detailViewCode: "Manba Kodini Ko'rish ↗",
+        detailVisitSite: "Saytga O'tish ↗",
         aiGreeting: "<strong>Salom! 👋</strong><br><br>Men Muxammadrizoning AI yordamchisiman. Uning dasturlash va o'yin loyihalari haqida nimani bilishni xohlaysiz?",
         chipAbout: "👨‍💻 Muxammadrizo kim?",
         chipBackend: "⚙️ Backend Arxitekturasi?",
@@ -199,16 +212,18 @@ const translations = {
         navJourney: "Путь",
         navSkills: "Навыки",
         navProjects: "Проекты",
-        navProof: "Успехи",
-        navBlog: "DevLog",
+        navProof: "Достижения",
+        navBlog: "Мой Блог",
         navReviews: "Отзывы",
         navContact: "Контакты",
+        navBackHome: "← Назад к Портфолио",
+        textBackHome: "← Назад к Портфолио",
         heroBadge: "16 лет • Hackathon IT School Фергана",
         serverLabel: "Сервер:",
         heroSuffix: ", я",
         heroName: "А'замжонов Мухаммадризо",
         typingPrefix: "Я специализируюсь на:",
-        heroSubtext: "Студент Hackathon IT School в Фергане. Основатель NKND Studios. Разрабатываю бэкенд на Python/FastAPI и игры на Unreal Engine 5.8.",
+        heroSubtext: "Студент Hackathon IT School в Фергане. Разрабатываю бэкенд на Python/FastAPI и игры на Unreal Engine 5.8.",
         heroBtn: "Смотреть Проекты 🚀",
         heroContactBtn: "Get in Touch 💬",
         titleJourney: "Образование и Развитие",
@@ -218,8 +233,8 @@ const translations = {
         journeySchoolDesc: "Изучение алгоритмов, инженерии ПО и участие в хакатонах.",
         journeyTagStudio: "Игровая Студия",
         journeyDate2: "2024 - Наст. время",
-        journeyStudioTitle: "Основатель — NKND Studios",
-        journeyStudioDesc: "Разработка игры Project Cube Island на Unreal Engine 5.8.",
+        journeyStudioTitle: "Основатель — Indie Game Development",
+        journeyStudioDesc: "Разработка 3D игр на Unreal Engine 5.8.",
         journeyTagBackend: "Бэкенд Системы",
         journeyDate3: "2023 - Наст. время",
         journeyBackendTitle: "Full-Stack Инженерия",
@@ -231,22 +246,22 @@ const translations = {
         filterUe5: "Unreal Engine 5",
         filterBot: "Telegram Боты",
         tagCubeIsland: "Активный MVP Игры 🌋",
-        titleCubeIsland: "Project Cube Island",
+        titleCubeIsland: "Unreal Engine 3D Game Project",
         descCubeIsland: "Игра на выживание, сочетающая реалистичные биомы и абстрактные кубы.",
-        btnReadPitch: "Читать Подробнее &rarr;",
+        btnReadPitch: "Читать Подробнее ↗",
         tagStorefront: "Активная Разработка 🚀",
         titleStorefront: "Витрина Местного Бизнеса",
         descStorefront: "Быстрое веб-приложение для розничного магазина с каталогом.",
-        btnViewDetails: "Смотреть Детали &rarr;",
+        btnViewDetails: "Смотреть Детали ↗",
         titleProof: "Достижения и Сертификаты",
         tagHackathon: "Академические и Хакатоны 🏆",
         titleHackathon: "Hackathon IT School Фергана",
         descHackathon: "Признан за высокую успеваемость и активную разработку проектов.",
-        btnViewProof: "Смотреть Сертификат &rarr;",
-        titleBlog: "DevLog и Новости Студии",
+        btnViewProof: "Смотреть Детали ↗",
+        titleBlog: "DevLog и Мой Блог",
         blogBadge1: "DevLog #04 • UE 5.8",
         blogDate1: "Июль 2026",
-        blogTitle1: "Project Cube Island - Процедурные Биомы",
+        blogTitle1: "UE5 Game - Procedural Biomes",
         blogDesc1: "Оптимизация систем PCG и тумана Lumen для вулканических биомов в Unreal Engine 5.8.",
         blogBadge2: "DevLog #03 • FastAPI",
         blogDate2: "Июнь 2026",
@@ -273,7 +288,11 @@ const translations = {
         btnSend: "Отправить Сообщение 📱",
         tooltipTelegramVerify: "Подтверждение через Telegram показывает, что отзывы написаны реальными клиентами.",
         tooltipContactInfo: "Ваши контактные данные используются только для быстрого ответа на ваше сообщение.",
-        aiGreeting: "<strong>Здравствуйте! 👋</strong><br><br>Я ИИ-помощник Мухаммадризо. Чем могу помочь вам узнать о его разработке и проектах?",
+        detailOverviewTitle: "ОБЗОР И АРХИТЕКТУРА",
+        detailTechTitle: "СТЕК ТЕХНОЛОГИЙ И ИНСТРУМЕНТЫ:",
+        detailViewCode: "Исходный Код ↗",
+        detailVisitSite: "Перейти на Сайт ↗",
+        aiGreeting: "<strong>Здравствуйте! 👋</strong><br><br>Я ИИ-помощник Мухаммадризо. Чем могу помочь вам сегодня?",
         chipAbout: "👨‍💻 Кто такой Мухаммадризо?",
         chipBackend: "⚙️ Архитектура Backend?",
         chipUe5: "🎮 Расскажи об игре UE5",
@@ -390,6 +409,7 @@ setInterval(rotateHoloGreeting, 2800);
 document.addEventListener('DOMContentLoaded', () => {
     changeLanguage(currentLanguage);
     loadVerifiedReviews();
+    checkAiLockoutState();
 
     document.querySelectorAll('.nav-links a').forEach(link => {
         link.addEventListener('click', () => {
@@ -579,7 +599,6 @@ function renderReviewList() {
         const cleanUsername = r.username ? r.username.replace('@', '') : '';
         const initials = r.avatar_initials || (r.name ? r.name.substring(0, 1).toUpperCase() : 'M');
 
-        // Clean Avatar Rendering with XSS Escaping
         const avatarHtml = r.avatar_url
             ? `<img src="${escapeHTML(r.avatar_url)}" class="review-avatar-img" onerror="this.outerHTML='<div class=\\'review-avatar\\'>${escapeHTML(initials)}</div>';" alt="${escapeHTML(r.name)}">`
             : `<div class="review-avatar">${escapeHTML(initials)}</div>`;
@@ -644,7 +663,6 @@ window.likeReview = async function(reviewId) {
     const numericId = Number(reviewId);
     let likedArray = JSON.parse(localStorage.getItem('liked_reviews') || '[]').map(Number);
 
-    // Check if valid review ID exists in currently loaded reviews list
     const reviewExists = allLoadedReviews.some(r => Number(r.id) === numericId);
     if (!reviewExists) return;
 
@@ -666,11 +684,17 @@ window.likeReview = async function(reviewId) {
 };
 
 /* ==========================================================================
-   6. TERMINAL LOADER (> Portfolio Output)
+   6. TERMINAL LOADER (> Portfolio Output) - SKIPPED ON BACK NAVIGATION
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     const typedText = document.getElementById('typed-text');
     const loader = document.getElementById('loader');
+
+    if (sessionStorage.getItem('loader_shown') === 'true') {
+        if (loader) loader.style.display = 'none';
+        document.body.classList.remove('no-scroll');
+        return;
+    }
 
     const lines = [
         { text: "P", speed: 150, pause: 700 },
@@ -697,6 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 loader.style.opacity = '0';
                 document.body.classList.remove('no-scroll');
+                sessionStorage.setItem('loader_shown', 'true');
                 setTimeout(() => {
                     loader.style.display = 'none';
                 }, 500);
@@ -704,7 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    setTimeout(typeTerminal, 500);
+    setTimeout(typeTerminal, 300);
 });
 
 /* ==========================================================================
@@ -929,45 +954,82 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   11. FLOATING AI CHATBOT WIDGET
+   11. FLOATING AI CHATBOT WIDGET & 10-QUESTION NON-PORTFOLIO CHAIN LOCK
    ========================================================================== */
+let offTopicAiCount = parseInt(localStorage.getItem('off_topic_ai_count') || '0', 10);
+
 const aiKnowledge = {
     en: {
-        greeting: "Hello there! 👋 I am Gemini, Muxammadrizo's AI assistant. I can tell you about his software engineering, game projects, freelance rates, or answer any general programming questions!",
-        about: "Muxammadrizo is a 16-year-old developer studying at Hackathon IT School in Fergana, Uzbekistan. He is the founder and lead of NKND Studios, specializing in Python backends, FastAPI REST architectures, and Unreal Engine 5.8.",
+        greeting: "Hello! I am Gemini, Muxammadrizo's AI assistant. How can I assist you today?",
+        about: "Muxammadrizo is a 16-year-old developer studying at Hackathon IT School in Fergana, Uzbekistan. He specializes in Python backends, FastAPI REST architectures, and Unreal Engine 5.8.",
         rates: "Since Muxammadrizo is a student starting out in freelancing, his rates are very affordable and negotiable! Pricing depends on project scope, complexity, and tech stack (Python/FastAPI, Telegram Bots, or UE5 tools), but always stays fair and budget-friendly.",
         location: "Muxammadrizo is based in Fergana, Uzbekistan. He works remotely with clients worldwide via Telegram and email.",
         frontend: "While his primary focus is deep backend architecture and game engines, he builds clean, modern Frontend interfaces using HTML, CSS, and JS—just like this portfolio!",
-        studio: "He founded NKND Studios, an indie game studio currently developing 'Project Cube Island' in Unreal Engine 5.8 featuring procedural biomes and non-lethal blaster mechanics.",
-        game: "He is architecting 'Project Cube Island' in Unreal Engine 5.8, utilizing PCG foliage networks, volumetric Lumen fog, and custom game mechanics.",
+        studio: "He works on indie game projects in Unreal Engine 5.8 featuring procedural biomes and custom gameplay mechanics.",
+        game: "He is architecting 3D game projects in Unreal Engine 5.8, utilizing PCG foliage networks, volumetric Lumen fog, and custom gameplay mechanics.",
         backend: "His backend stack includes Python, FastAPI, SQLite, WebSockets for live data, Gmail 2FA OTP gateways, and automated Telegram bots.",
         contact: "You can reach out using the Contact Form on this page or message him directly on Telegram @muxammadrizo0125!"
     },
     uz: {
-        greeting: "Salom! 👋 Men Muxammadrizoning AI yordamchisiman. Men sizga uning dasturlash va o'yin loyihalari, frilans narxlari haqida gapirib bera olaman!",
-        about: "Muxammadrizo Farg'onadagi Hackathon IT School o'quvchisi, 16 yoshli dasturchi va NKND Studios asoschisi. U Python, FastAPI va Unreal Engine 5.8 bo'yicha mutaxassis.",
+        greeting: "Salom! Men Muxammadrizoning AI yordamchisiman. Bugun sizga qanday yordam bera olaman?",
+        about: "Muxammadrizo Farg'onadagi Hackathon IT School o'quvchisi, 16 yoshli dasturchi. U Python, FastAPI va Unreal Engine 5.8 bo'yicha mutaxassis.",
         rates: "Muxammadrizo frilansni endi boshlayotgan o'quvchi bo'lgani uchun uning xizmat narxlari juda hamyonbop va kelishiladigan! Narx loyiha hajmi va murakkabligiga bog'liq.",
         location: "Muxammadrizo O'zbekistonning Farg'ona shahrida yashaydi va masofaviy ishlaydi.",
         frontend: "U asosan backend me'morchiligini bajarsa ham, ushbu portfel kabi zamonaviy va chiroyli interfeyslarni yarata oladi.",
-        studio: "U NKND Studios asoschisi va hozirda Unreal Engine 5.8 da 'Project Cube Island' o'yinini yaratmoqda.",
-        game: "U 'Project Cube Island' o'yinini Unreal Engine 5.8 da PCG va Lumen texnologiyalari bilan yaratmoqda.",
+        studio: "U Unreal Engine 5.8 da indie o'yin loyihalarini yaratmoqda.",
+        game: "U 3D o'yin loyihalarini Unreal Engine 5.8 da PCG va Lumen texnologiyalari bilan yaratmoqda.",
         backend: "Uning backend steki: Python, FastAPI, SQLite, WebSockets va Telegram botlar.",
         contact: "U bilan sahifaning pastki qismidagi aloqa formasi yoki Telegram (@muxammadrizo0125) orqali bog'lanishingiz mumkin!"
     },
     ru: {
-        greeting: "Здравствуйте! 👋 Я ИИ-помощник Мухаммадризо. Я могу рассказать вам о его бэкенд-системах, разработке игр, расценках на фриланс или ответить на любые вопросы!",
-        about: "Мухаммадризо — 16-летний разработчик, студент Hackathon IT School в Фергане (Узбекистан) и основатель NKND Studios.",
+        greeting: "Здравствуйте! Я ИИ-помощник Мухаммадризо. Чем могу помочь вам сегодня?",
+        about: "Мухаммадризо — 16-летний разработчик, студент Hackathon IT School в Фергане (Узбекистан).",
         rates: "Поскольку Мухаммадризо — студент, начинающий путь во фрилансе, его расценки очень демократичны и обсуждаемы! Цена зависит от сложности и стека проекта.",
         location: "Мухаммадризо живет в Фергане, Узбекистан, и работает удаленно.",
         frontend: "Хотя он специализируется на бэкенде, он отлично владеет Frontend (HTML, CSS) и создает современные интерфейсы!",
-        studio: "Он основал инди-студию NKND Studios, разрабатывающую 'Project Cube Island' на Unreal Engine 5.8.",
-        game: "Мухаммадризо разрабатывает 'Project Cube Island' на Unreal Engine 5.8 с использованием систем PCG и Lumen.",
+        studio: "Он разрабатывает 3D игры на Unreal Engine 5.8.",
+        game: "Мухаммадризо разрабатывает 3D игры на Unreal Engine 5.8 с использованием систем PCG и Lumen.",
         backend: "Его бэкенд-стек: Python, FastAPI, SQLite, WebSockets и автоматизированные Telegram-боты.",
         contact: "Вы можете написать ему через форму контактов внизу страницы или напрямую в Telegram (@muxammadrizo0125)!"
     }
 };
 
+function checkAiLockoutState() {
+    const lockUntil = parseInt(localStorage.getItem('ai_locked_until') || '0', 10);
+    const aiToggleBtn = document.getElementById('ai-toggle-btn');
+    const aiStatusDot = document.getElementById('ai-status-dot');
+    const aiHeaderTitle = document.getElementById('ai-header-title');
+    const chatWindow = document.getElementById('chat-window');
+
+    if (lockUntil && Date.now() < lockUntil) {
+        if (aiToggleBtn) aiToggleBtn.classList.add('ai-locked');
+        if (aiStatusDot) aiStatusDot.classList.add('status-dot-locked');
+        if (aiHeaderTitle) aiHeaderTitle.textContent = "AI Locked (10-Min Break)";
+        if (chatWindow && !chatWindow.classList.contains('chat-hidden')) {
+            chatWindow.classList.add('chat-hidden');
+        }
+        return true;
+    } else if (lockUntil) {
+        localStorage.removeItem('ai_locked_until');
+        localStorage.setItem('off_topic_ai_count', '0');
+        offTopicAiCount = 0;
+        if (aiToggleBtn) aiToggleBtn.classList.remove('ai-locked');
+        if (aiStatusDot) aiStatusDot.classList.remove('status-dot-locked');
+        if (aiHeaderTitle) aiHeaderTitle.textContent = "Gemini AI Assistant";
+    }
+    return false;
+}
+
 window.triggerQuickReply = function(topicKey) {
+    if (isAiThinking || checkAiLockoutState()) {
+        if (checkAiLockoutState()) {
+            const lockUntil = parseInt(localStorage.getItem('ai_locked_until') || '0', 10);
+            const minsLeft = Math.ceil((lockUntil - Date.now()) / 60000);
+            alert(`⛓️🔒 AI Assistant is currently locked.\n\nIt will unlock in ${minsLeft} minutes.`);
+        }
+        return;
+    }
+
     let chipI18nKey = '';
     if (topicKey === 'about') chipI18nKey = 'chipAbout';
     if (topicKey === 'game') chipI18nKey = 'chipUe5';
@@ -976,19 +1038,7 @@ window.triggerQuickReply = function(topicKey) {
     if (topicKey === 'contact') chipI18nKey = 'chipContact';
 
     const textToShow = translations[currentLanguage][chipI18nKey];
-    const chatBody = document.getElementById('chat-body');
-
-    if (chatBody) {
-        const userDiv = document.createElement('div');
-        userDiv.className = 'message user-message';
-        userDiv.textContent = textToShow;
-        chatBody.appendChild(userDiv);
-        chatBody.scrollTop = chatBody.scrollHeight;
-
-        setTimeout(() => {
-            typeAiMessage(aiKnowledge[currentLanguage][topicKey] || aiKnowledge.en[topicKey]);
-        }, 400);
-    }
+    processUserChat(textToShow);
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1000,6 +1050,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (aiToggleBtn && chatWindow) {
         aiToggleBtn.addEventListener('click', () => {
+            if (checkAiLockoutState()) {
+                const lockUntil = parseInt(localStorage.getItem('ai_locked_until') || '0', 10);
+                const minsLeft = Math.ceil((lockUntil - Date.now()) / 60000);
+                alert(`⛓️🔒 AI Assistant is currently locked for non-portfolio questions.\n\nIt will unlock automatically in ${minsLeft} minutes.`);
+                return;
+            }
             chatWindow.classList.toggle('chat-hidden');
         });
     }
@@ -1011,19 +1067,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (sendChatBtn && chatInput) {
-        sendChatBtn.addEventListener('click', () => processUserChat(chatInput.value));
+        sendChatBtn.addEventListener('click', () => {
+            if (!isAiThinking) processUserChat(chatInput.value);
+        });
 
         chatInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                processUserChat(chatInput.value);
+                e.preventDefault();
+                if (!isAiThinking) processUserChat(chatInput.value);
             }
         });
     }
 });
 
-function typeAiMessage(text) {
+function typeAiMessage(text, onComplete) {
     const chatBody = document.getElementById('chat-body');
-    if (!chatBody) return;
+    if (!chatBody) {
+        if (onComplete) onComplete();
+        return;
+    }
 
     const botDiv = document.createElement('div');
     botDiv.className = 'message bot-message';
@@ -1032,23 +1094,45 @@ function typeAiMessage(text) {
     let i = 0;
     function typing() {
         if (i < text.length) {
-            botDiv.innerHTML += text.charAt(i);
+            botDiv.textContent += text.charAt(i);
             i++;
             chatBody.scrollTop = chatBody.scrollHeight;
             setTimeout(typing, 12);
+        } else {
+            if (onComplete) onComplete();
         }
     }
     typing();
 }
 
-function processUserChat(text) {
+async function processUserChat(text) {
     const originalText = text.trim();
-    if (!originalText) return;
+    if (!originalText || isAiThinking) return;
+
+    if (checkAiLockoutState()) {
+        alert("🔒 AI Assistant is locked. Please try again later!");
+        return;
+    }
+
+    // LOCK CONTROLS
+    isAiThinking = true;
 
     const chatBody = document.getElementById('chat-body');
     const chatInput = document.getElementById('chat-input');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    const quickRepliesBox = document.getElementById('ai-quick-replies');
+
+    function setControlsState(disabled) {
+        if (chatInput) chatInput.disabled = disabled;
+        if (sendChatBtn) sendChatBtn.disabled = disabled;
+        if (quickRepliesBox) {
+            if (disabled) quickRepliesBox.classList.add('disabled');
+            else quickRepliesBox.classList.remove('disabled');
+        }
+    }
 
     if (chatBody) {
+        // Render User Message
         const userDiv = document.createElement('div');
         userDiv.className = 'message user-message';
         userDiv.textContent = originalText;
@@ -1057,48 +1141,96 @@ function processUserChat(text) {
         if (chatInput) chatInput.value = '';
         chatBody.scrollTop = chatBody.scrollHeight;
 
-        setTimeout(() => {
-            const lowerText = originalText.toLowerCase();
-            let replyText = null;
+        setControlsState(true);
 
-            let responseLang = currentLanguage;
-            if (/[а-яА-ЯёЁ]/.test(lowerText)) {
-                responseLang = 'ru';
-            } else if (lowerText.includes('salom') || lowerText.includes('haqida') || lowerText.includes('o\'yin') || lowerText.includes('kim') || lowerText.includes('qanday') || lowerText.includes('narx')) {
-                responseLang = 'uz';
-            }
+        // SHOW "Thinking... 💭" TEMPORARY BOT MESSAGE
+        const thinkingDiv = document.createElement('div');
+        thinkingDiv.className = 'message bot-message thinking';
+        thinkingDiv.id = 'ai-thinking-indicator';
+        thinkingDiv.innerHTML = `<span>Thinking... 💭</span>`;
+        chatBody.appendChild(thinkingDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
 
-            const hasKeyword = (words) => words.some(w => lowerText.includes(w));
+        // Client-side fallback check
+        const lowerMsg = originalText.toLowerCase();
+        const portfolioKeywords = [
+            'muxammadrizo', 'portfolio', 'project', 'backend', 'fastapi',
+            'unreal', 'ue5', 'nknd', 'cube island', 'hire', 'rate', 'rates', 'price',
+            'prices', 'cost', 'costs', 'cheap', 'budget', 'free', 'contact', 'skill',
+            'blog', 'review', 'fergana', 'school', 'game', 'dev', 'python', 'who',
+            'about', 'work', 'service', 'services', 'help', 'question', 'tell',
+            'explain', 'describe', 'hi', 'hello', 'hey', 'salom', 'привет'
+        ];
+        const isClientPortfolio = portfolioKeywords.some(kw => lowerMsg.includes(kw)) || lowerMsg.length <= 3;
 
-            if (hasKeyword(['hello', 'hi', 'hey', 'salom', 'привет'])) {
-                replyText = aiKnowledge[responseLang].greeting;
-            } else if (hasKeyword(['who', 'about', 'age', 'school', 'kim', 'yosh', 'кто', 'возраст', 'школа'])) {
-                replyText = aiKnowledge[responseLang].about;
-            } else if (hasKeyword(['price', 'cost', 'rate', 'hire', 'pay', 'narx', 'puli', 'цена', 'стоимость', 'сколько'])) {
-                replyText = aiKnowledge[responseLang].rates;
-            } else if (hasKeyword(['where', 'live', 'location', 'qayerda', 'shahri', 'где', 'город'])) {
-                replyText = aiKnowledge[responseLang].location;
-            } else if (hasKeyword(['nknd', 'studio', 'студия'])) {
-                replyText = aiKnowledge[responseLang].studio;
-            } else if (hasKeyword(['frontend', 'html', 'css', 'фронтенд'])) {
-                replyText = aiKnowledge[responseLang].frontend;
-            } else if (hasKeyword(['game', 'ue5', 'unreal', 'o\'yin', 'игра', 'игру'])) {
-                replyText = aiKnowledge[responseLang].game;
-            } else if (hasKeyword(['python', 'backend', 'api', 'fastapi', 'бэкенд'])) {
-                replyText = aiKnowledge[responseLang].backend;
-            } else if (hasKeyword(['contact', 'work', 'aloqa', 'контакт', 'связаться'])) {
-                replyText = aiKnowledge[responseLang].contact;
-            } else {
-                if (responseLang === 'uz') {
-                    replyText = "Men Muxammadrizoning AI yordamchisiman! U Python, FastAPI backend va Unreal Engine 5.8 bo'yicha kuchli tajribaga ega. U bilan loyihalar bo'yicha ishlash, narxlar yoki bog'lanish haqida so'rashingiz mumkin!";
-                } else if (responseLang === 'ru') {
-                    replyText = "Я ИИ-помощник Мухаммадризо! Он специализируется на Python/FastAPI бэкенде и Unreal Engine 5.8. Можете спросить меня о его проектах, расценках или о том, как с ним связаться!";
-                } else {
-                    replyText = "I am Muxammadrizo's AI assistant! He specializes in Python/FastAPI backends and Unreal Engine 5.8. Feel free to ask me about his projects, freelance rates, or how to get in touch with him!";
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: originalText })
+            });
+
+            // REMOVE THINKING INDICATOR ON RESPONSE
+            const activeThinkingMsg = document.getElementById('ai-thinking-indicator');
+            if (activeThinkingMsg) activeThinkingMsg.remove();
+
+            if (response.ok) {
+                const data = await response.json();
+                const isPortfolioMsg = data.is_portfolio !== undefined ? data.is_portfolio : isClientPortfolio;
+                const isShortToken = originalText.length <= 3;
+                let replyMessage = data.response;
+
+                if (!isPortfolioMsg && !isShortToken) {
+                    offTopicAiCount++;
+                    localStorage.setItem('off_topic_ai_count', offTopicAiCount.toString());
+
+                    if (offTopicAiCount >= 10) {
+                        const lockUntil = Date.now() + 10 * 60 * 1000; // 10-minute block
+                        localStorage.setItem('ai_locked_until', lockUntil.toString());
+
+                        const chatWindow = document.getElementById('chat-window');
+                        if (chatWindow) chatWindow.classList.add('chat-hidden');
+
+                        checkAiLockoutState();
+                        alert("⛓️🔒 You have reached the 10 non-portfolio question limit. The AI Assistant is locked for 10 minutes.");
+                        isAiThinking = false;
+                        setControlsState(false);
+                        return;
+                    } else if (offTopicAiCount >= 8) { // Warning when 2 questions remain
+                        const remaining = 10 - offTopicAiCount;
+                        replyMessage = `${data.response}\n\n⚠️ Note: You have ${remaining} non-portfolio question(s) remaining before AI Assistant locks. Feel free to ask about Muxammadrizo's projects!`;
+                    }
                 }
+
+                typeAiMessage(replyMessage, () => {
+                    isAiThinking = false;
+                    setControlsState(false);
+                    if (chatInput) chatInput.focus();
+                });
+            } else {
+                if (!isClientPortfolio && originalText.length > 3) {
+                    offTopicAiCount++;
+                    localStorage.setItem('off_topic_ai_count', offTopicAiCount.toString());
+                }
+
+                typeAiMessage("I am currently experiencing network latency. Feel free to reach Muxammadrizo directly on Telegram @muxammadrizo0125!", () => {
+                    isAiThinking = false;
+                    setControlsState(false);
+                });
+            }
+        } catch (e) {
+            const activeThinkingMsg = document.getElementById('ai-thinking-indicator');
+            if (activeThinkingMsg) activeThinkingMsg.remove();
+
+            if (!isClientPortfolio && originalText.length > 3) {
+                offTopicAiCount++;
+                localStorage.setItem('off_topic_ai_count', offTopicAiCount.toString());
             }
 
-            typeAiMessage(replyText);
-        }, 400);
+            typeAiMessage("I am Muxammadrizo's AI assistant! Feel free to ask me about his software engineering, game projects, or freelance work!", () => {
+                isAiThinking = false;
+                setControlsState(false);
+            });
+        }
     }
 }
