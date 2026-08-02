@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Muxammadrizo.dev | Portfolio</title>
+    <title id="site-page-title">Muxammadrizo.dev | Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <!-- Version v=60.0 forces fresh CSS loading -->
-    <link rel="stylesheet" href="/static/style.css?v=60.0">
+    <link rel="stylesheet" href="/static/style.css?v=72.0">
 </head>
 <body class="no-scroll">
 
@@ -19,7 +18,7 @@
 
     <!-- 2. NAVBAR WITH BULLETPROOF LANG & HAMBURGER BUTTONS -->
     <nav>
-        <div class="logo">Muxammadrizo<span>.dev</span></div>
+        <div class="logo" id="nav-brand-logo">Muxammadrizo<span>.dev</span></div>
 
         <div class="nav-links" id="nav-links">
             <a href="#about" data-i18n="navAbout">About</a>
@@ -43,13 +42,16 @@
         </div>
     </nav>
 
-    <!-- 3. HERO SECTION WITH TELEPORTING HOLOGRAPHIC GREETINGS -->
+    <!-- 3. HERO SECTION WITH TELEPORTING HOLOGRAPHIC GREETINGS & SESSION TIME -->
     <section class="hero" id="about">
         <div class="hero-badges">
-            <span class="badge-hero" data-i18n="heroBadge">16 y/o • Hackathon IT School Fergana</span>
+            <span class="badge-hero" id="display-hero-badge" data-i18n="heroBadge">16 y/o • Hackathon IT School Fergana</span>
             <div class="server-status-badge">
                 <span class="status-dot-hero" id="status-dot-hero"></span>
                 <span><span data-i18n="serverLabel">Server:</span> <strong id="server-status-text">Checking...</strong></span>
+            </div>
+            <div class="server-status-badge" style="background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.25); color: #38bdf8;">
+                <span>⏱️ Time on Site: <strong id="time-spent-text">00m 00s</strong></span>
             </div>
         </div>
 
@@ -57,7 +59,7 @@
             <span class="greeting-wrapper">
                 <span id="holo-greeting" class="holo-greeting">Hi</span><span id="hero-suffix" data-i18n="heroSuffix">, I'm</span>
             </span> <br>
-            <span data-i18n="heroName" class="gradient-text">A'zamjonov Muxammadrizo</span>
+            <span id="display-hero-name" data-i18n="heroName" class="gradient-text">A'zamjonov Muxammadrizo</span>
         </h1>
 
         <p class="typing-container" style="margin-top: 10px;">
@@ -65,19 +67,19 @@
             <span id="typewriter-text" class="typewriter-highlight"></span><span class="typewriter-cursor">|</span>
         </p>
 
-        <p data-i18n="heroSubtext" style="max-width: 680px; margin: 24px 0;">
+        <p id="display-hero-bio" data-i18n="heroSubtext" style="max-width: 680px; margin: 24px 0;">
             Developer studying at <strong>Hackathon IT School in Fergana, Uzbekistan</strong>. Founder of <strong>NKND Studios</strong>. I architect fast Python/FastAPI backends and build interactive open-world games in Unreal Engine 5.8.
         </p>
 
         <!-- WIRED SOCIAL LINKS -->
         <div class="hero-social-icons">
-            <a href="https://t.me/muxammadrizo0125" target="_blank" class="icon-link" title="Telegram">
+            <a id="link-telegram" href="https://t.me/muxammadrizo0125" target="_blank" class="icon-link" title="Telegram">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.65-.53.81-1.08.5l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.05 5.56-5.02c.24-.22-.05-.34-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.65-.64.13-.95l11.57-4.46c.53-.19 1 .13.85.94z"/></svg>
             </a>
-            <a href="https://github.com/azammuhammadrizo924-debug" target="_blank" class="icon-link" title="GitHub">
+            <a id="link-github" href="https://github.com/azammuhammadrizo924-debug" target="_blank" class="icon-link" title="GitHub">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
             </a>
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=azammuhammadrizo924@gmail.com" target="_blank" class="icon-link" title="Compose Gmail">
+            <a id="link-gmail" href="https://mail.google.com/mail/?view=cm&fs=1&to=azammuhammadrizo924@gmail.com" target="_blank" class="icon-link" title="Compose Gmail">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
             </a>
         </div>
@@ -90,7 +92,7 @@
 
     <!-- 4. DEV JOURNEY -->
     <h2 class="section-title" id="journey" data-i18n="titleJourney">Dev Journey & Education</h2>
-    <div class="horizontal-scroll-row">
+    <div class="horizontal-scroll-row" id="journey-container">
         <div class="journey-card h-card">
             <span class="journey-badge" data-i18n="journeyTagEducation">Education</span>
             <div class="journey-date" data-i18n="journeyDate1">2024 - Present</div>
@@ -133,37 +135,9 @@
 
         <div class="chart-marquee-container" id="chart-marquee-container">
             <div class="chart-marquee-track">
-                <!-- GROUP 1 -->
-                <div class="marquee-group">
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="92%"><span class="hologram-percent" data-target="92">0%</span></div></div><span class="hologram-label">Python</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="88%"><span class="hologram-percent" data-target="88">0%</span></div></div><span class="hologram-label">FastAPI</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="80%"><span class="hologram-percent" data-target="80">0%</span></div></div><span class="hologram-label">UE 5.8</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="90%"><span class="hologram-percent" data-target="90">0%</span></div></div><span class="hologram-label">Telegram Bots</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="85%"><span class="hologram-percent" data-target="85">0%</span></div></div><span class="hologram-label">SQLite & APIs</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="82%"><span class="hologram-percent" data-target="82">0%</span></div></div><span class="hologram-label">HTML/CSS</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="92%"><span class="hologram-percent" data-target="92">0%</span></div></div><span class="hologram-label">Python</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="88%"><span class="hologram-percent" data-target="88">0%</span></div></div><span class="hologram-label">FastAPI</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="80%"><span class="hologram-percent" data-target="80">0%</span></div></div><span class="hologram-label">UE 5.8</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="90%"><span class="hologram-percent" data-target="90">0%</span></div></div><span class="hologram-label">Telegram Bots</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="85%"><span class="hologram-percent" data-target="85">0%</span></div></div><span class="hologram-label">SQLite & APIs</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="82%"><span class="hologram-percent" data-target="82">0%</span></div></div><span class="hologram-label">HTML/CSS</span></div>
-                </div>
-
-                <!-- GROUP 2 -->
-                <div class="marquee-group" aria-hidden="true">
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="92%"><span class="hologram-percent" data-target="92">0%</span></div></div><span class="hologram-label">Python</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="88%"><span class="hologram-percent" data-target="88">0%</span></div></div><span class="hologram-label">FastAPI</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="80%"><span class="hologram-percent" data-target="80">0%</span></div></div><span class="hologram-label">UE 5.8</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="90%"><span class="hologram-percent" data-target="90">0%</span></div></div><span class="hologram-label">Telegram Bots</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="85%"><span class="hologram-percent" data-target="85">0%</span></div></div><span class="hologram-label">SQLite & APIs</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="82%"><span class="hologram-percent" data-target="82">0%</span></div></div><span class="hologram-label">HTML/CSS</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="92%"><span class="hologram-percent" data-target="92">0%</span></div></div><span class="hologram-label">Python</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="88%"><span class="hologram-percent" data-target="88">0%</span></div></div><span class="hologram-label">FastAPI</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="80%"><span class="hologram-percent" data-target="80">0%</span></div></div><span class="hologram-label">UE 5.8</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="90%"><span class="hologram-percent" data-target="90">0%</span></div></div><span class="hologram-label">Telegram Bots</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="85%"><span class="hologram-percent" data-target="85">0%</span></div></div><span class="hologram-label">SQLite & APIs</span></div>
-                    <div class="hologram-col"><div class="hologram-bar-wrapper"><div class="hologram-bar" data-height="82%"><span class="hologram-percent" data-target="82">0%</span></div></div><span class="hologram-label">HTML/CSS</span></div>
-                </div>
+                <!-- DYNAMIC SKILLS TRACK DYNAMICALLY POPULATED -->
+                <div class="marquee-group" id="skills-marquee-group1"></div>
+                <div class="marquee-group" id="skills-marquee-group2" aria-hidden="true"></div>
             </div>
         </div>
     </div>
@@ -218,7 +192,7 @@
 
     <!-- 8. DEVLOG & MY BLOG SECTION (#blog) -->
     <h2 class="section-title" id="blog" data-i18n="titleBlog">DevLog & My Blog</h2>
-    <div class="horizontal-scroll-row">
+    <div class="horizontal-scroll-row" id="blog-container">
         <div class="journey-card h-card">
             <span class="journey-badge" data-i18n="blogBadge1">DevLog #04 • UE 5.8</span>
             <div class="journey-date" data-i18n="blogDate1">July 2026</div>
@@ -302,7 +276,6 @@
                             <span>Verify via Telegram</span>
                         </button>
 
-                        <!-- REVIEWS TELEGRAM INFO TOOLTIP -->
                         <div class="info-tooltip-container">
                             <span class="info-icon" tabindex="0">ⓘ</span>
                             <div class="info-tooltip-popup" data-i18n="tooltipTelegramVerify">
@@ -328,7 +301,6 @@
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <label for="contact-email" data-i18n="labelEmail">Email or Telegram (@username)</label>
 
-                    <!-- CONTACT INFO TOOLTIP -->
                     <div class="info-tooltip-container">
                         <span class="info-icon" tabindex="0">ⓘ</span>
                         <div class="info-tooltip-popup" data-i18n="tooltipContactInfo">
@@ -361,8 +333,8 @@
                 <p id="modal-tech" style="font-size: 0.95rem; font-weight: 600; margin-top: 4px;"></p>
             </div>
             <div class="modal-actions">
-                <a id="modal-github-link" href="#" target="_blank" class="btn" style="display: none; background: #334155; color: #fff;">View Code ↗</a>
-                <a id="modal-live-link" href="#" target="_blank" class="btn" style="display: none;">Visit Site ↗</a>
+                <a id="modal-github-link" href="#" target="_blank" class="btn" style="display: none; background: #334155; color: #fff;" data-i18n="detailViewCode">View Code ↗</a>
+                <a id="modal-live-link" href="#" target="_blank" class="btn" style="display: none;" data-i18n="detailVisitSite">Visit Site ↗</a>
             </div>
         </div>
     </div>

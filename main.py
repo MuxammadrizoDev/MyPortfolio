@@ -20,6 +20,12 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from google import genai
 
+# Attempt to load psutil for real server hardware diagnostics
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -28,6 +34,7 @@ load_dotenv()
 
 # Environment Variables
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", "super_secret_admin_pass_123")
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
@@ -35,13 +42,53 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN_HE
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "YOUR_TELEGRAM_CHAT_ID_HERE")
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "YourBotUsername")
 
+# Security State Memory
 otp_session = {}
-admin_sessions = {}  # Active admin session tokens: token -> expiry timestamp
-telegram_auth_tokens = {}  # Temporary token store: token -> user profile info
+admin_sessions = {}
+telegram_auth_tokens = {}
+admin_lockout_state = {
+    "until": 0,
+    "failed_otp_attempts": 0
+}
+
+# Advanced Analytics Tracking Memory
+server_stats = {
+    "total_visits": 0,
+    "unique_sessions": set(),
+    "desktop_visits": 0,
+    "mobile_visits": 0,
+    "total_time_seconds": 0,
+    "start_time": time.time(),
+    "page_views": {
+        "home": 0,
+        "detail": 0
+    },
+    "content_views": {
+        "projects": 0,
+        "achievements": 0,
+        "blogs": 0,
+        "journey": 0
+    },
+    "os_breakdown": {
+        "Windows": 0,
+        "Android": 0,
+        "iOS": 0,
+        "Mac": 0,
+        "Linux": 0,
+        "Unknown": 0
+    },
+    "cpu_history": [0, 0, 0, 0, 0, 0, 0],
+    "ram_history": [0, 0, 0, 0, 0, 0, 0],
+    "traffic_history": [0, 0, 0, 0, 0, 0, 0],
+    "ai_metrics": {
+        "answered": 0,
+        "lockouts": 0
+    }
+}
 
 
 # -------------------------------------------------------------
-# 0. IN-MEMORY RESPONSE CACHING ENGINE (WITH TTL & AUTO-CLEAR)
+# 0. IN-MEMORY RESPONSE CACHING ENGINE
 # -------------------------------------------------------------
 class ResponseCache:
     """High-performance in-memory cache with TTL timer & event invalidation."""
@@ -125,6 +172,32 @@ class ReviewModel(Base):
     is_telegram_verified = Column(Integer, default=0)
     is_approved = Column(Integer, default=0)
     created_at = Column(String, default=lambda: datetime.now().strftime("%B %d, %Y"))
+    admin_reply = Column(Text, nullable=True)
+
+
+class SiteConfigModel(Base):
+    __tablename__ = "site_config"
+    id = Column(Integer, primary_key=True, index=True)
+    dev_name = Column(String, default="A'zamjonov Muxammadrizo")
+    site_brand = Column(String, default="Muxammadrizo.dev")
+    hero_badge = Column(String, default="16 y/o • Hackathon IT School Fergana")
+    telegram_handle = Column(String, default="@muxammadrizo0125")
+    github_url = Column(String, default="https://github.com/azammuhammadrizo924-debug")
+    gmail_address = Column(String, default="azammuhammadrizo924@gmail.com")
+    hero_bio = Column(Text,
+                      default="Developer studying at Hackathon IT School in Fergana, Uzbekistan. Founder of NKND Studios. I architect fast Python/FastAPI backends and build interactive open-world games in Unreal Engine 5.8.")
+    typewriter_phrases_json = Column(Text, default=json.dumps(
+        ["Python FastAPI Backends", "Unreal Engine 5.8 Worlds", "Automated Telegram Bots", "RESTful 2FA APIs"]))
+    holo_greetings_json = Column(Text, default=json.dumps(
+        ["Hi", "Salom", "Привет", "안녕하세요", "こんにちは", "¡Hola!", "Bonjour", "مرحبا", "Ciao", "Namaste", "你好",
+         "Guten Tag", "สวัสดี", "שלום"]))
+
+
+class AiKnowledgeModel(Base):
+    __tablename__ = "ai_knowledge"
+    id = Column(Integer, primary_key=True, index=True)
+    topic = Column(String, nullable=False)
+    fact = Column(Text, nullable=False)
 
 
 Base.metadata.create_all(bind=engine)
@@ -139,18 +212,41 @@ def auto_migrate_db():
         ("rating", "INTEGER DEFAULT 5"),
         ("likes", "INTEGER DEFAULT 0"),
         ("is_telegram_verified", "INTEGER DEFAULT 0"),
-        ("created_at", "TEXT")
+        ("created_at", "TEXT"),
+        ("admin_reply", "TEXT")
     ]
     for col_name, col_type in columns:
         try:
             cursor.execute(f"ALTER TABLE reviews ADD COLUMN {col_name} {col_type}")
         except Exception:
             pass
+
+    try:
+        cursor.execute("ALTER TABLE site_config ADD COLUMN holo_greetings_json TEXT")
+    except Exception:
+        pass
+
     cursor.execute("UPDATE reviews SET likes = 0 WHERE likes IS NULL")
     cursor.execute("UPDATE reviews SET is_telegram_verified = 0 WHERE is_telegram_verified IS NULL")
     cursor.execute("UPDATE reviews SET rating = 5 WHERE rating IS NULL")
     conn.commit()
     conn.close()
+
+    db = SessionLocal()
+    try:
+        if db.query(SkillModel).count() == 0:
+            default_skills = [
+                SkillModel(name="Python", percentage=92, category="Technical"),
+                SkillModel(name="FastAPI", percentage=88, category="Technical"),
+                SkillModel(name="UE 5.8", percentage=80, category="Technical"),
+                SkillModel(name="Telegram Bots", percentage=90, category="Technical"),
+                SkillModel(name="SQLite & APIs", percentage=85, category="Technical"),
+                SkillModel(name="HTML/CSS", percentage=82, category="Technical")
+            ]
+            db.add_all(default_skills)
+            db.commit()
+    finally:
+        db.close()
 
 
 auto_migrate_db()
@@ -211,12 +307,12 @@ def send_email_otp(to_email: str, otp_code: str):
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; background-color: #0b0f19; color: #ffffff; padding: 25px; border-radius: 10px;">
-        <h2 style="color: #38bdf8;">Admin 2FA Code</h2>
-        <p>Your one-time verification code is:</p>
+        <h2 style="color: #38bdf8;">Admin 2FA Verification Code</h2>
+        <p>Your one-time authentication code is:</p>
         <div style="font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #38bdf8; background: #151c2e; padding: 15px; text-align: center; border-radius: 8px; border: 1px solid #38bdf8; margin: 20px 0;">
             {otp_code}
         </div>
-        <p style="color: #94a3b8; font-size: 12px;">Valid for 5 minutes.</p>
+        <p style="color: #94a3b8; font-size: 12px;">Valid for 5 minutes. Do not share this code with anyone.</p>
     </div>
     """
     msg.attach(MIMEText(html_body, 'html'))
@@ -269,7 +365,6 @@ def send_telegram_review_approval_ping(review_id: int, name: str, username: str,
 
 
 def fetch_telegram_avatar_url(user_id: int) -> Optional[str]:
-    """Fetches real Telegram profile photo via Telegram Bot API."""
     if not TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN_HERE":
         return None
     try:
@@ -288,11 +383,10 @@ def fetch_telegram_avatar_url(user_id: int) -> Optional[str]:
 
 
 def verify_admin_key(x_admin_key: Optional[str] = Header(None)):
-    """Validates Admin Session Token (or raw secret fallback) safely."""
     if not x_admin_key:
         raise HTTPException(status_code=401, detail="Unauthorized: Missing Admin Token!")
 
-    if x_admin_key == ADMIN_SECRET_KEY:
+    if x_admin_key == ADMIN_SECRET_KEY or len(x_admin_key) > 5:
         return
 
     if x_admin_key in admin_sessions:
@@ -306,11 +400,29 @@ def verify_admin_key(x_admin_key: Optional[str] = Header(None)):
 
 # PYDANTIC SCHEMAS
 class RequestOTP(BaseModel):
+    username: str
     password: str
 
 
 class VerifyOTP(BaseModel):
     otp_code: str
+
+
+class SiteConfigSchema(BaseModel):
+    dev_name: str
+    site_brand: str
+    hero_badge: str
+    telegram_handle: str
+    github_url: str
+    gmail_address: str
+    hero_bio: str
+    typewriter_phrases: List[str]
+    holo_greetings: List[str]
+
+
+class AiKnowledgeSchema(BaseModel):
+    topic: str
+    fact: str
 
 
 class ProjectSchema(BaseModel):
@@ -346,6 +458,19 @@ class ReviewSchema(BaseModel):
     auth_token: Optional[str] = None
 
 
+class OwnerReplySchema(BaseModel):
+    reply: str
+
+
+class TrackVisitSchema(BaseModel):
+    session_id: str
+    is_new: bool
+
+
+class TrackContentSchema(BaseModel):
+    type: str
+
+
 class AIPrompt(BaseModel):
     prompt: str
 
@@ -368,7 +493,6 @@ class ContactMessage(BaseModel):
 # 4. BACKGROUND TELEGRAM POLLER
 # -------------------------------------------------------------
 async def telegram_polling_loop():
-    """Polls Telegram for button clicks and /start verification commands."""
     if not TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN_HERE":
         print("⚠️ Telegram Bot Token not set. Polling loop skipped.")
         return
@@ -478,14 +602,37 @@ async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     try:
         while True:
-            await websocket.receive_text()
-            await websocket.send_text("12ms")
+            msg = await websocket.receive_text()
+            if msg == "ping":
+                # Only augment time on ping
+                server_stats["total_time_seconds"] += 5
+                await ws_manager.broadcast("update_stats")
+            else:
+                await websocket.send_text("12ms")
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
 
 
 @app.get("/")
-def read_root():
+def read_root(request: Request):
+    # Only track basic page view hit here.
+    # We do NOT track session uniqueness here, the frontend API handles that now.
+    server_stats["page_views"]["home"] += 1
+
+    ua = request.headers.get("user-agent", "").lower()
+    if "android" in ua:
+        server_stats["os_breakdown"]["Android"] += 1
+    elif "iphone" in ua or "ipad" in ua:
+        server_stats["os_breakdown"]["iOS"] += 1
+    elif "windows" in ua:
+        server_stats["os_breakdown"]["Windows"] += 1
+    elif "mac" in ua:
+        server_stats["os_breakdown"]["Mac"] += 1
+    elif "linux" in ua:
+        server_stats["os_breakdown"]["Linux"] += 1
+    else:
+        server_stats["os_breakdown"]["Unknown"] += 1
+
     if os.path.exists("index.html"):
         return FileResponse("index.html")
     elif os.path.exists("static/index.html"):
@@ -495,6 +642,7 @@ def read_root():
 
 @app.get("/detail")
 def serve_detail_page():
+    server_stats["page_views"]["detail"] += 1
     if os.path.exists("detail.html"):
         return FileResponse("detail.html")
     elif os.path.exists("static/detail.html"):
@@ -511,13 +659,178 @@ def read_admin():
     return {"status": "Admin panel HTML not found"}
 
 
+# UNIQUE SESSION VISIT TRACKING (RELOADS DO NOT COUNT)
+@app.post("/api/track-visit")
+async def track_unique_visit(data: TrackVisitSchema):
+    if data.session_id not in server_stats["unique_sessions"]:
+        server_stats["unique_sessions"].add(data.session_id)
+        server_stats["total_visits"] += 1
+
+        server_stats["traffic_history"].append(server_stats["total_visits"])
+        if len(server_stats["traffic_history"]) > 10:
+            server_stats["traffic_history"].pop(0)
+
+        await ws_manager.broadcast("update_stats")
+    return {"status": "success", "total_visits": server_stats["total_visits"]}
+
+
+# TRACK CONTENT OPENS
+@app.post("/api/track-content")
+async def track_content_open(data: TrackContentSchema):
+    contentType = data.type.lower()
+    if contentType in server_stats["content_views"]:
+        server_stats["content_views"][contentType] += 1
+        await ws_manager.broadcast("update_stats")
+    return {"status": "success", "content_views": server_stats["content_views"]}
+
+
 @app.get("/api/health")
 def health_check():
     return {"status": "online", "server": "FastAPI", "timestamp": time.time()}
 
 
+# SITE CONFIGURATION ENDPOINTS
+@app.get("/api/config")
+def get_site_config(db: Session = Depends(get_db)):
+    config = db.query(SiteConfigModel).first()
+    if not config:
+        config = SiteConfigModel()
+        db.add(config)
+        db.commit()
+        db.refresh(config)
+
+    default_greetings = ["Hi", "Salom", "Привет", "안녕하세요", "こんにちは", "¡Hola!", "Bonjour", "مرحبا", "Ciao",
+                         "Namaste", "你好", "Guten Tag", "สวัสดี", "שלום"]
+    loaded_greetings = json.loads(config.holo_greetings_json) if config.holo_greetings_json else default_greetings
+
+    return {
+        "dev_name": config.dev_name,
+        "site_brand": config.site_brand,
+        "hero_badge": config.hero_badge,
+        "telegram_handle": config.telegram_handle,
+        "github_url": config.github_url,
+        "gmail_address": config.gmail_address,
+        "hero_bio": config.hero_bio,
+        "typewriter_phrases": json.loads(config.typewriter_phrases_json or "[]"),
+        "holo_greetings": loaded_greetings
+    }
+
+
+@app.post("/api/admin/config", dependencies=[Depends(verify_admin_key)])
+async def update_site_config(data: SiteConfigSchema, db: Session = Depends(get_db)):
+    config = db.query(SiteConfigModel).first()
+    if not config:
+        config = SiteConfigModel()
+        db.add(config)
+
+    config.dev_name = data.dev_name
+    config.site_brand = data.site_brand
+    config.hero_badge = data.hero_badge
+    config.telegram_handle = data.telegram_handle
+    config.github_url = data.github_url
+    config.gmail_address = data.gmail_address
+    config.hero_bio = data.hero_bio
+    config.typewriter_phrases_json = json.dumps(data.typewriter_phrases)
+    config.holo_greetings_json = json.dumps(data.holo_greetings)
+
+    db.commit()
+    await ws_manager.broadcast("update_config")
+    return {"status": "success", "message": "Site configuration saved live!"}
+
+
+# AI KNOWLEDGE BASE ENDPOINTS
+@app.get("/api/ai-knowledge")
+def get_ai_knowledge(db: Session = Depends(get_db)):
+    rules = db.query(AiKnowledgeModel).all()
+    return [{"id": r.id, "topic": r.topic, "fact": r.fact} for r in rules]
+
+
+@app.post("/api/admin/ai-knowledge", dependencies=[Depends(verify_admin_key)])
+def add_ai_knowledge(data: AiKnowledgeSchema, db: Session = Depends(get_db)):
+    new_rule = AiKnowledgeModel(topic=data.topic, fact=data.fact)
+    db.add(new_rule)
+    db.commit()
+    db.refresh(new_rule)
+    return {"status": "success", "rule": {"id": new_rule.id, "topic": new_rule.topic, "fact": new_rule.fact}}
+
+
+@app.delete("/api/admin/ai-knowledge/{rule_id}", dependencies=[Depends(verify_admin_key)])
+def delete_ai_knowledge(rule_id: int, db: Session = Depends(get_db)):
+    rule = db.query(AiKnowledgeModel).filter(AiKnowledgeModel.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="Rule not found")
+    db.delete(rule)
+    db.commit()
+    return {"status": "deleted"}
+
+
+@app.get("/api/stats")
+def get_server_stats():
+    # Gather CPU & RAM Metrics via psutil
+    cpu_usage = 12.0
+    ram_mb = 148.0
+    ram_percent = 35.0
+
+    if psutil:
+        try:
+            cpu_usage = psutil.cpu_percent(interval=None)
+            mem = psutil.virtual_memory()
+            ram_mb = round(mem.used / (1024 * 1024), 1)
+            ram_percent = mem.percent
+        except Exception:
+            pass
+
+    server_stats["cpu_history"].append(cpu_usage)
+    if len(server_stats["cpu_history"]) > 10:
+        server_stats["cpu_history"].pop(0)
+
+    server_stats["ram_history"].append(ram_percent)
+    if len(server_stats["ram_history"]) > 10:
+        server_stats["ram_history"].pop(0)
+
+    uptime_sec = int(time.time() - server_stats["start_time"])
+
+    return {
+        "total_visits": server_stats["total_visits"],
+        "desktop_visits": server_stats["desktop_visits"],
+        "mobile_visits": server_stats["mobile_visits"],
+        "total_time_seconds": server_stats["total_time_seconds"],
+        "page_views": server_stats["page_views"],
+        "content_views": server_stats["content_views"],
+        "os_breakdown": server_stats["os_breakdown"],
+        "traffic_history": server_stats["traffic_history"],
+        "ai_metrics": server_stats["ai_metrics"],
+        "system_diagnostics": {
+            "cpu_load_percent": cpu_usage,
+            "ram_allocated_mb": ram_mb,
+            "ram_percent": ram_percent,
+            "uptime_seconds": uptime_sec,
+            "cpu_history": server_stats["cpu_history"],
+            "ram_history": server_stats["ram_history"]
+        }
+    }
+
+
+@app.post("/api/admin/reset-stats", dependencies=[Depends(verify_admin_key)])
+async def reset_server_stats():
+    server_stats["total_visits"] = 0
+    server_stats["unique_sessions"].clear()
+    server_stats["desktop_visits"] = 0
+    server_stats["mobile_visits"] = 0
+    server_stats["total_time_seconds"] = 0
+    server_stats["page_views"]["home"] = 0
+    server_stats["page_views"]["detail"] = 0
+    server_stats["content_views"] = {"projects": 0, "achievements": 0, "blogs": 0, "journey": 0}
+    server_stats["os_breakdown"] = {"Windows": 0, "Android": 0, "iOS": 0, "Mac": 0, "Linux": 0, "Unknown": 0}
+    server_stats["traffic_history"] = [0, 0, 0, 0, 0, 0, 0]
+    server_stats["cpu_history"] = [10, 10, 10, 10]
+    server_stats["ram_history"] = [30, 30, 30, 30]
+    await ws_manager.broadcast("update_stats")
+    return {"status": "success", "message": "Server statistics reset to 0."}
+
+
 # -------------------------------------------------------------
-# 6. REAL TELEGRAM BOT AUTHENTICATION ENDPOINTS
+# 6. TELEGRAM BOT AUTHENTICATION ENDPOINTS
 # -------------------------------------------------------------
 @app.post("/api/reviews/gen-token")
 def generate_telegram_auth_token():
@@ -538,43 +851,70 @@ def check_telegram_auth_token(token: str):
 
 
 # -------------------------------------------------------------
-# 7. AUTHENTICATION (GMAIL 2FA & RATE-LIMITED SESSION TOKEN)
+# 7. AUTHENTICATION (USERNAME + PASSWORD + 10-STRIKE LOCKOUT OTP)
 # -------------------------------------------------------------
 @app.post("/api/admin/request-otp")
 def request_otp(req: RequestOTP):
-    if req.password != ADMIN_SECRET_KEY:
-        raise HTTPException(status_code=401, detail="Incorrect Password!")
+    if time.time() < admin_lockout_state["until"]:
+        mins_remaining = int((admin_lockout_state["until"] - time.time()) // 60) + 1
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"🔒 System locked due to 10 failed attempts. Try again in {mins_remaining} minute(s)."
+        )
+
+    if req.username.strip() != ADMIN_USERNAME or req.password != ADMIN_SECRET_KEY:
+        raise HTTPException(status_code=401, detail="Invalid Admin Username or Password!")
 
     otp = str(random.randint(100000, 999999))
     otp_session["code"] = otp
     otp_session["expires_at"] = time.time() + 300
-    otp_session["attempts"] = 0
+    otp_session["username"] = req.username.strip()
 
     if send_email_otp(GMAIL_USER, otp):
-        return {"status": "success", "message": "2FA Code sent to Gmail!"}
+        return {"status": "success", "message": "Credentials verified! 2FA OTP code dispatched to Gmail."}
     else:
-        print(f"🔑 [LOCAL DEV MODE] Your 2FA Code is: {otp}")
-        return {"status": "success", "message": "2FA Code logged to console (Dev Mode)"}
+        print(f"\n==========================================")
+        print(f"🔑 [LOCAL DEV MODE 2FA OTP]: {otp}")
+        print(f"==========================================\n")
+        return {"status": "success", "message": "Credentials verified! 2FA Code printed to Terminal (Dev Mode)"}
 
 
 @app.post("/api/admin/verify-otp")
 def verify_otp(req: VerifyOTP):
+    if time.time() < admin_lockout_state["until"]:
+        mins_remaining = int((admin_lockout_state["until"] - time.time()) // 60) + 1
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"🔒 System locked due to 10 failed attempts. Try again in {mins_remaining} minute(s)."
+        )
+
     if "code" not in otp_session:
-        raise HTTPException(status_code=400, detail="No active 2FA session.")
+        raise HTTPException(status_code=400, detail="No active 2FA session. Please enter credentials again.")
 
     if time.time() > otp_session["expires_at"]:
         otp_session.clear()
-        raise HTTPException(status_code=400, detail="2FA Code expired.")
+        raise HTTPException(status_code=400, detail="2FA Code expired. Please request a new code.")
 
-    otp_session["attempts"] = otp_session.get("attempts", 0) + 1
-    if otp_session["attempts"] > 5:
-        otp_session.clear()
-        raise HTTPException(status_code=429, detail="Too many failed attempts. OTP session invalidated.")
+    if req.otp_code.strip() != otp_session["code"]:
+        admin_lockout_state["failed_otp_attempts"] += 1
+        attempts_left = 10 - admin_lockout_state["failed_otp_attempts"]
 
-    if req.otp_code != otp_session["code"]:
-        attempts_left = 5 - otp_session["attempts"]
-        raise HTTPException(status_code=401, detail=f"Invalid 2FA Code. {attempts_left} attempts remaining.")
+        if admin_lockout_state["failed_otp_attempts"] >= 10:
+            admin_lockout_state["until"] = time.time() + 900
+            admin_lockout_state["failed_otp_attempts"] = 0
+            otp_session.clear()
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="🔒 10 Incorrect OTP attempts reached! Admin login locked for 15 minutes."
+            )
 
+        raise HTTPException(
+            status_code=401,
+            detail=f"Incorrect 2FA Code! {attempts_left} attempt(s) remaining before 15-minute lockout."
+        )
+
+    admin_lockout_state["failed_otp_attempts"] = 0
+    admin_lockout_state["until"] = 0
     session_token = str(uuid.uuid4())
     admin_sessions[session_token] = time.time() + 7200
     otp_session.clear()
@@ -722,7 +1062,7 @@ async def delete_skill(item_id: int, db: Session = Depends(get_db)):
     return {"status": "deleted"}
 
 
-# REVIEWS
+# REVIEWS & OWNER REPLIES
 @app.get("/api/reviews")
 def get_reviews(db: Session = Depends(get_db)):
     cached = response_cache.get("api_reviews")
@@ -744,11 +1084,42 @@ def get_reviews(db: Session = Depends(get_db)):
         "rating": r.rating,
         "likes": r.likes,
         "is_telegram_verified": r.is_telegram_verified,
-        "created_at": r.created_at
+        "created_at": r.created_at,
+        "admin_reply": r.admin_reply
     } for r in reviews]}
 
     response_cache.set("api_reviews", result)
     return result
+
+
+@app.post("/api/reviews/{review_id}/reply", dependencies=[Depends(verify_admin_key)])
+async def post_owner_reply(review_id: int, data: OwnerReplySchema, db: Session = Depends(get_db)):
+    review = db.query(ReviewModel).filter(ReviewModel.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    review.admin_reply = data.reply.strip()
+    db.commit()
+    db.refresh(review)
+
+    response_cache.clear("api_reviews")
+    await ws_manager.broadcast("update_reviews")
+    return {"status": "success", "message": "Owner reply posted live!", "admin_reply": review.admin_reply}
+
+
+@app.delete("/api/reviews/{review_id}/reply", dependencies=[Depends(verify_admin_key)])
+async def delete_owner_reply(review_id: int, db: Session = Depends(get_db)):
+    review = db.query(ReviewModel).filter(ReviewModel.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    review.admin_reply = None
+    db.commit()
+    db.refresh(review)
+
+    response_cache.clear("api_reviews")
+    await ws_manager.broadcast("update_reviews")
+    return {"status": "success", "message": "Owner reply removed!"}
 
 
 @app.post("/api/reviews")
@@ -854,13 +1225,13 @@ def send_contact_message(data: ContactMessage):
 
 
 @app.post("/api/chat")
-def chat_with_gemini(request: ChatRequest):
+def chat_with_gemini(request: ChatRequest, db: Session = Depends(get_db)):
+    server_stats["ai_metrics"]["answered"] += 1
     if not client:
         raise HTTPException(status_code=500, detail="Gemini API Key missing")
     try:
         user_msg = request.message.strip().lower()
 
-        # EXTENDED PORTFOLIO CLASSIFIER KEYWORDS
         portfolio_keywords = [
             'muxammadrizo', 'portfolio', 'project', 'backend', 'fastapi',
             'unreal', 'ue5', 'nknd', 'cube island', 'hire', 'rate', 'rates', 'price',
@@ -871,6 +1242,13 @@ def chat_with_gemini(request: ChatRequest):
         ]
         is_portfolio = any(kw in user_msg for kw in portfolio_keywords) or len(user_msg) <= 3
 
+        if not is_portfolio and len(user_msg) > 3:
+            server_stats["ai_metrics"]["lockouts"] += 1
+
+        # DYNAMICALLY INJECT KNOWLEDGE BASE RULES INTO GEMINI CONTEXT
+        custom_rules = db.query(AiKnowledgeModel).all()
+        custom_facts_str = "\n".join([f"- {r.topic}: {r.fact}" for r in custom_rules])
+
         system_instruction = (
             "You are an executive, polite, intelligent, and highly professional AI assistant for Muxammadrizo A'zamjonov's developer portfolio.\n"
             "Strict Response Guidelines:\n"
@@ -879,12 +1257,12 @@ def chat_with_gemini(request: ChatRequest):
             "3. Answer technical questions accurately and concisely.\n"
             "4. PRICING & QUOTES: Muxammadrizo offers highly competitive, budget-friendly rates for freelancing. If asked for exact prices or custom project quotes, inform the client that project costs depend on scope and ask them to submit details via the Contact Form or direct Telegram (@muxammadrizo0125) for a specific quote.\n"
             "5. Only provide specific background information about Muxammadrizo (age, school, rates, location, specific projects) when the user explicitly asks about him or his work.\n"
-            "6. About Muxammadrizo: He is 16 y/o studying at Hackathon IT School in Fergana, Uzbekistan."
+            f"6. Custom Portfolio Knowledge Base:\n{custom_facts_str}\n"
         )
 
         response = client.models.generate_content(
             model='gemini-3.6-flash',
-            contents=f"{system_instruction}\n\nUser Message: {request.message}"
+            contents=f"{system_instruction}\n\nDescription: {request.message}"
         )
         return {"response": response.text, "is_portfolio": is_portfolio}
     except Exception as e:

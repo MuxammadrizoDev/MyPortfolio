@@ -9,6 +9,22 @@ let clientTelegramVerified = 0;
 let clientTelegramAvatar = null;
 let currentAuthToken = null;
 let isAiThinking = false;
+let currentSessionId = localStorage.getItem('session_id');
+
+if (!currentSessionId) {
+    currentSessionId = 'sess_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('session_id', currentSessionId);
+}
+
+// SESSION DURATION COUNTER
+let sessionSeconds = 0;
+setInterval(() => {
+    sessionSeconds++;
+    const mins = String(Math.floor(sessionSeconds / 60)).padStart(2, '0');
+    const secs = String(sessionSeconds % 60).padStart(2, '0');
+    const timeElem = document.getElementById('time-spent-text');
+    if (timeElem) timeElem.textContent = `${mins}m ${secs}s`;
+}, 1000);
 
 function escapeHTML(str) {
     if (!str) return '';
@@ -364,27 +380,14 @@ window.toggleMobileMenu = function() {
 /* ==========================================================================
    2. HOLOGRAPHIC TELEPORTATION COUNTER-SKEW ROTATOR
    ========================================================================== */
-const holoGreetings = [
-    "Hi",
-    "Salom",
-    "Привет",
-    "안녕하세요",
-    "こんにちは",
-    "¡Hola!",
-    "Bonjour",
-    "مرحبا",
-    "Ciao",
-    "Namaste",
-    "你好",
-    "Guten Tag",
-    "สวัสดี",
-    "שלום"
+let holoGreetings = [
+    "Hi", "Salom", "Привет", "안녕하세요", "こんにちは", "¡Hola!", "Bonjour", "مرحبا", "Ciao", "Namaste", "你好", "Guten Tag", "สวัสดี", "שלום"
 ];
 let holoGreetingIndex = 0;
 
 function rotateHoloGreeting() {
     const holoElem = document.getElementById('holo-greeting');
-    if (!holoElem) return;
+    if (!holoElem || holoGreetings.length === 0) return;
 
     holoGreetingIndex = (holoGreetingIndex + 1) % holoGreetings.length;
     const nextGreeting = holoGreetings[holoGreetingIndex];
@@ -403,12 +406,15 @@ function rotateHoloGreeting() {
 setInterval(rotateHoloGreeting, 2800);
 
 /* ==========================================================================
-   3. DOM BINDINGS & MARQUEE TICKER & REVIEWS
+   3. DOM BINDINGS, MARQUEE TICKER & DYNAMIC CONFIG / SKILLS LOADING
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     changeLanguage(currentLanguage);
     loadVerifiedReviews();
+    loadSiteConfiguration();
+    loadDynamicSkills();
     checkAiLockoutState();
+    registerUniqueVisit();
 
     document.querySelectorAll('.nav-links a').forEach(link => {
         link.addEventListener('click', () => {
@@ -424,68 +430,184 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const marqueeContainer = document.getElementById('chart-marquee-container');
+    bindHologramChartObserver();
+});
 
-    if (marqueeContainer) {
-        function animateCounter(counter, targetVal) {
-            const duration = 2200;
-            const startTime = performance.now();
+function registerUniqueVisit() {
+    try {
+        fetch('/api/track-visit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: currentSessionId, is_new: true })
+        });
+    } catch(e) {}
+}
 
-            function update(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const ease = 1 - Math.pow(1 - progress, 3);
-                const currentVal = Math.floor(targetVal * ease);
-
-                counter.textContent = `${currentVal}%`;
-
-                if (progress < 1) {
-                    counter._animFrame = requestAnimationFrame(update);
-                } else {
-                    counter.textContent = `${targetVal}%`;
+// LOAD DYNAMIC CONFIG
+async function loadSiteConfiguration() {
+    try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+            const cfg = await res.json();
+            if (cfg.dev_name) {
+                const nameElem = document.getElementById('display-hero-name');
+                if (nameElem) nameElem.textContent = cfg.dev_name;
+            }
+            if (cfg.site_brand) {
+                const brandElem = document.getElementById('nav-brand-logo');
+                if (brandElem) {
+                    const parts = cfg.site_brand.split('.');
+                    brandElem.innerHTML = `${escapeHTML(parts[0])}<span>.${escapeHTML(parts[1] || 'dev')}</span>`;
                 }
+                const titleElem = document.getElementById('site-page-title');
+                if (titleElem) titleElem.textContent = `${cfg.site_brand} | Portfolio`;
+            }
+            if (cfg.hero_badge) {
+                const badgeElem = document.getElementById('display-hero-badge');
+                if (badgeElem) badgeElem.textContent = cfg.hero_badge;
+            }
+            if (cfg.hero_bio) {
+                const bioElem = document.getElementById('display-hero-bio');
+                if (bioElem) bioElem.textContent = cfg.hero_bio;
+            }
+            if (cfg.telegram_handle) {
+                const tgLink = document.getElementById('link-telegram');
+                if (tgLink) tgLink.href = `https://t.me/${cfg.telegram_handle.replace('@', '')}`;
+            }
+            if (cfg.github_url) {
+                const ghLink = document.getElementById('link-github');
+                if (ghLink) ghLink.href = cfg.github_url;
+            }
+            if (cfg.gmail_address) {
+                const gmailLink = document.getElementById('link-gmail');
+                if (gmailLink) gmailLink.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${cfg.gmail_address}`;
+            }
+            if (cfg.typewriter_phrases && cfg.typewriter_phrases.length > 0) {
+                phrases = cfg.typewriter_phrases;
+            }
+            if (cfg.holo_greetings && cfg.holo_greetings.length > 0) {
+                holoGreetings = cfg.holo_greetings;
+            }
+        }
+    } catch(e) {}
+}
+
+// DYNAMIC SKILLS LOADING WITH FALLBACK TO DEFAULT SKILLS
+async function loadDynamicSkills() {
+    const g1 = document.getElementById('skills-marquee-group1');
+    const g2 = document.getElementById('skills-marquee-group2');
+    if (!g1 || !g2) return;
+
+    const defaultSkills = [
+        { name: "Python", percentage: 92 },
+        { name: "FastAPI", percentage: 88 },
+        { name: "UE 5.8", percentage: 80 },
+        { name: "Telegram Bots", percentage: 90 },
+        { name: "SQLite & APIs", percentage: 85 },
+        { name: "HTML/CSS", percentage: 82 }
+    ];
+
+    try {
+        const res = await fetch('/api/skills');
+        if (res.ok) {
+            let skills = await res.json();
+            if (!skills || skills.length === 0) {
+                skills = defaultSkills;
             }
 
-            if (counter._animFrame) cancelAnimationFrame(counter._animFrame);
-            counter._animFrame = requestAnimationFrame(update);
+            const skillHtml = skills.map(s => `
+                <div class="hologram-col">
+                    <div class="hologram-bar-wrapper">
+                        <div class="hologram-bar" data-height="${s.percentage}%">
+                            <span class="hologram-percent" data-target="${s.percentage}">0%</span>
+                        </div>
+                    </div>
+                    <span class="hologram-label">${escapeHTML(s.name)}</span>
+                </div>
+            `).join('');
+
+            g1.innerHTML = skillHtml;
+            g2.innerHTML = skillHtml;
+        }
+    } catch(e) {
+        const skillHtml = defaultSkills.map(s => `
+            <div class="hologram-col">
+                <div class="hologram-bar-wrapper">
+                    <div class="hologram-bar" data-height="${s.percentage}%">
+                        <span class="hologram-percent" data-target="${s.percentage}">0%</span>
+                    </div>
+                </div>
+                <span class="hologram-label">${escapeHTML(s.name)}</span>
+            </div>
+        `).join('');
+
+        g1.innerHTML = skillHtml;
+        g2.innerHTML = skillHtml;
+    }
+}
+
+function bindHologramChartObserver() {
+    const marqueeContainer = document.getElementById('chart-marquee-container');
+    if (!marqueeContainer) return;
+
+    function animateCounter(counter, targetVal) {
+        const duration = 2200;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            const currentVal = Math.floor(targetVal * ease);
+
+            counter.textContent = `${currentVal}%`;
+
+            if (progress < 1) {
+                counter._animFrame = requestAnimationFrame(update);
+            } else {
+                counter.textContent = `${targetVal}%`;
+            }
         }
 
-        function checkColumnPositions() {
-            const containerRect = marqueeContainer.getBoundingClientRect();
-            const cols = marqueeContainer.querySelectorAll('.hologram-col');
-            const triggerZoneX = containerRect.right - (containerRect.width * 0.3);
+        if (counter._animFrame) cancelAnimationFrame(counter._animFrame);
+        counter._animFrame = requestAnimationFrame(update);
+    }
 
-            cols.forEach(col => {
-                const colRect = col.getBoundingClientRect();
-                const bar = col.querySelector('.hologram-bar');
-                const counter = col.querySelector('.hologram-percent');
-                if (!bar || !counter) return;
+    function checkColumnPositions() {
+        const containerRect = marqueeContainer.getBoundingClientRect();
+        const cols = marqueeContainer.querySelectorAll('.hologram-col');
+        const triggerZoneX = containerRect.right - (containerRect.width * 0.3);
 
-                const targetHeight = bar.getAttribute('data-height') || '80%';
-                const targetVal = parseInt(counter.getAttribute('data-target') || '0', 10);
+        cols.forEach(col => {
+            const colRect = col.getBoundingClientRect();
+            const bar = col.querySelector('.hologram-bar');
+            const counter = col.querySelector('.hologram-percent');
+            if (!bar || !counter) return;
 
-                if (colRect.left <= triggerZoneX && colRect.right >= containerRect.left) {
-                    if (!bar._isRaised) {
-                        bar._isRaised = true;
-                        bar.style.height = targetHeight;
-                        animateCounter(counter, targetVal);
-                    }
-                } else {
-                    if (bar._isRaised) {
-                        bar._isRaised = false;
-                        bar.style.height = '16px';
-                        counter.textContent = '0%';
-                        if (counter._animFrame) cancelAnimationFrame(counter._animFrame);
-                    }
+            const targetHeight = bar.getAttribute('data-height') || '80%';
+            const targetVal = parseInt(counter.getAttribute('data-target') || '0', 10);
+
+            if (colRect.left <= triggerZoneX && colRect.right >= containerRect.left) {
+                if (!bar._isRaised) {
+                    bar._isRaised = true;
+                    bar.style.height = targetHeight;
+                    animateCounter(counter, targetVal);
                 }
-            });
-
-            requestAnimationFrame(checkColumnPositions);
-        }
+            } else {
+                if (bar._isRaised) {
+                    bar._isRaised = false;
+                    bar.style.height = '16px';
+                    counter.textContent = '0%';
+                    if (counter._animFrame) cancelAnimationFrame(counter._animFrame);
+                }
+            }
+        });
 
         requestAnimationFrame(checkColumnPositions);
     }
-});
+
+    requestAnimationFrame(checkColumnPositions);
+}
 
 /* ==========================================================================
    4. REAL TELEGRAM BOT VERIFICATION LINK & POLLING
@@ -558,7 +680,7 @@ function applyStage2FormMorph(name, username, photoUrl) {
 }
 
 /* ==========================================================================
-   5. DYNAMIC RANKED REVIEWS WITH 80-CHAR READ MORE TRUNCATION
+   5. DYNAMIC RANKED REVIEWS WITH CLEAN PROFESSIONAL OWNER RESPONSE RENDER
    ========================================================================== */
 async function loadVerifiedReviews() {
     const list = document.getElementById('public-reviews-list');
@@ -613,9 +735,9 @@ function renderReviewList() {
         const ratingStars = '⭐'.repeat(r.rating || 5);
         const isLiked = likedArray.includes(Number(r.id));
         const likeClass = isLiked ? 'like-btn liked' : 'like-btn';
-        const dateStamp = escapeHTML(r.created_at || "July 31, 2026");
+        const dateStamp = escapeHTML(r.created_at || "August 02, 2026");
 
-        // TRUNCATION AT 80 CHARACTERS FOR RELIABLE READ MORE DISPLAY
+        // TRUNCATION FOR MAIN MESSAGE
         const rawMsg = r.message || '';
         let msgHtml = '';
         if (rawMsg.length > 80) {
@@ -629,6 +751,33 @@ function renderReviewList() {
             `;
         } else {
             msgHtml = `<div class="review-msg-container">"${escapeHTML(rawMsg)}"</div>`;
+        }
+
+        // TRUNCATION FOR OWNER REPLY (NEW FIX)
+        let ownerReplyHtml = '';
+        if (r.admin_reply) {
+            const rawReply = r.admin_reply || '';
+            let replyTextHtml = '';
+
+            if (rawReply.length > 80) {
+                const truncatedReply = escapeHTML(rawReply.substring(0, 80));
+                const fullReply = escapeHTML(rawReply);
+                replyTextHtml = `
+                    <div class="review-msg-container" style="color: #f1f5f9; font-size: 0.85rem; margin-top: 2px;">
+                        <span class="short-msg">"${truncatedReply}..." <span class="read-more-btn" onclick="toggleReviewMsg(this)">Read More</span></span>
+                        <span class="full-msg" style="display:none;">"${fullReply}" <span class="read-more-btn" onclick="toggleReviewMsg(this)">Show Less</span></span>
+                    </div>
+                `;
+            } else {
+                replyTextHtml = `<p style="color: #f1f5f9; margin-top: 2px;">"${escapeHTML(rawReply)}"</p>`;
+            }
+
+            ownerReplyHtml = `
+                <div class="owner-reply-box">
+                    <span class="owner-reply-tag">[OWNER RESPONSE • REPLIED TO ${escapeHTML(r.name.toUpperCase())}]</span>
+                    ${replyTextHtml}
+                </div>
+            `;
         }
 
         return `
@@ -646,6 +795,7 @@ function renderReviewList() {
                 </div>
 
                 ${msgHtml}
+                ${ownerReplyHtml}
 
                 <div class="review-footer-row">
                     <span class="star-rating-display">${ratingStars}</span>
@@ -674,27 +824,24 @@ window.toggleReviewMsg = function(btn) {
 
     const shortSpan = container.querySelector('.short-msg');
     const fullSpan = container.querySelector('.full-msg');
-    const isMobile = window.innerWidth <= 768;
 
     if (shortSpan && fullSpan) {
         if (shortSpan.style.display === 'none') {
             shortSpan.style.display = 'inline';
             fullSpan.style.display = 'none';
             container.classList.remove('expanded');
-            if (isMobile) {
-                card.style.height = '250px';
-            } else {
-                card.style.height = 'auto';
-                card.style.minHeight = '190px';
-            }
         } else {
             shortSpan.style.display = 'none';
             fullSpan.style.display = 'inline';
-            if (isMobile) {
-                container.classList.add('expanded');
-            } else {
-                card.style.height = 'auto';
-            }
+            container.classList.add('expanded');
+        }
+
+        // Flexible auto-height prevents breaking when expanding both messages on mobile
+        card.style.height = 'auto';
+        if (window.innerWidth <= 768) {
+            card.style.minHeight = '250px';
+        } else {
+            card.style.minHeight = '190px';
         }
     }
 };
@@ -780,7 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ==========================================================================
    7. TYPEWRITER (HERO SECTION)
    ========================================================================== */
-const phrases = [
+let phrases = [
     "Python FastAPI Backends",
     "Unreal Engine 5.8 Worlds",
     "Automated Telegram Bots",
@@ -794,7 +941,7 @@ function typeEffect() {
     const typewriterElem = document.getElementById('typewriter-text');
     if (!typewriterElem) return;
 
-    const currentPhrase = phrases[phraseIndex];
+    const currentPhrase = phrases[phraseIndex] || phrases[0];
 
     if (isDeleting) {
         typewriterElem.textContent = currentPhrase.substring(0, charIndex - 1);
@@ -821,7 +968,7 @@ function typeEffect() {
 document.addEventListener('DOMContentLoaded', typeEffect);
 
 /* ==========================================================================
-   8. WEBSOCKET SERVER PING
+   8. WEBSOCKET SERVER PING & REAL-TIME HEARTBEAT
    ========================================================================== */
 function connectWebSocket() {
     const statusText = document.getElementById('server-status-text');
@@ -835,12 +982,23 @@ function connectWebSocket() {
         ws.onopen = () => {
             if (statusText) statusText.textContent = "Online (12ms)";
             if (statusDot) statusDot.style.backgroundColor = "#10b981";
+
+            // Periodic heartbeat ping to accumulate real duration & live user count
+            setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send("ping");
+                }
+            }, 5000);
         };
 
         ws.onmessage = (event) => {
             if (event.data === "update_reviews") {
                 loadVerifiedReviews();
-            } else if (statusText) {
+            } else if (event.data === "update_config") {
+                loadSiteConfiguration();
+            } else if (event.data === "update_skills") {
+                loadDynamicSkills();
+            } else if (statusText && !event.data.startsWith("{")) {
                 statusText.textContent = `Online (${event.data})`;
             }
         };
@@ -1002,42 +1160,6 @@ document.addEventListener('DOMContentLoaded', () => {
    11. FLOATING AI CHATBOT WIDGET & 10-QUESTION NON-PORTFOLIO CHAIN LOCK
    ========================================================================== */
 let offTopicAiCount = parseInt(localStorage.getItem('off_topic_ai_count') || '0', 10);
-
-const aiKnowledge = {
-    en: {
-        greeting: "Hello! I am Gemini, Muxammadrizo's AI assistant. How can I assist you today?",
-        about: "Muxammadrizo is a 16-year-old developer studying at Hackathon IT School in Fergana, Uzbekistan. He specializes in Python backends, FastAPI REST architectures, and Unreal Engine 5.8.",
-        rates: "Since Muxammadrizo is a student starting out in freelancing, his rates are very affordable and negotiable! Pricing depends on project scope, complexity, and tech stack (Python/FastAPI, Telegram Bots, or UE5 tools), but always stays fair and budget-friendly.",
-        location: "Muxammadrizo is based in Fergana, Uzbekistan. He works remotely with clients worldwide via Telegram and email.",
-        frontend: "While his primary focus is deep backend architecture and game engines, he builds clean, modern Frontend interfaces using HTML, CSS, and JS—just like this portfolio!",
-        studio: "He works on indie game projects in Unreal Engine 5.8 featuring procedural biomes and custom gameplay mechanics.",
-        game: "He is architecting 3D game projects in Unreal Engine 5.8, utilizing PCG foliage networks, volumetric Lumen fog, and custom gameplay mechanics.",
-        backend: "His backend stack includes Python, FastAPI, SQLite, WebSockets for live data, Gmail 2FA OTP gateways, and automated Telegram bots.",
-        contact: "You can reach out using the Contact Form on this page or message him directly on Telegram @muxammadrizo0125!"
-    },
-    uz: {
-        greeting: "Salom! Men Muxammadrizoning AI yordamchisiman. Bugun sizga qanday yordam bera olaman?",
-        about: "Muxammadrizo Farg'onadagi Hackathon IT School o'quvchisi, 16 yoshli dasturchi. U Python, FastAPI va Unreal Engine 5.8 bo'yicha mutaxassis.",
-        rates: "Muxammadrizo frilansni endi boshlayotgan o'quvchi bo'lgani uchun uning xizmat narxlari juda hamyonbop va kelishiladigan! Narx loyiha hajmi va murakkabligiga bog'liq.",
-        location: "Muxammadrizo O'zbekistonning Farg'ona shahrida yashaydi va masofaviy ishlaydi.",
-        frontend: "U asosan backend me'morchiligini bajarsa ham, ushbu portfel kabi zamonaviy va chiroyli interfeyslarni yarata oladi.",
-        studio: "U Unreal Engine 5.8 da indie o'yin loyihalarini yaratmoqda.",
-        game: "U 3D o'yin loyihalarini Unreal Engine 5.8 da PCG va Lumen texnologiyalari bilan yaratmoqda.",
-        backend: "Uning backend steki: Python, FastAPI, SQLite, WebSockets va Telegram botlar.",
-        contact: "U bilan sahifaning pastki qismidagi aloqa formasi yoki Telegram (@muxammadrizo0125) orqali bog'lanishingiz mumkin!"
-    },
-    ru: {
-        greeting: "Здравствуйте! Я ИИ-помощник Мухаммадризо. Чем могу помочь вам сегодня?",
-        about: "Мухаммадризо — 16-летний разработчик, студент Hackathon IT School в Фергане (Узбекистан).",
-        rates: "Поскольку Мухаммадризо — студент, начинающий путь во фрилансе, его расценки очень демократичны и обсуждаемы! Цена зависит от сложности и стека проекта.",
-        location: "Мухаммадризо живет в Фергане, Узбекистан, и работает удаленно.",
-        frontend: "Хотя он специализируется на бэкенде, он отлично владеет Frontend (HTML, CSS) и создает современные интерфейсы!",
-        studio: "Он разрабатывает 3D игры на Unreal Engine 5.8.",
-        game: "Мухаммадризо разрабатывает 3D игры на Unreal Engine 5.8 с использованием систем PCG и Lumen.",
-        backend: "Его бэкенд-стек: Python, FastAPI, SQLite, WebSockets и автоматизированные Telegram-боты.",
-        contact: "Вы можете написать ему через форму контактов внизу страницы или напрямую в Telegram (@muxammadrizo0125)!"
-    }
-};
 
 function checkAiLockoutState() {
     const lockUntil = parseInt(localStorage.getItem('ai_locked_until') || '0', 10);

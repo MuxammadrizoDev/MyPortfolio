@@ -753,7 +753,7 @@ nav {
 }
 
 /* ==========================================================================
-   7. REVIEWS & STAGE 2 ADVANCED FORM MORPH STYLES
+   7. REVIEWS & PROFESSIONAL OWNER REPLY STYLES
    ========================================================================== */
 .feedback-layout {
     display: grid;
@@ -813,6 +813,27 @@ nav {
 
 .review-msg-container.expanded {
     max-height: none;
+}
+
+/* SLEEK PROFESSIONAL OWNER REPLY BOX (NO EMOJIS, CLEAN NEON ACCENT) */
+.owner-reply-box {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: rgba(56, 189, 248, 0.08);
+    border-left: 3px solid #38bdf8;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.85rem;
+}
+
+.owner-reply-tag {
+    color: #38bdf8;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    display: inline-block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .read-more-btn {
@@ -886,7 +907,7 @@ nav {
     font-size: 0.73rem;
     font-weight: 700;
     margin-top: 4px;
-    white-space: nowrap; /* PREVENTS VERIFIED BADGE SQUISHING */
+    white-space: nowrap;
 }
 
 .review-date-tag {
@@ -1405,7 +1426,6 @@ nav {
     color: #ffffff;
 }
 
-/* FOOTER */
 footer {
     text-align: center;
     padding: 30px 8%;
@@ -1415,7 +1435,139 @@ footer {
 }
 
 /* ==========================================================================
-   9. NATIVE MOBILE OPTIMIZATION
+   9. ADMIN DASHBOARD SPECIFIC STYLES
+   ========================================================================== */
+.admin-card {
+    background: rgba(8, 14, 26, 0.88);
+    border: 1px solid rgba(0, 255, 102, 0.35);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 28px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 0 25px rgba(0, 255, 102, 0.1);
+}
+
+.admin-card h2 {
+    color: #00ff66;
+    font-size: 1.25rem;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+}
+
+.chart-box-wrapper {
+    background: rgba(5, 10, 20, 0.9);
+    border: 1px solid rgba(0, 255, 102, 0.25);
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.analytics-metric-box {
+    background: rgba(5, 10, 20, 0.9);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+.analytics-metric-box h4 {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.analytics-metric-box .metric-value {
+    color: #00f2fe;
+    font-size: 1.6rem;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+}
+
+/* AI KNOWLEDGE BASE STYLES */
+.ai-rule-card {
+    background: rgba(5, 10, 20, 0.85);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-left: 4px solid #00f2fe;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-rule-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.15);
+}
+
+.ai-rule-topic {
+    color: #00f2fe;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+    margin-bottom: 4px;
+}
+
+.ai-rule-fact {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.ai-rule-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 10px;
+}
+
+.btn-edit {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid #fbbf24;
+    color: #fbbf24;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+    background: #fbbf24;
+    color: #03050c;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+.item-row {
+    background: rgba(5, 10, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btn-danger { background: rgba(255, 0, 85, 0.15); border: 1px solid #ff0055; color: #ff0055; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: all 0.2s ease; }
+.btn-danger:hover { background: #ff0055; color: #ffffff; box-shadow: 0 0 10px rgba(255, 0, 85, 0.5); }
+
+/* ==========================================================================
+   10. NATIVE MOBILE OPTIMIZATION
    ========================================================================== */
 @media (max-width: 900px) {
     .feedback-layout {
@@ -1517,18 +1669,17 @@ footer {
         box-sizing: border-box;
     }
 
-    /* MOBILE REVIEW CARD: 250PX HEIGHT */
     .review-display-box {
         width: 82vw;
         min-width: 280px;
         max-width: 82vw;
-        height: 250px !important;
+        height: auto !important;
+        min-height: 250px;
         scroll-snap-align: start;
         flex-shrink: 0;
         box-sizing: border-box;
     }
 
-    /* MOBILE PREVIEW TEXT CONTAINER - NO SCROLLBAR UNTIL EXPANDED */
     .review-msg-container {
         max-height: 70px;
         overflow: hidden;
@@ -1549,7 +1700,6 @@ footer {
         overflow: hidden;
     }
 
-    /* MOBILE ACTION ROW STACK WITH RIGHT-ALIGNED INFO TOOLTIP */
     .review-form-action-row {
         flex-direction: column;
         align-items: stretch;

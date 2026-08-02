@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title id="page-title">Item Details | Muxammadrizo.dev</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <!-- Version v=60.0 forces fresh CSS loading -->
-    <link rel="stylesheet" href="/static/style.css?v=60.0">
+    <!-- Version v=71.0 forces fresh CSS loading -->
+    <link rel="stylesheet" href="/static/style.css?v=71.0">
     <style>
         .detail-card-wrapper {
             opacity: 0;
@@ -87,6 +87,15 @@
                 document.getElementById('detail-title').textContent = titleParam;
                 document.getElementById('page-title').textContent = `${escapeHTML(titleParam)} | Muxammadrizo.dev`;
             }
+
+            // Track content open for Server Analytics
+            try {
+                fetch('/api/track-content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type })
+                });
+            } catch(e) {}
 
             if (type === 'project') {
                 try {

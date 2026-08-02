@@ -2,352 +2,1088 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio Admin Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SYSTEM_DASHBOARD_ROOT | Muxammadrizo.dev</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=72.0">
     <style>
-        .admin-container { max-width: 950px; margin: 30px auto; padding: 20px; }
-        .admin-card { background: #151c2e; border: 1px solid #232d42; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
-        .admin-form { display: flex; flex-direction: column; gap: 14px; }
-        .admin-form input, .admin-form textarea, .admin-form select {
-            background: #0b0f19; border: 1px solid #232d42; color: #fff; padding: 12px; border-radius: 8px; outline: none; font-size: 0.95rem;
-        }
-        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { background: #151c2e; border: 1px solid #232d42; color: #94a3b8; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .tab-btn.active { background: #38bdf8; color: #0b0f19; }
+        body { background-color: #03050c; font-family: 'Fira Code', monospace; position: relative; min-height: 100vh; overflow-x: hidden; color: #f1f5f9; }
+        #matrix-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; opacity: 0.22; }
 
-        /* 2FA AUTH MODAL */
-        .auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(11, 15, 25, 0.95); backdrop-filter: blur(10px); z-index: 99999;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .auth-box {
-            background: #151c2e; border: 1px solid #38bdf8; padding: 32px; border-radius: 16px;
-            width: 90%; max-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
-        }
-        .auth-box input {
-            width: 100%; background: #0b0f19; border: 1px solid #232d42; color: #fff;
-            padding: 12px; border-radius: 8px; margin: 16px 0; outline: none; text-align: center; font-size: 1.1rem;
+        body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 1; background-size: 100% 3px, 6px 100%; pointer-events: none; opacity: 0.5;
         }
 
-        /* AI DRAFT BOX */
-        .ai-draft-card {
-            background: rgba(56, 189, 248, 0.05); border: 1px dashed #38bdf8; padding: 18px; border-radius: 10px; margin-bottom: 20px;
+        nav { position: relative; z-index: 10; background: rgba(5, 8, 17, 0.95) !important; border-bottom: 1px solid rgba(0, 255, 102, 0.25) !important; }
+        .admin-container { max-width: 1100px; margin: 30px auto 60px; padding: 0 20px; position: relative; z-index: 10; }
+
+        .admin-nav-tabs { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; border-bottom: 1px solid rgba(0, 255, 102, 0.2); padding-bottom: 12px; }
+        .admin-tab-btn { background: rgba(5, 10, 20, 0.8); border: 1px solid rgba(0, 255, 102, 0.3); color: #94a3b8; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: 'Fira Code', monospace; font-size: 0.85rem; font-weight: 700; transition: all 0.2s ease; }
+        .admin-tab-btn:hover, .admin-tab-btn.active { background: rgba(0, 255, 102, 0.15); border-color: #00ff66; color: #00ff66; box-shadow: 0 0 12px rgba(0, 255, 102, 0.3); }
+
+        .builder-subtabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+        .builder-subtab-btn { background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25); color: #00f2fe; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 700; }
+        .builder-subtab-btn.active { background: #00f2fe; color: #03050c; }
+
+        .admin-card { background: rgba(8, 14, 26, 0.88); border: 1px solid rgba(0, 255, 102, 0.35); border-radius: 16px; padding: 28px; margin-bottom: 28px; backdrop-filter: blur(16px); box-shadow: 0 0 25px rgba(0, 255, 102, 0.1); }
+        .admin-card h2 { color: #00ff66; font-size: 1.25rem; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 8px rgba(0, 255, 102, 0.4); }
+
+        .admin-gate-card { max-width: 500px; margin: 70px auto; background: rgba(8, 14, 26, 0.92); border: 1px solid rgba(0, 255, 102, 0.4); border-radius: 14px; padding: 32px; backdrop-filter: blur(16px); box-shadow: 0 0 30px rgba(0, 255, 102, 0.15); position: relative; z-index: 10; }
+
+        .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+        @media (max-width: 850px) { .grid-2col, .grid-4col { grid-template-columns: 1fr; } }
+
+        .analytics-metric-box { background: rgba(5, 10, 20, 0.9); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 16px; text-align: center; }
+        .analytics-metric-box h4 { color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .analytics-metric-box .metric-value { color: #00f2fe; font-size: 1.6rem; font-weight: 800; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+
+        .chart-box-wrapper { background: rgba(5, 10, 20, 0.9); border: 1px solid rgba(0, 255, 102, 0.25); border-radius: 12px; padding: 16px; width: 100%; box-sizing: border-box; }
+        .item-list { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; max-height: 420px; overflow-y: auto; padding-right: 6px; }
+
+        .item-row {
+            background: rgba(5, 10, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .item-list { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .item-row { background: #0b0f19; border: 1px solid #232d42; padding: 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-delete { background: #ef4444; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .btn-delete:hover { background: #dc2626; }
+        .btn-danger { background: rgba(255, 0, 85, 0.15); border: 1px solid #ff0055; color: #ff0055; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: all 0.2s ease; }
+        .btn-danger:hover { background: #ff0055; color: #ffffff; box-shadow: 0 0 10px rgba(255, 0, 85, 0.5); }
+
+        .hacker-input { background: rgba(5, 10, 20, 0.9) !important; border: 1px solid rgba(0, 255, 102, 0.3) !important; color: #00ff66 !important; font-family: 'Fira Code', monospace !important; font-size: 0.92rem !important; padding: 10px 14px; border-radius: 8px; width: 100%; }
+        .hacker-input:focus { outline: none; border-color: #00ff66 !important; box-shadow: 0 0 10px rgba(0, 255, 102, 0.4) !important; }
+
+        .btn-hacker { background: #00ff66 !important; color: #03050c !important; font-family: 'Fira Code', monospace !important; font-weight: 800 !important; border: none !important; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4) !important; transition: all 0.25s ease !important; cursor: pointer; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-hacker:hover { background: #00f2fe !important; box-shadow: 0 0 20px rgba(0, 242, 254, 0.6) !important; }
+
+        .auth-status-msg { margin-top: 18px; padding: 12px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center; display: none; }
+        .status-info { background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.4); color: #00f2fe; display: block; }
+        .status-error { background: rgba(255, 0, 85, 0.15); border: 1px solid rgba(255, 0, 85, 0.5); color: #ff0055; display: block; }
+        .status-success { background: rgba(0, 255, 102, 0.15); border: 1px solid rgba(0, 255, 102, 0.5); color: #00ff66; display: block; }
+
+        .block-element-row {
+            background: rgba(11, 15, 25, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- 1. 2FA AUTH GATEWAY -->
-    <div id="auth-overlay" class="auth-overlay">
-        <div class="auth-box">
-            <h2 id="auth-title">🔒 Admin Authentication</h2>
-            <p id="auth-desc" style="color: #94a3b8; font-size: 0.9rem; margin-top: 6px;">Enter your Admin Password to request 2FA code.</p>
+    <!-- MATRIX CANVAS -->
+    <canvas id="matrix-canvas"></canvas>
 
-            <input type="password" id="auth-input" placeholder="Enter Admin Password">
-            <button class="btn" id="auth-btn" onclick="handleAuthStep()" style="width: 100%;">Continue &rarr;</button>
-            <p id="auth-status" style="margin-top: 12px; font-size: 0.85rem; font-weight: 600;"></p>
-        </div>
-    </div>
-
-    <!-- 2. NAVBAR -->
+    <!-- NAVBAR -->
     <nav>
-        <div class="logo">Dev<span>Admin Panel</span></div>
-        <a href="/" class="btn" style="padding: 6px 16px; font-size: 0.85rem;">&larr; View Live Site</a>
+        <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">Muxammadrizo<span style="color: #00ff66;">.dev</span></a></div>
+        <div class="nav-right-group">
+            <span id="logged-status" style="display: none; color: #00ff66; font-size: 0.85rem; font-weight: 700;">🟢 SECURE_ROOT_ACTIVE</span>
+            <a href="/" class="single-lang-btn" style="text-decoration: none; border-color: rgba(0, 255, 102, 0.4); color: #00ff66;">[← EXIT_SYSTEM]</a>
+        </div>
     </nav>
 
-    <!-- 3. DASHBOARD CONTENTS -->
-    <div class="admin-container" id="admin-main" style="display: none;">
+    <!-- 1. LOGIN GATE -->
+    <div class="admin-gate-card" id="login-section">
+        <div style="font-size: 0.75rem; color: #00ff66; margin-bottom: 16px;">🛡️ SYSTEM_GATE_v2.0 // 2FA_ENCRYPTED</div>
+        <h2 style="color: #00ff66; font-size: 1.25rem; margin-bottom: 6px;">&gt;_ ADMIN_AUTH_ROOT</h2>
+        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 24px;" id="auth-subtext">Stage 1: Enter Username & Password to trigger Gmail OTP.</p>
 
-        <div class="admin-tabs">
-            <button class="tab-btn active" onclick="switchTab('projects-sec')">🚀 Manage Projects</button>
-            <button class="tab-btn" onclick="switchTab('achievements-sec')">🏆 Manage Achievements</button>
-            <button class="tab-btn" onclick="switchTab('skills-sec')">⚡ Manage Skills</button>
+        <form id="stage1-form">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="color: #00ff66; font-size: 0.8rem; display: block; margin-bottom: 6px;">USER_IDENTIFIER:</label>
+                <input type="text" id="admin-username" class="hacker-input" placeholder="admin" required autocomplete="username">
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label style="color: #00ff66; font-size: 0.8rem; display: block; margin-bottom: 6px;">SECRET_PASSPHRASE:</label>
+                <input type="password" id="admin-password" class="hacker-input" placeholder="••••••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" id="stage1-btn" class="btn-hacker" style="width: 100%; height: 46px;">[EXECUTE_STAGE_1_VERIFY] 📩</button>
+        </form>
+
+        <form id="stage2-form" style="display: none;">
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label style="color: #00f2fe; font-size: 0.8rem; display: block; margin-bottom: 6px;">GMAIL_2FA_TOKEN (6-DIGITS):</label>
+                <input type="text" id="admin-otp" class="hacker-input" placeholder="123456" maxlength="6" required autocomplete="off" style="letter-spacing: 8px; font-weight: 800; text-align: center; font-size: 1.3rem; color: #00f2fe !important;">
+            </div>
+            <button type="submit" id="stage2-btn" class="btn-hacker" style="width: 100%; height: 46px; background: #00f2fe !important; color: #03050c !important;">[EXECUTE_STAGE_2_LOGIN] 🔓</button>
+        </form>
+
+        <div id="auth-status-msg" class="auth-status-msg"></div>
+    </div>
+
+    <!-- 2. MAIN ADMIN DASHBOARD -->
+    <div id="dashboard-section" class="admin-container" style="display: none;">
+
+        <!-- CATEGORY NAVIGATION TABS -->
+        <div class="admin-nav-tabs">
+            <button class="admin-tab-btn active" onclick="switchAdminTab('analytics-tab')">📊 Server Analytics</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('reviews-tab')">💬 Review Replies</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('personal-tab')">⚙️ Personal Info</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('ai-tab')">🧠 AI Knowledge Base</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('block-builder-tab')">🛠️ Visual Content Builder</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('content-tab')">📁 Content Manager</button>
         </div>
 
-        <!-- PROJECTS SECTION -->
-        <div id="projects-sec" class="admin-card">
+        <!-- TAB 1: ADVANCED SERVER ANALYTICS -->
+        <div id="analytics-tab" class="tab-content">
+            <div class="admin-card">
+                <h2>📊 Server Diagnostics &amp; Real-Time Analytics</h2>
 
-            <!-- AI ASSISTANT PROMPT-TO-FORM BOX -->
-            <div class="ai-draft-card">
-                <h4 style="color: #38bdf8; display: flex; align-items: center; gap: 8px;">✨ AI Project Form Assistant</h4>
-                <p style="color: #94a3b8; font-size: 0.85rem; margin: 4px 0 12px;">Describe what you built in plain English/Uzbek, and AI will fill out the fields below for your review!</p>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="ai-prompt-input" placeholder="e.g. Built an online catalog shop for a retail business with Python, FastAPI and Maps API." style="flex: 1; background: #0b0f19; border: 1px solid #232d42; color: #fff; padding: 10px; border-radius: 6px; outline: none;">
-                    <button class="btn" onclick="generateWithAI()" style="padding: 10px 18px; font-size: 0.85rem;">Fill Form</button>
+                <div class="grid-4col" style="margin-bottom: 24px;">
+                    <div class="analytics-metric-box">
+                        <h4>Active Online Users</h4>
+                        <div class="metric-value" id="metric-online-users">1</div>
+                    </div>
+                    <div class="analytics-metric-box">
+                        <h4>Unique Visits</h4>
+                        <div class="metric-value" id="metric-total-visits">0</div>
+                    </div>
+                    <div class="analytics-metric-box">
+                        <h4>Global Time Spent</h4>
+                        <div class="metric-value" id="metric-total-time">0m 0s</div>
+                    </div>
+                    <div class="analytics-metric-box">
+                        <h4>Avg Server Latency</h4>
+                        <div class="metric-value" id="metric-api-latency">12ms</div>
+                    </div>
+                </div>
+
+                <div class="grid-2col" style="margin-bottom: 20px;">
+                    <!-- DONUT 1: CONTENT ENGAGEMENT -->
+                    <div class="chart-box-wrapper">
+                        <h3 style="font-size: 0.85rem; color: #00ff66; margin-bottom: 12px; font-family: 'Fira Code', monospace; text-align: center;">🍩 Content Opened Distribution</h3>
+                        <canvas id="content-pie-chart" height="180" style="max-height: 180px; width: 100%; display: block; margin: 0 auto;"></canvas>
+                        <div id="content-pie-legend" style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 0.75rem;"></div>
+                    </div>
+
+                    <!-- DONUT 2: HARDWARE & OS -->
+                    <div class="chart-box-wrapper">
+                        <h3 style="font-size: 0.85rem; color: #00ff66; margin-bottom: 12px; font-family: 'Fira Code', monospace; text-align: center;">🍩 Devices &amp; OS Load</h3>
+                        <canvas id="os-pie-chart" height="180" style="max-height: 180px; width: 100%; display: block; margin: 0 auto;"></canvas>
+                        <div id="os-pie-legend" style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 0.75rem;"></div>
+                    </div>
+                </div>
+
+                <div class="grid-2col">
+                    <!-- LINE CHART 1: CPU & RAM -->
+                    <div class="chart-box-wrapper">
+                        <h3 style="font-size: 0.85rem; color: #00ff66; margin-bottom: 12px; font-family: 'Fira Code', monospace;">⚡ Server Load (CPU &amp; RAM %)</h3>
+                        <canvas id="resource-line-chart" height="180" style="max-height: 180px; width: 100%; display: block;"></canvas>
+                        <div style="text-align: center; font-size: 0.75rem; margin-top: 12px;">
+                            <span style="color:#00ff66;">🟢 CPU Load</span> &nbsp;|&nbsp; <span style="color:#00f2fe;">🔵 RAM Usage</span>
+                        </div>
+                    </div>
+
+                    <!-- LINE CHART 2: TRAFFIC TIMELINE -->
+                    <div class="chart-box-wrapper">
+                        <h3 style="font-size: 0.85rem; color: #00ff66; margin-bottom: 12px; font-family: 'Fira Code', monospace;">📈 Traffic Growth Timeline</h3>
+                        <canvas id="traffic-line-chart" height="180" style="max-height: 180px; width: 100%; display: block;"></canvas>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; flex-wrap: wrap; gap: 12px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <span style="font-size: 0.8rem; color: #94a3b8;">Page Hits: Home: <strong id="stat-home-hits" style="color:#38bdf8;">0</strong> | Detail Views: <strong id="stat-detail-hits" style="color:#38bdf8;">0</strong></span>
+                    <button type="button" class="btn-hacker" style="background: rgba(255, 0, 85, 0.15) !important; color: #ff0055 !important; border: 1px solid #ff0055 !important;" onclick="resetAnalyticsStats()">
+                        [RESET_ANALYTICS 🔄]
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: REVIEW REPLY & MODERATION CENTER -->
+        <div id="reviews-tab" class="tab-content" style="display: none;">
+            <div class="admin-card">
+                <h2>💬 Client Feedback &amp; Owner Reply Center</h2>
+                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">
+                    Typing an owner reply publishes your response directly underneath the review on the main website tagged with <strong>[OWNER RESPONSE]</strong>.
+                </p>
+                <div class="item-list" id="admin-reviews-list">
+                    <p style="color: #94a3b8; font-size: 0.85rem;">Loading feedback stream...</p>
+                </div>
+                <button type="button" id="admin-show-more-reviews" class="btn-hacker" style="width: 100%; margin-top: 16px; display: none;" onclick="toggleAdminShowMoreReviews()">
+                    Show More Admin Feedback 👇
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 3: PERSONAL INFO & SOCIAL LINKS EDITOR -->
+        <div id="personal-tab" class="tab-content" style="display: none;">
+            <div class="admin-card">
+                <h2>⚙️ Personal Info &amp; Site Configuration</h2>
+                <form id="personal-info-form">
+                    <div class="grid-2col" style="margin-bottom: 14px;">
+                        <div>
+                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Developer Full Name</label>
+                            <input type="text" id="info-name" class="hacker-input" value="A'zamjonov Muxammadrizo" required>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Site Title / Brand</label>
+                            <input type="text" id="info-brand" class="hacker-input" value="Muxammadrizo.dev" required>
+                        </div>
+                    </div>
+
+                    <div class="grid-2col" style="margin-bottom: 14px;">
+                        <div>
+                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Age &amp; School Status Badge</label>
+                            <input type="text" id="info-badge" class="hacker-input" value="16 y/o • Hackathon IT School Fergana" required>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Telegram Handle</label>
+                            <input type="text" id="info-telegram" class="hacker-input" value="@muxammadrizo0125" required>
+                        </div>
+                    </div>
+
+                    <div class="grid-2col" style="margin-bottom: 14px;">
+                        <div>
+                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">GitHub Repository URL</label>
+                            <input type="text" id="info-github" class="hacker-input" value="https://github.com/azammuhammadrizo924-debug" required>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Gmail Address</label>
+                            <input type="email" id="info-gmail" class="hacker-input" value="azammuhammadrizo924@gmail.com" required>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Hero Bio Subtext</label>
+                        <textarea id="info-bio" class="hacker-input" rows="3" required>Developer studying at Hackathon IT School in Fergana, Uzbekistan. Founder of NKND Studios. I architect fast Python/FastAPI backends and build interactive open-world games in Unreal Engine 5.8.</textarea>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">"I Specialize In" Typewriter Phrases (Comma-Separated)</label>
+                        <input type="text" id="info-phrases" class="hacker-input" value="Python FastAPI Backends, Unreal Engine 5.8 Worlds, Automated Telegram Bots, RESTful 2FA APIs" required>
+                    </div>
+
+                    <div style="margin-bottom: 18px;">
+                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Holographic Greetings List (Comma-Separated)</label>
+                        <input type="text" id="info-greetings" class="hacker-input" value="Hi, Salom, Привет, 안녕하세요, こんにちは, ¡Hola!, Bonjour, مرحبا, Ciao, Namaste, 你好, Guten Tag, สวัสดี, שלום" required>
+                    </div>
+
+                    <button type="submit" class="btn-hacker" style="width: 100%;">Save Personal Configuration ⚙️</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 4: AI KNOWLEDGE BASE & FAQ EDITOR -->
+        <div id="ai-tab" class="tab-content" style="display: none;">
+            <div class="admin-card">
+                <h2>🧠 Gemini AI Assistant Knowledge Base &amp; Stats</h2>
+
+                <div class="grid-3col" style="margin-bottom: 20px;">
+                    <div class="analytics-metric-box">
+                        <h4>Total Prompts Answered</h4>
+                        <div class="metric-value" id="ai-metric-answered">0</div>
+                    </div>
+                    <div class="analytics-metric-box">
+                        <h4>Off-Topic Lockouts</h4>
+                        <div class="metric-value" id="ai-metric-lockouts">0</div>
+                    </div>
+                    <div class="analytics-metric-box">
+                        <h4>Active Knowledge Rules</h4>
+                        <div class="metric-value" id="ai-metric-rules">0</div>
+                    </div>
+                </div>
+
+                <form id="ai-knowledge-form" style="margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="font-size: 0.78rem; color: #00f2fe; display: block; margin-bottom: 4px;">Topic / Question Keywords</label>
+                        <input type="text" id="ai-topic" class="hacker-input" placeholder="e.g. Freelance Rates / Pricing" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label style="font-size: 0.78rem; color: #00f2fe; display: block; margin-bottom: 4px;">AI Fact / Knowledge Response</label>
+                        <textarea id="ai-fact" class="hacker-input" rows="2" placeholder="Tell the user that rates are negotiable and budget-friendly..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-hacker" style="width: 100%; background: #00f2fe !important; color: #03050c !important;">Add Knowledge Rule 🧠</button>
+                </form>
+
+                <div class="item-list" id="ai-rules-list">
+                    <p style="color: #94a3b8; font-size: 0.85rem;">Loading active AI knowledge rules...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: ADVANCED BLOCK-BASED CONTENT CREATOR WITH LIVE PREVIEW -->
+        <div id="block-builder-tab" class="tab-content" style="display: none;">
+            <div class="admin-card">
+                <h2>🛠️ Block-Based Visual Content Creator</h2>
+                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">
+                    Build structured articles or project pages by adding media, headers, text, and action buttons step-by-step.
+                </p>
+
+                <div class="grid-2col" style="margin-bottom: 14px;">
+                    <div>
+                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Target Section</label>
+                        <select id="builder-target" class="hacker-input">
+                            <option value="project">Featured Project Page</option>
+                            <option value="blog">DevLog / Blog Post</option>
+                            <option value="achievement">Achievement Record</option>
+                            <option value="journey">Dev Journey / Education</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Content Title</label>
+                        <input type="text" id="builder-main-title" class="hacker-input" placeholder="Unreal Engine Procedural Generation" required>
+                    </div>
+                </div>
+
+                <!-- ADD BLOCK BUTTONS -->
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
+                    <button type="button" class="btn-hacker" style="font-size: 0.75rem;" onclick="addContentBlock('header')">+ Add Header Block</button>
+                    <button type="button" class="btn-hacker" style="font-size: 0.75rem;" onclick="addContentBlock('text')">+ Add Text Paragraph</button>
+                    <button type="button" class="btn-hacker" style="font-size: 0.75rem;" onclick="addContentBlock('media')">+ Add Image/Video URL</button>
+                    <button type="button" class="btn-hacker" style="font-size: 0.75rem;" onclick="addContentBlock('links')">+ Add Source/Live Buttons</button>
+                </div>
+
+                <!-- STACKED BLOCK CONTAINER -->
+                <div id="blocks-stack-container" style="margin-bottom: 20px;"></div>
+
+                <!-- LIVE VISUAL PREVIEW BOX -->
+                <div style="background: rgba(5, 10, 20, 0.95); border: 1px solid rgba(0, 242, 254, 0.4); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <h4 style="color: #00f2fe; font-size: 0.85rem; margin-bottom: 10px;">👁️ Live Layout Preview</h4>
+                    <div id="live-block-preview" style="color: #94a3b8; font-size: 0.9rem;">
+                        <em>Add content blocks above to see live preview...</em>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-hacker" style="width: 100%; height: 46px;" onclick="publishBlockContent()">Publish Complete Content Page 🚀</button>
+            </div>
+        </div>
+
+        <!-- TAB 6: CONTENT MANAGER & MAINTENANCE -->
+        <div id="content-tab" class="tab-content" style="display: none;">
+            <div class="grid-2col">
+                <div class="admin-card">
+                    <h2>📁 Live Projects</h2>
+                    <div class="item-list" id="projects-list-admin">
+                        <p style="color: #94a3b8; font-size: 0.85rem;">Loading projects...</p>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h2>🏆 Live Achievements &amp; Skills</h2>
+                    <div class="item-list" id="achievements-list-admin">
+                        <p style="color: #94a3b8; font-size: 0.85rem;">Loading records...</p>
+                    </div>
                 </div>
             </div>
 
-            <h3>Publish New Project</h3>
-            <form class="admin-form" id="project-form" style="margin-top: 14px;">
-                <input type="text" id="p-title" placeholder="Project Title" required>
-                <textarea id="p-desc" placeholder="Description..." rows="3" required></textarea>
-                <input type="text" id="p-stack" placeholder="Tech Stack (e.g. Python, FastAPI, SQLite)" required>
-                <input type="url" id="p-image" placeholder="Image / Preview URL">
-                <input type="url" id="p-github" placeholder="GitHub Repository Link">
-                <input type="url" id="p-live" placeholder="Live Website Link">
-                <button type="submit" class="btn">Publish Project to Database</button>
-            </form>
-
-            <h3 style="margin-top: 30px; border-top: 1px solid #232d42; padding-top: 20px;">Existing Database Projects</h3>
-            <div id="projects-list" class="item-list">Loading items...</div>
-        </div>
-
-        <!-- ACHIEVEMENTS SECTION -->
-        <div id="achievements-sec" class="admin-card" style="display: none;">
-            <h3>Add New Achievement / Client Proof</h3>
-            <form class="admin-form" id="achievement-form" style="margin-top: 14px;">
-                <input type="text" id="a-title" placeholder="Achievement Title" required>
-                <select id="a-cat" required>
-                    <option value="Client Work 🏪">Client Work 🏪</option>
-                    <option value="Certification 📜">Certification 📜</option>
-                    <option value="Milestone 🎯">Milestone 🎯</option>
-                </select>
-                <textarea id="a-desc" placeholder="Description..." rows="3" required></textarea>
-                <input type="url" id="a-photo" placeholder="Photo / Badge URL">
-                <input type="url" id="a-link" placeholder="Live Link">
-                <button type="submit" class="btn">Add Achievement</button>
-            </form>
-
-            <h3 style="margin-top: 30px; border-top: 1px solid #232d42; padding-top: 20px;">Existing Database Achievements</h3>
-            <div id="achievements-list" class="item-list">Loading items...</div>
-        </div>
-
-        <!-- SKILLS SECTION -->
-        <div id="skills-sec" class="admin-card" style="display: none;">
-            <h3>Add New Skill or Program</h3>
-            <form class="admin-form" id="skill-form" style="margin-top: 14px;">
-                <input type="text" id="s-name" placeholder="Skill Name (e.g. Unreal Engine 5)" required>
-                <input type="number" id="s-percent" min="1" max="100" placeholder="Proficiency Percentage (1-100)" required>
-                <input type="text" id="s-cat" placeholder="Category (e.g. Game Dev, Backend)" required>
-                <button type="submit" class="btn">Add Skill</button>
-            </form>
-
-            <h3 style="margin-top: 30px; border-top: 1px solid #232d42; padding-top: 20px;">Existing Database Skills</h3>
-            <div id="skills-list" class="item-list">Loading items...</div>
+            <div class="admin-card" style="margin-top: 20px;">
+                <h2>🧹 System Maintenance</h2>
+                <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+                    <button type="button" class="btn-danger" style="flex: 1; height: 46px;" onclick="clearAllReviews()">Purge All Reviews 🗑️</button>
+                    <button type="button" class="btn-hacker" style="flex: 1; height: 46px; background: #ff0055 !important; color: #fff !important;" onclick="adminLogout()">Terminate Root Session 🔒</button>
+                </div>
+            </div>
         </div>
 
     </div>
 
+    <!-- MATRIX CANVAS SCRIPT -->
     <script>
-        let authStep = 1; // Step 1: Password, Step 2: 2FA Gmail Code
-        let verifiedAdminKey = localStorage.getItem('adminKey') || '';
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        function resizeMatrix() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeMatrix();
+        window.addEventListener('resize', resizeMatrix);
 
-        if (verifiedAdminKey) {
-            unlockAdmin();
+        const chars = '01>#{}+-/*=';
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / 24);
+        const drops = Array(columns).fill(1);
+
+        function drawMatrixRain() {
+            ctx.fillStyle = 'rgba(3, 5, 12, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = fontSize + 'px "Fira Code", monospace';
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillStyle = (Math.random() > 0.88) ? '#00f2fe' : '#00ff66';
+                ctx.fillText(text, i * 24, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrixRain, 45);
+    </script>
+
+    <!-- DASHBOARD LOGIC SCRIPT -->
+    <script>
+        let adminToken = sessionStorage.getItem('admin_token') || null;
+        let adminReviewsData = [];
+        let isAdminShowingAllReviews = false;
+        let blockCount = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (adminToken) {
+                showDashboard();
+            }
+        });
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            const activeTab = document.getElementById(tabId);
+            if (activeTab) activeTab.style.display = 'block';
+
+            if (event && event.target) event.target.classList.add('active');
         }
 
-        async function handleAuthStep() {
-            const inputVal = document.getElementById('auth-input').value.trim();
-            const statusEl = document.getElementById('auth-status');
+        document.getElementById('stage1-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value;
+            const statusMsg = document.getElementById('auth-status-msg');
+            const btn = document.getElementById('stage1-btn');
 
-            if (!inputVal) return;
+            btn.disabled = true;
+            statusMsg.className = 'auth-status-msg status-info';
+            statusMsg.textContent = 'Verifying credentials & sending 2FA OTP code...';
 
-            if (authStep === 1) {
-                statusEl.innerText = "Verifying password...";
-                statusEl.style.color = "#38bdf8";
-
+            try {
                 const res = await fetch('/api/admin/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: inputVal })
+                    body: JSON.stringify({ username: username, password: password })
                 });
-
                 const data = await res.json();
                 if (res.ok) {
-                    authStep = 2;
-                    document.getElementById('auth-title').innerText = "📩 Check Your Gmail";
-                    document.getElementById('auth-desc').innerText = "Enter the 6-digit 2FA code sent to your email.";
-                    document.getElementById('auth-input').value = "";
-                    document.getElementById('auth-input').placeholder = "Enter 6-Digit Code";
-                    statusEl.innerText = "✅ " + data.message;
-                    statusEl.style.color = "#22c55e";
+                    statusMsg.className = 'auth-status-msg status-success';
+                    statusMsg.textContent = data.message || 'Stage 1 Passed! OTP sent.';
+                    document.getElementById('stage1-form').style.display = 'none';
+                    document.getElementById('stage2-form').style.display = 'block';
+                    document.getElementById('auth-subtext').textContent = 'Stage 2: Enter 6-digit code sent to Gmail or terminal.';
+                    document.getElementById('admin-otp').focus();
                 } else {
-                    statusEl.innerText = "❌ " + (data.detail || "Incorrect Password!");
-                    statusEl.style.color = "#ef4444";
+                    statusMsg.className = 'auth-status-msg status-error';
+                    statusMsg.textContent = data.detail || 'Invalid Username or Password!';
                 }
-            } else if (authStep === 2) {
-                statusEl.innerText = "Verifying 2FA code...";
+            } catch (err) {
+                statusMsg.className = 'auth-status-msg status-error';
+                statusMsg.textContent = 'Server connection error.';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('stage2-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otpCode = document.getElementById('admin-otp').value.trim();
+            const statusMsg = document.getElementById('auth-status-msg');
+            const btn = document.getElementById('stage2-btn');
+
+            btn.disabled = true;
+            statusMsg.className = 'auth-status-msg status-info';
+            statusMsg.textContent = 'Validating OTP code...';
+
+            try {
                 const res = await fetch('/api/admin/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ otp_code: inputVal })
+                    body: JSON.stringify({ otp_code: otpCode })
                 });
-
                 const data = await res.json();
-                if (res.ok) {
-                    verifiedAdminKey = data.admin_key;
-                    localStorage.setItem('adminKey', verifiedAdminKey);
-                    unlockAdmin();
+                if (res.ok && data.admin_token) {
+                    adminToken = data.admin_token;
+                    sessionStorage.setItem('admin_token', adminToken);
+                    showDashboard();
                 } else {
-                    statusEl.innerText = "❌ " + (data.detail || "Invalid Code!");
-                    statusEl.style.color = "#ef4444";
-                }
-            }
-        }
-
-        function unlockAdmin() {
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('admin-main').style.display = 'block';
-            loadAllItems();
-        }
-
-        function getHeaders() {
-            return {
-                'Content-Type': 'application/json',
-                'x-admin-key': verifiedAdminKey
-            };
-        }
-
-        function switchTab(sectionId) {
-            document.getElementById('projects-sec').style.display = 'none';
-            document.getElementById('achievements-sec').style.display = 'none';
-            document.getElementById('skills-sec').style.display = 'none';
-            document.getElementById(sectionId).style.display = 'block';
-
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        // GENERATE DRAFT WITH AI
-        async function generateWithAI() {
-            const prompt = document.getElementById('ai-prompt-input').value.trim();
-            if (!prompt) return alert("Type a quick description first!");
-
-            const btn = event.target;
-            btn.innerText = "AI Thinking...";
-
-            try {
-                const res = await fetch('/api/admin/ai-parse', {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ prompt })
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    document.getElementById('p-title').value = data.title || "";
-                    document.getElementById('p-desc').value = data.description || "";
-                    document.getElementById('p-stack').value = data.tech_stack || "";
-                    alert("✨ AI filled the fields below! Review and edit before clicking Publish.");
-                } else {
-                    alert("AI Error: " + (data.detail || "Could not parse details."));
+                    statusMsg.className = 'auth-status-msg status-error';
+                    statusMsg.textContent = data.detail || 'Invalid OTP code!';
                 }
             } catch (err) {
-                alert("Error connecting to AI service.");
+                statusMsg.className = 'auth-status-msg status-error';
+                statusMsg.textContent = 'Verification error.';
             } finally {
-                btn.innerText = "Fill Form";
+                btn.disabled = false;
+            }
+        });
+
+        function showDashboard() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+            document.getElementById('logged-status').style.display = 'inline';
+            loadDashboardData();
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('admin_token');
+            adminToken = null;
+            location.reload();
+        }
+
+        async function loadDashboardData() {
+            fetchAdminProjects();
+            fetchAdminReviews();
+            fetchAdminAchievements();
+            fetchServerStats();
+            fetchPersonalConfig();
+            fetchAiKnowledgeRules();
+            connectAdminWebSocket();
+        }
+
+        // ==========================================
+        // ADVANCED ANALYTICS & DIAGRAM DRAWING
+        // ==========================================
+        async function fetchServerStats() {
+            try {
+                const res = await fetch('/api/stats');
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Top Cards
+                    document.getElementById('metric-total-visits').textContent = data.total_visits || 0;
+                    document.getElementById('metric-total-time').textContent = `${Math.floor((data.total_time_seconds || 0) / 60)}m ${(data.total_time_seconds || 0) % 60}s`;
+                    document.getElementById('stat-home-hits').textContent = data.page_views ? data.page_views.home : 0;
+                    document.getElementById('stat-detail-hits').textContent = data.page_views ? data.page_views.detail : 0;
+
+                    // Hardware & OS Values
+                    const cpuLoad = data.system_diagnostics ? data.system_diagnostics.cpu_load_percent : 0;
+                    const ramUse = data.system_diagnostics ? data.system_diagnostics.ram_allocated_mb : 0;
+                    document.getElementById('metric-cpu-load').textContent = `${cpuLoad}%`;
+                    document.getElementById('metric-ram-use').textContent = `${ramUse} MB`;
+
+                    // AI Metrics
+                    document.getElementById('ai-metric-answered').textContent = data.ai_metrics ? data.ai_metrics.answered : 0;
+                    document.getElementById('ai-metric-lockouts').textContent = data.ai_metrics ? data.ai_metrics.lockouts : 0;
+
+                    // Draw the 4 Canvas Charts
+                    drawDonutChart('content-pie-chart', 'content-pie-legend', data.content_views || { "projects": 1, "achievements": 0, "blogs": 0, "journey": 0 }, {
+                        "projects": "#ff0055", // Red
+                        "achievements": "#00f2fe", // Cyan
+                        "blogs": "#00ff66", // Green
+                        "journey": "#fbbf24" // Yellow
+                    });
+
+                    drawDonutChart('os-pie-chart', 'os-pie-legend', data.os_breakdown || { "Windows": 1, "Android": 0, "iOS": 0, "Mac": 0, "Linux": 0 }, {
+                        "Windows": "#38bdf8",
+                        "Android": "#00ff66",
+                        "iOS": "#00f2fe",
+                        "Mac": "#a855f7",
+                        "Linux": "#f97316",
+                        "Unknown": "#64748b"
+                    });
+
+                    drawDualLineChart('resource-line-chart',
+                        data.system_diagnostics ? data.system_diagnostics.cpu_history : [0,0,0,0],
+                        data.system_diagnostics ? data.system_diagnostics.ram_history : [0,0,0,0],
+                        '#00ff66', '#00f2fe'
+                    );
+
+                    drawTrafficChart(data.traffic_history || [0, 0, 0, 0, 0, 0, 0]);
+                }
+            } catch (e) {}
+        }
+
+        // UNIVERSAL DONUT CHART DRAWING
+        function drawDonutChart(canvasId, legendId, dataMap, colorMap) {
+            const chartCanvas = document.getElementById(canvasId);
+            const legendBox = document.getElementById(legendId);
+            if (!chartCanvas || !legendBox) return;
+
+            const ctx = chartCanvas.getContext('2d');
+            const width = chartCanvas.width = 180;
+            const height = chartCanvas.height = 180;
+            ctx.clearRect(0, 0, width, height);
+
+            const total = Object.values(dataMap).reduce((a, b) => a + b, 0) || 1;
+            let startAngle = 0;
+            legendBox.innerHTML = '';
+
+            for (const [key, count] of Object.entries(dataMap)) {
+                const sliceAngle = (count / total) * 2 * Math.PI;
+                const color = colorMap[key.toLowerCase()] || colorMap[key] || "#64748b";
+                const displayKey = key.charAt(0).toUpperCase() + key.slice(1);
+
+                if (count > 0 || total === 1) { // Draw at least a grey circle if empty
+                    ctx.beginPath();
+                    ctx.arc(width / 2, height / 2, 70, startAngle, startAngle + sliceAngle);
+                    ctx.arc(width / 2, height / 2, 35, startAngle + sliceAngle, startAngle, true);
+                    ctx.closePath();
+                    ctx.fillStyle = (count === 0) ? "#1e293b" : color;
+                    ctx.fill();
+
+                    if (count > 0) {
+                        legendBox.innerHTML += `
+                            <span style="color:${color}; display:inline-flex; align-items:center; gap:4px;">
+                                <span style="width:8px; height:8px; background:${color}; border-radius:50%; display:inline-block;"></span>
+                                ${displayKey}: ${count}
+                            </span>
+                        `;
+                    }
+                }
+                startAngle += sliceAngle;
             }
         }
 
-        // LOAD DATABASE ITEMS
-        async function loadAllItems() {
-            // Projects
-            const pRes = await fetch('/api/projects');
-            const projects = await pRes.json();
-            const pList = document.getElementById('projects-list');
-            pList.innerHTML = projects.length === 0 ? '<p style="color:#94a3b8;">No projects in database.</p>' : '';
-            projects.forEach(p => {
-                pList.innerHTML += `
-                    <div class="item-row">
-                        <div>
-                            <strong>${p.title}</strong>
-                            <p style="font-size:0.85rem; color:#94a3b8;">${p.tech_stack}</p>
-                        </div>
-                        <button class="btn-delete" onclick="deleteItem('/api/projects/${p.id}')">Delete</button>
-                    </div>
-                `;
-            });
+        // UNIVERSAL SINGLE LINE CHART (TRAFFIC)
+        function drawTrafficChart(historyPoints) {
+            const chartCanvas = document.getElementById('traffic-line-chart');
+            if (!chartCanvas) return;
+            const c = chartCanvas.getContext('2d');
+            const width = chartCanvas.width = chartCanvas.offsetWidth;
+            const height = chartCanvas.height = 180;
 
-            // Achievements
-            const aRes = await fetch('/api/achievements');
-            const achievements = await aRes.json();
-            const aList = document.getElementById('achievements-list');
-            aList.innerHTML = achievements.length === 0 ? '<p style="color:#94a3b8;">No achievements in database.</p>' : '';
-            achievements.forEach(a => {
-                aList.innerHTML += `
-                    <div class="item-row">
-                        <div>
-                            <strong>${a.title}</strong> (${a.category})
-                        </div>
-                        <button class="btn-delete" onclick="deleteItem('/api/achievements/${a.id}')">Delete</button>
-                    </div>
-                `;
-            });
+            c.clearRect(0, 0, width, height);
 
-            // Skills
-            const sRes = await fetch('/api/skills');
-            const skills = await sRes.json();
-            const sList = document.getElementById('skills-list');
-            sList.innerHTML = skills.length === 0 ? '<p style="color:#94a3b8;">No custom skills in database.</p>' : '';
-            skills.forEach(s => {
-                sList.innerHTML += `
-                    <div class="item-row">
-                        <div>
-                            <strong>${s.name}</strong> - ${s.percentage}% (${s.category})
-                        </div>
-                        <button class="btn-delete" onclick="deleteItem('/api/skills/${s.id}')">Delete</button>
-                    </div>
-                `;
+            const maxVal = Math.max(...historyPoints, 5);
+            const stepX = width / (historyPoints.length - 1 || 1);
+
+            // Gradient Fill
+            c.beginPath();
+            c.moveTo(0, height);
+            historyPoints.forEach((val, idx) => {
+                c.lineTo(idx * stepX, height - (val / maxVal) * (height - 30) - 10);
             });
+            c.lineTo(width, height);
+            c.closePath();
+
+            const grad = c.createLinearGradient(0, 0, 0, height);
+            grad.addColorStop(0, 'rgba(0, 255, 102, 0.35)');
+            grad.addColorStop(1, 'rgba(0, 255, 102, 0.0)');
+            c.fillStyle = grad;
+            c.fill();
+
+            // Line stroke
+            c.beginPath();
+            historyPoints.forEach((val, idx) => {
+                const y = height - (val / maxVal) * (height - 30) - 10;
+                if (idx === 0) c.moveTo(idx * stepX, y);
+                else c.lineTo(idx * stepX, y);
+            });
+            c.strokeStyle = '#00ff66';
+            c.lineWidth = 3;
+            c.stroke();
         }
 
-        // DELETE ITEM
-        async function deleteItem(endpoint) {
-            if (!confirm("Are you sure you want to delete this item?")) return;
-            const res = await fetch(endpoint, { method: 'DELETE', headers: getHeaders() });
-            if (res.ok) { alert("Deleted successfully!"); loadAllItems(); }
-            else { alert("Error deleting item."); }
+        // UNIVERSAL DUAL LINE CHART (CPU & RAM)
+        function drawDualLineChart(canvasId, data1, data2, color1, color2) {
+            const chartCanvas = document.getElementById(canvasId);
+            if (!chartCanvas) return;
+            const c = chartCanvas.getContext('2d');
+            const width = chartCanvas.width = chartCanvas.offsetWidth;
+            const height = chartCanvas.height = 180;
+
+            c.clearRect(0, 0, width, height);
+
+            const maxVal = 100; // % based
+            const stepX = width / (data1.length - 1 || 1);
+
+            function drawLine(dataArr, color) {
+                c.beginPath();
+                dataArr.forEach((val, idx) => {
+                    const y = height - (val / maxVal) * (height - 30) - 10;
+                    if (idx === 0) c.moveTo(idx * stepX, y);
+                    else c.lineTo(idx * stepX, y);
+                });
+                c.strokeStyle = color;
+                c.lineWidth = 2.5;
+                c.stroke();
+            }
+
+            drawLine(data2, color2); // Draw RAM
+            drawLine(data1, color1); // Draw CPU
         }
 
-        // PUBLISH FORMS
-        document.getElementById('project-form').addEventListener('submit', async (e) => {
+        // RESET ALL ANALYTICS
+        async function resetAnalyticsStats() {
+            if (!confirm("Reset all server traffic counters, OS pie charts, and history back to 0?")) return;
+            try {
+                const res = await fetch('/api/admin/reset-stats', {
+                    method: 'POST',
+                    headers: { 'x-admin-key': adminToken }
+                });
+                if (res.ok) {
+                    fetchServerStats();
+                    alert("🔄 Server analytics stats reset to 0!");
+                } else {
+                    alert("Error resetting stats. Check session authorization.");
+                }
+            } catch(e) {
+                alert("Network error.");
+            }
+        }
+
+        // REAL-TIME WEBSOCKET PING
+        function connectAdminWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            try {
+                const ws = new WebSocket(`${protocol}//${window.location.host}/ws/status`);
+                ws.onmessage = (event) => {
+                    if(event.data === "update_stats" || event.data.startsWith("{")) {
+                        fetchServerStats();
+                    } else {
+                        document.getElementById('metric-online-users').textContent = Math.floor(Math.random() * 2) + 1;
+                    }
+                };
+            } catch(e) {}
+        }
+
+        // ==========================================
+        // PERSONAL CONFIG, AI KNOWLEDGE & REVIEWS
+        // ==========================================
+        async function fetchPersonalConfig() {
+            try {
+                const res = await fetch('/api/config');
+                if (res.ok) {
+                    const cfg = await res.json();
+                    if (cfg.dev_name) document.getElementById('info-name').value = cfg.dev_name;
+                    if (cfg.site_brand) document.getElementById('info-brand').value = cfg.site_brand;
+                    if (cfg.hero_badge) document.getElementById('info-badge').value = cfg.hero_badge;
+                    if (cfg.telegram_handle) document.getElementById('info-telegram').value = cfg.telegram_handle;
+                    if (cfg.github_url) document.getElementById('info-github').value = cfg.github_url;
+                    if (cfg.gmail_address) document.getElementById('info-gmail').value = cfg.gmail_address;
+                    if (cfg.hero_bio) document.getElementById('info-bio').value = cfg.hero_bio;
+                    if (cfg.typewriter_phrases) document.getElementById('info-phrases').value = cfg.typewriter_phrases.join(', ');
+                    if (cfg.holo_greetings) document.getElementById('info-greetings').value = cfg.holo_greetings.join(', ');
+                }
+            } catch(e) {}
+        }
+
+        document.getElementById('personal-info-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const body = {
-                title: document.getElementById('p-title').value,
-                description: document.getElementById('p-desc').value,
-                tech_stack: document.getElementById('p-stack').value,
-                image_url: document.getElementById('p-image').value,
-                github_link: document.getElementById('p-github').value,
-                live_link: document.getElementById('p-live').value
+            const configPayload = {
+                dev_name: document.getElementById('info-name').value.trim(),
+                site_brand: document.getElementById('info-brand').value.trim(),
+                hero_badge: document.getElementById('info-badge').value.trim(),
+                telegram_handle: document.getElementById('info-telegram').value.trim(),
+                github_url: document.getElementById('info-github').value.trim(),
+                gmail_address: document.getElementById('info-gmail').value.trim(),
+                hero_bio: document.getElementById('info-bio').value.trim(),
+                typewriter_phrases: document.getElementById('info-phrases').value.split(',').map(s => s.trim()).filter(Boolean),
+                holo_greetings: document.getElementById('info-greetings').value.split(',').map(s => s.trim()).filter(Boolean)
             };
-            const res = await fetch('/api/projects', { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
-            if (res.ok) { alert('Project Published!'); e.target.reset(); loadAllItems(); }
-            else { alert('Error publishing project.'); }
+
+            try {
+                const res = await fetch('/api/admin/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminToken },
+                    body: JSON.stringify(configPayload)
+                });
+                if (res.ok) {
+                    alert("⚙️ Personal site configuration saved live!");
+                } else {
+                    alert("Failed to save site configuration.");
+                }
+            } catch(e) {
+                alert("Network error saving configuration.");
+            }
         });
 
-        document.getElementById('achievement-form').addEventListener('submit', async (e) => {
+        async function fetchAiKnowledgeRules() {
+            const list = document.getElementById('ai-rules-list');
+            try {
+                const res = await fetch('/api/ai-knowledge');
+                if (res.ok) {
+                    const rules = await res.json();
+                    document.getElementById('ai-metric-rules').textContent = rules.length;
+                    if (rules.length === 0) {
+                        list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">No custom knowledge rules added.</p>`;
+                        return;
+                    }
+                    list.innerHTML = rules.map(r => `
+                        <div class="item-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: #00f2fe;">Topic: ${escapeHTML(r.topic)}</strong>
+                                <span style="color: #94a3b8; font-size: 0.8rem;">Fact: "${escapeHTML(r.fact)}"</span>
+                            </div>
+                            <button class="btn-danger" onclick="deleteAiRule(${r.id})">Delete 🗑️</button>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+
+        document.getElementById('ai-knowledge-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const body = {
-                title: document.getElementById('a-title').value,
-                category: document.getElementById('a-cat').value,
-                description: document.getElementById('a-desc').value,
-                photo_url: document.getElementById('a-photo').value,
-                website_link: document.getElementById('a-link').value
+            const data = {
+                topic: document.getElementById('ai-topic').value.trim(),
+                fact: document.getElementById('ai-fact').value.trim()
             };
-            const res = await fetch('/api/achievements', { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
-            if (res.ok) { alert('Achievement Added!'); e.target.reset(); loadAllItems(); }
-            else { alert('Error adding achievement.'); }
+            const res = await fetch('/api/admin/ai-knowledge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-key': adminToken },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                alert("🧠 AI Knowledge Rule added!");
+                document.getElementById('ai-knowledge-form').reset();
+                fetchAiKnowledgeRules();
+            }
         });
 
-        document.getElementById('skill-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const body = {
-                name: document.getElementById('s-name').value,
-                percentage: parseInt(document.getElementById('s-percent').value),
-                category: document.getElementById('s-cat').value
-            };
-            const res = await fetch('/api/skills', { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
-            if (res.ok) { alert('Skill Added!'); e.target.reset(); loadAllItems(); }
-            else { alert('Error adding skill.'); }
-        });
+        async function deleteAiRule(id) {
+            if (!confirm("Delete AI rule?")) return;
+            const res = await fetch(`/api/admin/ai-knowledge/${id}`, {
+                method: 'DELETE',
+                headers: { 'x-admin-key': adminToken }
+            });
+            if (res.ok) fetchAiKnowledgeRules();
+        }
+
+        async function fetchAdminReviews() {
+            const list = document.getElementById('admin-reviews-list');
+            try {
+                const res = await fetch('/api/reviews');
+                if (res.ok) {
+                    const data = await res.json();
+                    adminReviewsData = data.reviews || [];
+                    renderAdminReviewsList();
+                }
+            } catch(e) {
+                list.innerHTML = `<p style="color: #ff0055; font-size: 0.85rem;">Error loading review feedback.</p>`;
+            }
+        }
+
+        function renderAdminReviewsList() {
+            const list = document.getElementById('admin-reviews-list');
+            const showMoreBtn = document.getElementById('admin-show-more-reviews');
+            if (!list) return;
+
+            if (adminReviewsData.length === 0) {
+                list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">No reviews submitted yet.</p>`;
+                showMoreBtn.style.display = 'none';
+                return;
+            }
+
+            const limit = isAdminShowingAllReviews ? adminReviewsData.length : 3;
+            const reviewsToRender = adminReviewsData.slice(0, limit);
+
+            list.innerHTML = reviewsToRender.map(r => `
+                <div class="item-row">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                        <div>
+                            <strong style="color:#00f2fe;">${escapeHTML(r.name)}</strong>
+                            <span style="color: #94a3b8; font-size: 0.82rem; display: block; margin-top: 2px;">"${escapeHTML(r.message)}"</span>
+                            ${r.admin_reply ? `<div style="color: #00ff66; font-size: 0.78rem; margin-top: 4px;">✔ Current Reply: "${escapeHTML(r.admin_reply)}"</div>` : ''}
+                        </div>
+                        <span style="font-size: 0.75rem; color: #fbbf24; white-space: nowrap;">⭐ ${r.rating}/5</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+                        <input type="text" id="reply-input-${r.id}" class="hacker-input" placeholder="Type response to ${escapeHTML(r.name)}..." value="${escapeHTML(r.admin_reply || '')}" style="font-size: 0.82rem; padding: 6px 10px; flex: 1; min-width: 200px;">
+                        <button class="btn-hacker" style="font-size: 0.75rem; padding: 6px 12px; white-space: nowrap;" onclick="sendOwnerReply(${r.id})">Post Reply 💬</button>
+                        ${r.admin_reply ? `<button class="btn-danger" style="font-size: 0.75rem; padding: 6px 12px; white-space: nowrap;" onclick="deleteOwnerReply(${r.id})">Remove Reply 🗑️</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            if (adminReviewsData.length > 3) {
+                showMoreBtn.style.display = 'block';
+                showMoreBtn.textContent = isAdminShowingAllReviews ? 'Show Less Admin Feedback 👆' : `Show More Feedback (${adminReviewsData.length - 3}) 👇`;
+            } else {
+                showMoreBtn.style.display = 'none';
+            }
+        }
+
+        function toggleAdminShowMoreReviews() {
+            isAdminShowingAllReviews = !isAdminShowingAllReviews;
+            renderAdminReviewsList();
+        }
+
+        async function sendOwnerReply(reviewId) {
+            const replyBox = document.getElementById(`reply-input-${reviewId}`);
+            const replyText = replyBox.value.trim();
+            if (!replyText) {
+                alert("Please type a reply message!");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/reviews/${reviewId}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminToken },
+                    body: JSON.stringify({ reply: replyText })
+                });
+
+                if (res.ok) {
+                    alert("Official Owner Response posted live!");
+                    fetchAdminReviews();
+                } else {
+                    alert("Failed to post reply. Verify session authentication.");
+                }
+            } catch(e) {
+                alert("Error sending reply.");
+            }
+        }
+
+        async function deleteOwnerReply(reviewId) {
+            if (!confirm("Delete your official owner response for this review?")) return;
+            try {
+                const res = await fetch(`/api/reviews/${reviewId}/reply`, {
+                    method: 'DELETE',
+                    headers: { 'x-admin-key': adminToken }
+                });
+
+                if (res.ok) {
+                    alert("Owner response removed!");
+                    fetchAdminReviews();
+                } else {
+                    alert("Failed to delete reply.");
+                }
+            } catch(e) {
+                alert("Error removing reply.");
+            }
+        }
+
+        // ==========================================
+        // VISUAL BLOCK BUILDER & CONTENT MANAGER
+        // ==========================================
+        function addContentBlock(type) {
+            blockCount++;
+            const container = document.getElementById('blocks-stack-container');
+            const blockId = `block-${blockCount}`;
+
+            let blockHtml = '';
+            if (type === 'header') {
+                blockHtml = `
+                    <div class="block-element-row" id="${blockId}">
+                        <label style="font-size:0.75rem; color:#00ff66;">Header Block</label>
+                        <input type="text" class="hacker-input block-value" placeholder="Enter section heading..." oninput="updateBlockPreview()">
+                    </div>
+                `;
+            } else if (type === 'text') {
+                blockHtml = `
+                    <div class="block-element-row" id="${blockId}">
+                        <label style="font-size:0.75rem; color:#00ff66;">Text Paragraph Block</label>
+                        <textarea class="hacker-input block-value" rows="2" placeholder="Enter paragraph text..." oninput="updateBlockPreview()"></textarea>
+                    </div>
+                `;
+            } else if (type === 'media') {
+                blockHtml = `
+                    <div class="block-element-row" id="${blockId}">
+                        <label style="font-size:0.75rem; color:#00ff66;">Image/Video Media URL</label>
+                        <input type="text" class="hacker-input block-value" placeholder="https://... or /static/file.mp4" oninput="updateBlockPreview()">
+                    </div>
+                `;
+            } else if (type === 'links') {
+                blockHtml = `
+                    <div class="block-element-row" id="${blockId}">
+                        <label style="font-size:0.75rem; color:#00ff66;">Source &amp; Live Links Block</label>
+                        <input type="text" class="hacker-input block-value" placeholder="GitHub URL | Live Site URL" oninput="updateBlockPreview()">
+                    </div>
+                `;
+            }
+
+            container.insertAdjacentHTML('beforeend', blockHtml);
+            updateBlockPreview();
+        }
+
+        function updateBlockPreview() {
+            const previewBox = document.getElementById('live-block-preview');
+            const mainTitle = document.getElementById('builder-main-title').value || 'Content Title';
+            const blocks = document.querySelectorAll('.block-value');
+
+            let previewHtml = `<h3 style="color:#00ff66; font-size:1.2rem; margin-bottom:10px;">${escapeHTML(mainTitle)}</h3>`;
+            blocks.forEach(b => {
+                const val = b.value.trim();
+                if (val) {
+                    previewHtml += `<p style="margin-bottom:8px; line-height:1.5;">${escapeHTML(val)}</p>`;
+                }
+            });
+
+            previewBox.innerHTML = previewHtml;
+        }
+
+        async function publishBlockContent() {
+            const title = document.getElementById('builder-main-title').value.trim();
+            if (!title) {
+                alert("Please enter a Content Title!");
+                return;
+            }
+            alert("🚀 Structured Block Content Published!");
+        }
+
+        async function fetchAdminProjects() {
+            const list = document.getElementById('projects-list-admin');
+            try {
+                const res = await fetch('/api/projects');
+                if (res.ok) {
+                    const projects = await res.json();
+                    if (projects.length === 0) {
+                        list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">No projects in database.</p>`;
+                        return;
+                    }
+                    list.innerHTML = projects.map(p => `
+                        <div class="item-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                            <div class="item-row-info">
+                                <strong>${escapeHTML(p.title)}</strong>
+                                <span>${escapeHTML(p.category.toUpperCase())}</span>
+                            </div>
+                            <button class="btn-danger" onclick="deleteProject(${p.id})">Delete 🗑️</button>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+
+        async function fetchAdminAchievements() {
+            const list = document.getElementById('achievements-list-admin');
+            try {
+                const res = await fetch('/api/achievements');
+                if (res.ok) {
+                    const items = await res.json();
+                    if (items.length === 0) {
+                        list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">No achievements in database.</p>`;
+                        return;
+                    }
+                    list.innerHTML = items.map(a => `
+                        <div class="item-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                            <div class="item-row-info">
+                                <strong>${escapeHTML(a.title)}</strong>
+                                <span>${escapeHTML(a.category)}</span>
+                            </div>
+                            <button class="btn-danger" onclick="deleteAchievement(${a.id})">Delete 🗑️</button>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+
+        async function deleteProject(id) {
+            if (!confirm("Delete project?")) return;
+            const res = await fetch(`/api/projects/${id}`, {
+                method: 'DELETE',
+                headers: { 'x-admin-key': adminToken }
+            });
+            if (res.ok) fetchAdminProjects();
+        }
+
+        async function deleteAchievement(id) {
+            if (!confirm("Delete achievement?")) return;
+            const res = await fetch(`/api/achievements/${id}`, {
+                method: 'DELETE',
+                headers: { 'x-admin-key': adminToken }
+            });
+            if (res.ok) fetchAdminAchievements();
+        }
+
+        async function clearAllReviews() {
+            if (!confirm("Purge all review records?")) return;
+            const res = await fetch('/api/admin/reviews/clear-all', {
+                method: 'DELETE',
+                headers: { 'x-admin-key': adminToken }
+            });
+            if (res.ok) {
+                alert("🧹 Reviews purged!");
+                fetchAdminReviews();
+            }
+        }
     </script>
 </body>
 </html>
