@@ -17,6 +17,8 @@ A full-stack developer portfolio and custom Content Management System (CMS) buil
 * ## How to make it work:
 * **AdminPanel:** To go to admin panel write "/admin" in after site url like this http://link/admin/ .
 * **Running:** write " uvicorn main:app --reload " in terminal.
+* **liblaries** Make sure to write " pip install requipments.txt " to downloadall libraries to make it work
+* **.env** There is .env.example file that shows what to fill, you need to create a .env file (with the dot otherwise it won't work) and write everything like in example but set them your infromation(IP, TP key, login/password...)
 
 ## Read this!
 This portfolio code was written entirely on LLM (AI) and might have some bugs, I only tracked AI, told it what to add, change, fix, remove. This project was done by me like 2-3 months ago from now, when I was still a beginner and didn't knew a lot. And today I am trying to write codes entirely by me (using AI as a tutor hoping I will learn more like this), so even if I ever come back to VibeCoding somehow, I will understand more in the code#   M y P o r t f o l i o 
