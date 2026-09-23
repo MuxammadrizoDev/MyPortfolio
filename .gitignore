@@ -1,4 +1,15 @@
+# Environment Variables
 .env
+
+# Local Database
 portfolio.db
+
+# Python Cache & Environments
 __pycache__/
 *.pyc
+venv/
+.venv/
+
+# IDE Configurations
+.idea/
+.vscode/

@@ -1,1089 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SYSTEM_DASHBOARD_ROOT | Muxammadrizo.dev</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=72.0">
-    <style>
-        body { background-color: #03050c; font-family: 'Fira Code', monospace; position: relative; min-height: 100vh; overflow-x: hidden; color: #f1f5f9; }
-        #matrix-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; opacity: 0.22; }
-
-        body::before {
-            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 1; background-size: 100% 3px, 6px 100%; pointer-events: none; opacity: 0.5;
-        }
-
-        nav { position: relative; z-index: 10; background: rgba(5, 8, 17, 0.95) !important; border-bottom: 1px solid rgba(0, 255, 102, 0.25) !important; }
-        .admin-container { max-width: 1100px; margin: 30px auto 60px; padding: 0 20px; position: relative; z-index: 10; }
-
-        .admin-nav-tabs { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; border-bottom: 1px solid rgba(0, 255, 102, 0.2); padding-bottom: 12px; }
-        .admin-tab-btn { background: rgba(5, 10, 20, 0.8); border: 1px solid rgba(0, 255, 102, 0.3); color: #94a3b8; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: 'Fira Code', monospace; font-size: 0.85rem; font-weight: 700; transition: all 0.2s ease; }
-        .admin-tab-btn:hover, .admin-tab-btn.active { background: rgba(0, 255, 102, 0.15); border-color: #00ff66; color: #00ff66; box-shadow: 0 0 12px rgba(0, 255, 102, 0.3); }
-
-        .builder-subtabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
-        .builder-subtab-btn { background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25); color: #00f2fe; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 700; }
-        .builder-subtab-btn.active { background: #00f2fe; color: #03050c; }
-
-        .admin-card { background: rgba(8, 14, 26, 0.88); border: 1px solid rgba(0, 255, 102, 0.35); border-radius: 16px; padding: 28px; margin-bottom: 28px; backdrop-filter: blur(16px); box-shadow: 0 0 25px rgba(0, 255, 102, 0.1); }
-        .admin-card h2 { color: #00ff66; font-size: 1.25rem; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 8px rgba(0, 255, 102, 0.4); }
-
-        .admin-gate-card { max-width: 500px; margin: 70px auto; background: rgba(8, 14, 26, 0.92); border: 1px solid rgba(0, 255, 102, 0.4); border-radius: 14px; padding: 32px; backdrop-filter: blur(16px); box-shadow: 0 0 30px rgba(0, 255, 102, 0.15); position: relative; z-index: 10; }
-
-        .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-
-        @media (max-width: 850px) { .grid-2col, .grid-4col { grid-template-columns: 1fr; } }
-
-        .analytics-metric-box { background: rgba(5, 10, 20, 0.9); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 16px; text-align: center; }
-        .analytics-metric-box h4 { color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-        .analytics-metric-box .metric-value { color: #00f2fe; font-size: 1.6rem; font-weight: 800; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
-
-        .chart-box-wrapper { background: rgba(5, 10, 20, 0.9); border: 1px solid rgba(0, 255, 102, 0.25); border-radius: 12px; padding: 16px; width: 100%; box-sizing: border-box; }
-        .item-list { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; max-height: 420px; overflow-y: auto; padding-right: 6px; }
-
-        .item-row {
-            background: rgba(5, 10, 20, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            overflow-wrap: anywhere;
-            word-break: break-word;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .btn-danger { background: rgba(255, 0, 85, 0.15); border: 1px solid #ff0055; color: #ff0055; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: all 0.2s ease; }
-        .btn-danger:hover { background: #ff0055; color: #ffffff; box-shadow: 0 0 10px rgba(255, 0, 85, 0.5); }
-
-        .hacker-input { background: rgba(5, 10, 20, 0.9) !important; border: 1px solid rgba(0, 255, 102, 0.3) !important; color: #00ff66 !important; font-family: 'Fira Code', monospace !important; font-size: 0.92rem !important; padding: 10px 14px; border-radius: 8px; width: 100%; }
-        .hacker-input:focus { outline: none; border-color: #00ff66 !important; box-shadow: 0 0 10px rgba(0, 255, 102, 0.4) !important; }
-
-        .btn-hacker { background: #00ff66 !important; color: #03050c !important; font-family: 'Fira Code', monospace !important; font-weight: 800 !important; border: none !important; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4) !important; transition: all 0.25s ease !important; cursor: pointer; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-hacker:hover { background: #00f2fe !important; box-shadow: 0 0 20px rgba(0, 242, 254, 0.6) !important; }
-
-        .auth-status-msg { margin-top: 18px; padding: 12px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center; display: none; }
-        .status-info { background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.4); color: #00f2fe; display: block; }
-        .status-error { background: rgba(255, 0, 85, 0.15); border: 1px solid rgba(255, 0, 85, 0.5); color: #ff0055; display: block; }
-        .status-success { background: rgba(0, 255, 102, 0.15); border: 1px solid rgba(0, 255, 102, 0.5); color: #00ff66; display: block; }
-
-        .block-element-row {
-            background: rgba(11, 15, 25, 0.9);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>SYSTEM_DASHBOARD_ROOT | Muxammadrizo.dev</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="/static/style.css?v=95.0">
+<style>
+body{background-color:#03050c;font-family:'Fira Code',monospace;position:relative;min-height:100vh;overflow-x:hidden;color:#f1f5f9}#matrix-canvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0.22}
+body::before{content:" ";display:block;position:fixed;top:0;left:0;bottom:0;right:0;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,0.3) 50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03));z-index:1;background-size:100% 3px,6px 100%;pointer-events:none;opacity:0.5}
+nav{position:relative;z-index:10;background:rgba(5,8,17,0.95)!important;border-bottom:1px solid rgba(0,255,102,0.25)!important}.admin-container{max-width:1100px;margin:30px auto 60px;padding:0 20px;position:relative;z-index:10}
+.admin-nav-tabs{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;border-bottom:1px solid rgba(0,255,102,0.2);padding-bottom:12px}.admin-tab-btn{background:rgba(5,10,20,0.8);border:1px solid rgba(0,255,102,0.3);color:#94a3b8;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.85rem;font-weight:700;transition:all .2s}.admin-tab-btn:hover,.admin-tab-btn.active{background:rgba(0,255,102,0.15);border-color:#00ff66;color:#00ff66;box-shadow:0 0 12px rgba(0,255,102,0.3)}
+.admin-card{background:rgba(8,14,26,0.88);border:1px solid rgba(0,255,102,0.35);border-radius:16px;padding:28px;margin-bottom:28px;backdrop-filter:blur(16px);box-shadow:0 0 25px rgba(0,255,102,0.1)}.admin-card h2{color:#00ff66;font-size:1.25rem;margin-bottom:18px;display:flex;align-items:center;gap:10px;text-shadow:0 0 8px rgba(0,255,102,0.4)}
+.admin-gate-card{max-width:500px;margin:70px auto;background:rgba(8,14,26,0.92);border:1px solid rgba(0,255,102,0.4);border-radius:14px;padding:32px;backdrop-filter:blur(16px);box-shadow:0 0 30px rgba(0,255,102,0.15);position:relative;z-index:10}
+.grid-2col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.grid-3col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.grid-4col{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}@media(max-width:850px){.grid-2col,.grid-3col,.grid-4col{grid-template-columns:1fr}}
+.analytics-metric-box{background:rgba(5,10,20,0.9);border:1px solid rgba(0,242,254,0.3);border-radius:12px;padding:16px;text-align:center}.analytics-metric-box h4{color:#94a3b8;font-size:0.72rem;letter-spacing:1px;margin-bottom:6px}.analytics-metric-box .metric-value{color:#00f2fe;font-size:1.6rem;font-weight:800;text-shadow:0 0 10px rgba(0,242,254,0.5)}
+.chart-box-wrapper{background:rgba(5,10,20,0.9);border:1px solid rgba(0,255,102,0.25);border-radius:12px;padding:16px;width:100%}.item-list{display:flex;flex-direction:column;gap:14px;margin-top:16px;max-height:420px;overflow-y:auto;padding-right:6px}
+.item-row{background:rgba(5,10,20,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;overflow-wrap:anywhere;word-break:break-word;width:100%}
+.ai-rule-card{background:rgba(5,10,20,0.85);border:1px solid rgba(0,242,254,0.3);border-left:4px solid #00f2fe;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;overflow-wrap:anywhere;word-break:break-word}.ai-rule-topic{color:#00f2fe;font-size:1rem;font-weight:700;margin-bottom:4px}.ai-rule-fact{color:#94a3b8;font-size:0.85rem;line-height:1.5}.ai-rule-actions{display:flex;gap:10px;margin-top:8px;justify-content:flex-end;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px}
+.btn-danger{background:rgba(255,0,85,0.15);border:1px solid #ff0055;color:#ff0055;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:700}.btn-danger:hover{background:#ff0055;color:#fff;box-shadow:0 0 10px rgba(255,0,85,0.5)}
+.hacker-input{background:rgba(5,10,20,0.9)!important;border:1px solid rgba(0,255,102,0.3)!important;color:#00ff66!important;font-family:'Fira Code',monospace!important;font-size:0.92rem!important;padding:10px 14px;border-radius:8px;width:100%;box-sizing:border-box}.hacker-input:focus{outline:none;border-color:#00ff66!important;box-shadow:0 0 10px rgba(0,255,102,0.4)!important}
+.btn-hacker{background:#00ff66!important;color:#03050c!important;font-family:'Fira Code',monospace!important;font-weight:800!important;border:none!important;box-shadow:0 0 15px rgba(0,255,102,0.4)!important;cursor:pointer;padding:10px 20px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center}.btn-hacker:hover{background:#00f2fe!important;box-shadow:0 0 20px rgba(0,242,254,0.6)!important}
+.btn-edit{background:rgba(251,191,36,0.15);border:1px solid #fbbf24;color:#fbbf24;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:700}.btn-edit:hover{background:#fbbf24;color:#03050c;box-shadow:0 0 10px rgba(251,191,36,0.5)}
+.auth-status-msg{margin-top:18px;padding:12px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;text-align:center;display:none}.status-info{background:rgba(0,242,254,0.1);border:1px solid rgba(0,242,254,0.4);color:#00f2fe;display:block}.status-error{background:rgba(255,0,85,0.15);border:1px solid rgba(255,0,85,0.5);color:#ff0055;display:block}.status-success{background:rgba(0,255,102,0.15);border:1px solid rgba(0,255,102,0.5);color:#00ff66;display:block}
+.builder-wrapper{background:rgba(5,10,20,0.6);border:1px solid rgba(0,242,254,0.2);border-radius:12px;padding:20px;margin-bottom:20px}.block-element{background:rgba(11,15,25,0.9);border:1px solid rgba(56,189,248,0.3);border-radius:8px;padding:16px;position:relative;margin-bottom:0;transition:all 0.3s ease}.block-container{display:flex;flex-direction:column;gap:12px}.insert-block-btn{background:rgba(0,255,102,0.05);border:1px dashed rgba(0,255,102,0.4);color:#00ff66;width:100%;padding:6px;border-radius:6px;cursor:pointer;text-align:center;font-size:0.8rem;margin:4px 0}.insert-block-btn:hover{background:rgba(0,255,102,0.2);box-shadow:0 0 10px rgba(0,255,102,0.3)}.block-remove-btn{position:absolute;top:12px;right:12px;background:rgba(255,0,85,0.15);border:1px solid #ff0055;color:#ff0055;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;line-height:1}.block-remove-btn:hover{background:#ff0055;color:#fff}.live-preview-box{background:rgba(5,10,20,0.95);border:1px solid rgba(0,242,254,0.4);border-radius:12px;padding:20px;min-height:150px;color:#f1f5f9;overflow-wrap:anywhere;word-break:break-word}.modal-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(11,15,25,0.85);backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center;z-index:3000}.modal-content{background:#121a2b;border:1px solid rgba(0,242,254,0.4);border-radius:16px;padding:32px;max-width:400px;width:90%;position:relative;text-align:center}.modal-close{position:absolute;top:16px;right:20px;background:none;border:none;color:#94a3b8;font-size:1.8rem;cursor:pointer}
+</style>
 </head>
 <body>
+<canvas id="matrix-canvas"></canvas>
+<nav><div class="logo"><a href="/" style="color:inherit;text-decoration:none;">Muxammadrizo<span style="color:#00ff66;">.dev</span></a></div><div class="nav-right-group"><span id="logged-status" style="display:none;color:#00ff66;font-size:0.85rem;font-weight:700;">🟢 SECURE_ROOT_ACTIVE</span><a href="/" class="btn-secondary" style="border-color:rgba(0,255,102,0.4);color:#00ff66;padding:6px 14px;height:auto;">[← EXIT_SYSTEM]</a></div></nav>
 
-    <!-- MATRIX CANVAS -->
-    <canvas id="matrix-canvas"></canvas>
+<div class="admin-gate-card" id="login-section"><div style="font-size:0.75rem;color:#00ff66;margin-bottom:16px;">🛡️ SYSTEM_GATE_v2.0 // 2FA_ENCRYPTED</div><h2 style="color:#00ff66;font-size:1.25rem;margin-bottom:6px;">&gt;_ ADMIN_AUTH_ROOT</h2><p style="color:#94a3b8;font-size:0.85rem;margin-bottom:24px;" id="auth-subtext">Stage 1: Enter Username & Password to trigger Gmail OTP.</p><form id="stage1-form"><div class="form-group" style="margin-bottom:14px;"><label style="color:#00ff66;font-size:0.8rem;display:block;margin-bottom:6px;">USER_IDENTIFIER:</label><input type="text" id="admin-username" class="hacker-input" placeholder="admin" required autocomplete="username"></div><div class="form-group" style="margin-bottom:18px;"><label style="color:#00ff66;font-size:0.8rem;display:block;margin-bottom:6px;">SECRET_PASSPHRASE:</label><input type="password" id="admin-password" class="hacker-input" placeholder="••••••••••••" required autocomplete="current-password"></div><button type="submit" id="stage1-btn" class="btn-hacker" style="width:100%;height:46px;">[EXECUTE_STAGE_1_VERIFY] 📩</button></form><form id="stage2-form" style="display:none;"><div class="form-group" style="margin-bottom:18px;"><label style="color:#00f2fe;font-size:0.8rem;display:block;margin-bottom:6px;">GMAIL_2FA_TOKEN (6-DIGITS):</label><input type="text" id="admin-otp" class="hacker-input" placeholder="123456" maxlength="6" required autocomplete="off" style="letter-spacing:8px;font-weight:800;text-align:center;font-size:1.3rem;color:#00f2fe!important;"></div><button type="submit" id="stage2-btn" class="btn-hacker" style="width:100%;height:46px;background:#00f2fe!important;color:#03050c!important;">[EXECUTE_STAGE_2_LOGIN] 🔓</button></form><div id="auth-status-msg" class="auth-status-msg"></div></div>
 
-    <!-- NAVBAR -->
-    <nav>
-        <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">Muxammadrizo<span style="color: #00ff66;">.dev</span></a></div>
-        <div class="nav-right-group">
-            <span id="logged-status" style="display: none; color: #00ff66; font-size: 0.85rem; font-weight: 700;">🟢 SECURE_ROOT_ACTIVE</span>
-            <a href="/" class="single-lang-btn" style="text-decoration: none; border-color: rgba(0, 255, 102, 0.4); color: #00ff66;">[← EXIT_SYSTEM]</a>
-        </div>
-    </nav>
-
-    <!-- 1. LOGIN GATE -->
-    <div class="admin-gate-card" id="login-section">
-        <div style="font-size: 0.75rem; color: #00ff66; margin-bottom: 16px;">🛡️ SYSTEM_GATE_v2.0 // 2FA_ENCRYPTED</div>
-        <h2 style="color: #00ff66; font-size: 1.25rem; margin-bottom: 6px;">&gt;_ ADMIN_AUTH_ROOT</h2>
-        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 24px;" id="auth-subtext">Stage 1: Enter Username & Password to trigger Gmail OTP.</p>
-
-        <form id="stage1-form">
-            <div class="form-group" style="margin-bottom: 14px;">
-                <label style="color: #00ff66; font-size: 0.8rem; display: block; margin-bottom: 6px;">USER_IDENTIFIER:</label>
-                <input type="text" id="admin-username" class="hacker-input" placeholder="admin" required autocomplete="username">
-            </div>
-            <div class="form-group" style="margin-bottom: 18px;">
-                <label style="color: #00ff66; font-size: 0.8rem; display: block; margin-bottom: 6px;">SECRET_PASSPHRASE:</label>
-                <input type="password" id="admin-password" class="hacker-input" placeholder="••••••••••••" required autocomplete="current-password">
-            </div>
-            <button type="submit" id="stage1-btn" class="btn-hacker" style="width: 100%; height: 46px;">[EXECUTE_STAGE_1_VERIFY] 📩</button>
-        </form>
-
-        <form id="stage2-form" style="display: none;">
-            <div class="form-group" style="margin-bottom: 18px;">
-                <label style="color: #00f2fe; font-size: 0.8rem; display: block; margin-bottom: 6px;">GMAIL_2FA_TOKEN (6-DIGITS):</label>
-                <input type="text" id="admin-otp" class="hacker-input" placeholder="123456" maxlength="6" required autocomplete="off" style="letter-spacing: 8px; font-weight: 800; text-align: center; font-size: 1.3rem; color: #00f2fe !important;">
-            </div>
-            <button type="submit" id="stage2-btn" class="btn-hacker" style="width: 100%; height: 46px; background: #00f2fe !important; color: #03050c !important;">[EXECUTE_STAGE_2_LOGIN] 🔓</button>
-        </form>
-
-        <div id="auth-status-msg" class="auth-status-msg"></div>
+<div id="dashboard-section" class="admin-container" style="display:none;">
+    <div class="admin-nav-tabs">
+        <button class="admin-tab-btn active" onclick="switchAdminTab('analytics-tab')">📊 Server Analytics</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('reviews-tab')">💬 Review Replies</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('personal-tab')">⚙️ Personal Info</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('ai-tab')">🧠 AI Knowledge Base</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('block-builder-tab')">🛠️ Advanced Content Builder</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('content-tab')">📁 Content Manager</button>
     </div>
 
-    <!-- 2. MAIN ADMIN DASHBOARD -->
-    <div id="dashboard-section" class="admin-container" style="display: none;">
-
-        <!-- CATEGORY NAVIGATION TABS -->
-        <div class="admin-nav-tabs">
-            <button class="admin-tab-btn active" onclick="switchAdminTab('analytics-tab')">📊 Server Analytics</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('reviews-tab')">💬 Review Replies</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('personal-tab')">⚙️ Personal Info</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('ai-tab')">🧠 AI Knowledge Base</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('block-builder-tab')">🛠️ Visual Content Builder</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('content-tab')">📁 Content Manager</button>
-        </div>
-
-        <!-- TAB 1: ADVANCED SERVER ANALYTICS -->
-        <div id="analytics-tab" class="tab-content">
-            <div class="admin-card">
-                <h2>📊 Server Diagnostics &amp; Real-Time Analytics</h2>
-
-                <div class="grid-4col" style="margin-bottom: 24px;">
-                    <div class="analytics-metric-box">
-                        <h4>Active Online Users</h4>
-                        <div class="metric-value" id="metric-online-users">1</div>
-                    </div>
-                    <div class="analytics-metric-box">
-                        <h4>Unique Visits</h4>
-                        <div class="metric-value" id="metric-total-visits">0</div>
-                    </div>
-                    <div class="analytics-metric-box">
-                        <h4>Global Time Spent</h4>
-                        <div class="metric-value" id="metric-total-time">0m 0s</div>
-                    </div>
-                    <div class="analytics-metric-box">
-                        <h4>Avg Server Latency</h4>
-                        <div class="metric-value" id="metric-api-latency">12ms</div>
-                    </div>
-                </div>
-
-                <div class="grid-2col" style="margin-bottom: 20px;">
-                    <!-- DONUT 1: CONTENT ENGAGEMENT -->
-                    <div class="chart-box-wrapper">
-                        <h3 style="font-size: 0.85rem; color: #00ff66; margin-bottom: 12px; font-family: 'Fira Code', monospace; text-align: center;">🍩 Content Opened Distribution</h3>
-                        <canvas id="content-pie-chart" height="180" style="max-height: 180px; width: 100%; display: block; margin: 0 auto;"></canvas>
-                        <div id="content-pie-legend" style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 0.75rem;"></div>
-                    </div>
-
-                    <!-- DONUT 2: HARDWARE & OS -->
-                    <div class="chart-box-wrapper">
-                        <h3 style="font-size: 0.85rem; color: #00ff66; margin-bottom: 12px; font-family: 'Fira Code', monospace; text-align: center;">🍩 Devices &amp; OS Load</h3>
-                        <canvas id="os-pie-chart" height="180" style="max-height: 180px; width: 100%; display: block; margin: 0 auto;"></canvas>
-                        <div id="os-pie-legend" style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 0.75rem;"></div>
-                    </div>
-                </div>
-
-                <div class="grid-2col">
-                    <!-- LINE CHART 1: CPU & RAM -->
-                    <div class="chart-box-wrapper">
-                        <h3 style="font-size: 0.85rem; color: #00ff66; margin-bottom: 12px; font-family: 'Fira Code', monospace;">⚡ Server Load (CPU &amp; RAM %)</h3>
-                        <canvas id="resource-line-chart" height="180" style="max-height: 180px; width: 100%; display: block;"></canvas>
-                        <div style="text-align: center; font-size: 0.75rem; margin-top: 12px;">
-                            <span style="color:#00ff66;">🟢 CPU Load</span> &nbsp;|&nbsp; <span style="color:#00f2fe;">🔵 RAM Usage</span>
-                        </div>
-                    </div>
-
-                    <!-- LINE CHART 2: TRAFFIC TIMELINE -->
-                    <div class="chart-box-wrapper">
-                        <h3 style="font-size: 0.85rem; color: #00ff66; margin-bottom: 12px; font-family: 'Fira Code', monospace;">📈 Traffic Growth Timeline</h3>
-                        <canvas id="traffic-line-chart" height="180" style="max-height: 180px; width: 100%; display: block;"></canvas>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; flex-wrap: wrap; gap: 12px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <span style="font-size: 0.8rem; color: #94a3b8;">Page Hits: Home: <strong id="stat-home-hits" style="color:#38bdf8;">0</strong> | Detail Views: <strong id="stat-detail-hits" style="color:#38bdf8;">0</strong></span>
-                    <button type="button" class="btn-hacker" style="background: rgba(255, 0, 85, 0.15) !important; color: #ff0055 !important; border: 1px solid #ff0055 !important;" onclick="resetAnalyticsStats()">
-                        [RESET_ANALYTICS 🔄]
-                    </button>
-                </div>
+    <!-- TAB 1 -->
+    <div id="analytics-tab" class="tab-content">
+        <div class="admin-card"><h2>📊 Live Server Diagnostics &amp; Traffic Analytics</h2>
+            <div class="grid-4col" style="margin-bottom:24px;"><div class="analytics-metric-box"><h4>Active Users</h4><div class="metric-value" id="metric-online-users">1</div></div><div class="analytics-metric-box"><h4>Unique Visits</h4><div class="metric-value" id="metric-total-visits">0</div></div><div class="analytics-metric-box"><h4>Global Time Spent</h4><div class="metric-value" id="metric-total-time">0m 0s</div></div><div class="analytics-metric-box"><h4>Avg Server Latency</h4><div class="metric-value" id="metric-api-latency">12ms</div></div></div>
+            <div class="grid-2col" style="margin-bottom:20px;">
+                <div class="chart-box-wrapper"><h3 style="font-size:0.85rem;color:#00ff66;margin-bottom:12px;text-align:center;">🍩 Content Opened Distribution</h3><canvas id="content-pie-chart" height="180" style="display:block;margin:0 auto;"></canvas><div id="content-pie-legend" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:0.75rem;"></div></div>
+                <div class="chart-box-wrapper"><h3 style="font-size:0.85rem;color:#00ff66;margin-bottom:12px;text-align:center;">🍩 Devices &amp; OS Load</h3><canvas id="os-pie-chart" height="180" style="display:block;margin:0 auto;"></canvas><div id="os-pie-legend" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:0.75rem;"></div></div>
             </div>
-        </div>
-
-        <!-- TAB 2: REVIEW REPLY & MODERATION CENTER -->
-        <div id="reviews-tab" class="tab-content" style="display: none;">
-            <div class="admin-card">
-                <h2>💬 Client Feedback &amp; Owner Reply Center</h2>
-                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">
-                    Typing an owner reply publishes your response directly underneath the review on the main website tagged with <strong>[OWNER RESPONSE]</strong>.
-                </p>
-                <div class="item-list" id="admin-reviews-list">
-                    <p style="color: #94a3b8; font-size: 0.85rem;">Loading feedback stream...</p>
-                </div>
-                <button type="button" id="admin-show-more-reviews" class="btn-hacker" style="width: 100%; margin-top: 16px; display: none;" onclick="toggleAdminShowMoreReviews()">
-                    Show More Admin Feedback 👇
-                </button>
-            </div>
-        </div>
-
-        <!-- TAB 3: PERSONAL INFO & SOCIAL LINKS EDITOR -->
-        <div id="personal-tab" class="tab-content" style="display: none;">
-            <div class="admin-card">
-                <h2>⚙️ Personal Info &amp; Site Configuration</h2>
-                <form id="personal-info-form">
-                    <div class="grid-2col" style="margin-bottom: 14px;">
-                        <div>
-                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Developer Full Name</label>
-                            <input type="text" id="info-name" class="hacker-input" value="A'zamjonov Muxammadrizo" required>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Site Title / Brand</label>
-                            <input type="text" id="info-brand" class="hacker-input" value="Muxammadrizo.dev" required>
-                        </div>
-                    </div>
-
-                    <div class="grid-2col" style="margin-bottom: 14px;">
-                        <div>
-                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Age &amp; School Status Badge</label>
-                            <input type="text" id="info-badge" class="hacker-input" value="16 y/o • Hackathon IT School Fergana" required>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Telegram Handle</label>
-                            <input type="text" id="info-telegram" class="hacker-input" value="@muxammadrizo0125" required>
-                        </div>
-                    </div>
-
-                    <div class="grid-2col" style="margin-bottom: 14px;">
-                        <div>
-                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">GitHub Repository URL</label>
-                            <input type="text" id="info-github" class="hacker-input" value="https://github.com/azammuhammadrizo924-debug" required>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Gmail Address</label>
-                            <input type="email" id="info-gmail" class="hacker-input" value="azammuhammadrizo924@gmail.com" required>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 14px;">
-                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Hero Bio Subtext</label>
-                        <textarea id="info-bio" class="hacker-input" rows="3" required>Developer studying at Hackathon IT School in Fergana, Uzbekistan. Founder of NKND Studios. I architect fast Python/FastAPI backends and build interactive open-world games in Unreal Engine 5.8.</textarea>
-                    </div>
-
-                    <div style="margin-bottom: 14px;">
-                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">"I Specialize In" Typewriter Phrases (Comma-Separated)</label>
-                        <input type="text" id="info-phrases" class="hacker-input" value="Python FastAPI Backends, Unreal Engine 5.8 Worlds, Automated Telegram Bots, RESTful 2FA APIs" required>
-                    </div>
-
-                    <div style="margin-bottom: 18px;">
-                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Holographic Greetings List (Comma-Separated)</label>
-                        <input type="text" id="info-greetings" class="hacker-input" value="Hi, Salom, Привет, 안녕하세요, こんにちは, ¡Hola!, Bonjour, مرحبا, Ciao, Namaste, 你好, Guten Tag, สวัสดี, שלום" required>
-                    </div>
-
-                    <button type="submit" class="btn-hacker" style="width: 100%;">Save Personal Configuration ⚙️</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- TAB 4: AI KNOWLEDGE BASE & FAQ EDITOR -->
-        <div id="ai-tab" class="tab-content" style="display: none;">
-            <div class="admin-card">
-                <h2>🧠 Gemini AI Assistant Knowledge Base &amp; Stats</h2>
-
-                <div class="grid-3col" style="margin-bottom: 20px;">
-                    <div class="analytics-metric-box">
-                        <h4>Total Prompts Answered</h4>
-                        <div class="metric-value" id="ai-metric-answered">0</div>
-                    </div>
-                    <div class="analytics-metric-box">
-                        <h4>Off-Topic Lockouts</h4>
-                        <div class="metric-value" id="ai-metric-lockouts">0</div>
-                    </div>
-                    <div class="analytics-metric-box">
-                        <h4>Active Knowledge Rules</h4>
-                        <div class="metric-value" id="ai-metric-rules">0</div>
-                    </div>
-                </div>
-
-                <form id="ai-knowledge-form" style="margin-bottom: 20px;">
-                    <div class="form-group" style="margin-bottom: 12px;">
-                        <label style="font-size: 0.78rem; color: #00f2fe; display: block; margin-bottom: 4px;">Topic / Question Keywords</label>
-                        <input type="text" id="ai-topic" class="hacker-input" placeholder="e.g. Freelance Rates / Pricing" required>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 14px;">
-                        <label style="font-size: 0.78rem; color: #00f2fe; display: block; margin-bottom: 4px;">AI Fact / Knowledge Response</label>
-                        <textarea id="ai-fact" class="hacker-input" rows="2" placeholder="Tell the user that rates are negotiable and budget-friendly..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn-hacker" style="width: 100%; background: #00f2fe !important; color: #03050c !important;">Add Knowledge Rule 🧠</button>
-                </form>
-
-                <div class="item-list" id="ai-rules-list">
-                    <p style="color: #94a3b8; font-size: 0.85rem;">Loading active AI knowledge rules...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 5: ADVANCED BLOCK-BASED CONTENT CREATOR WITH LIVE PREVIEW -->
-        <div id="block-builder-tab" class="tab-content" style="display: none;">
-            <div class="admin-card">
-                <h2>🛠️ Block-Based Visual Content Creator</h2>
-                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">
-                    Build structured articles or project pages by adding media, headers, text, and action buttons step-by-step.
-                </p>
-
-                <div class="grid-2col" style="margin-bottom: 14px;">
-                    <div>
-                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Target Section</label>
-                        <select id="builder-target" class="hacker-input">
-                            <option value="project">Featured Project Page</option>
-                            <option value="blog">DevLog / Blog Post</option>
-                            <option value="achievement">Achievement Record</option>
-                            <option value="journey">Dev Journey / Education</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.78rem; color: #00ff66; display: block; margin-bottom: 4px;">Content Title</label>
-                        <input type="text" id="builder-main-title" class="hacker-input" placeholder="Unreal Engine Procedural Generation" required>
-                    </div>
-                </div>
-
-                <!-- ADD BLOCK BUTTONS -->
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
-                    <button type="button" class="btn-hacker" style="font-size: 0.75rem;" onclick="addContentBlock('header')">+ Add Header Block</button>
-                    <button type="button" class="btn-hacker" style="font-size: 0.75rem;" onclick="addContentBlock('text')">+ Add Text Paragraph</button>
-                    <button type="button" class="btn-hacker" style="font-size: 0.75rem;" onclick="addContentBlock('media')">+ Add Image/Video URL</button>
-                    <button type="button" class="btn-hacker" style="font-size: 0.75rem;" onclick="addContentBlock('links')">+ Add Source/Live Buttons</button>
-                </div>
-
-                <!-- STACKED BLOCK CONTAINER -->
-                <div id="blocks-stack-container" style="margin-bottom: 20px;"></div>
-
-                <!-- LIVE VISUAL PREVIEW BOX -->
-                <div style="background: rgba(5, 10, 20, 0.95); border: 1px solid rgba(0, 242, 254, 0.4); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                    <h4 style="color: #00f2fe; font-size: 0.85rem; margin-bottom: 10px;">👁️ Live Layout Preview</h4>
-                    <div id="live-block-preview" style="color: #94a3b8; font-size: 0.9rem;">
-                        <em>Add content blocks above to see live preview...</em>
-                    </div>
-                </div>
-
-                <button type="button" class="btn-hacker" style="width: 100%; height: 46px;" onclick="publishBlockContent()">Publish Complete Content Page 🚀</button>
-            </div>
-        </div>
-
-        <!-- TAB 6: CONTENT MANAGER & MAINTENANCE -->
-        <div id="content-tab" class="tab-content" style="display: none;">
             <div class="grid-2col">
-                <div class="admin-card">
-                    <h2>📁 Live Projects</h2>
-                    <div class="item-list" id="projects-list-admin">
-                        <p style="color: #94a3b8; font-size: 0.85rem;">Loading projects...</p>
-                    </div>
-                </div>
-
-                <div class="admin-card">
-                    <h2>🏆 Live Achievements &amp; Skills</h2>
-                    <div class="item-list" id="achievements-list-admin">
-                        <p style="color: #94a3b8; font-size: 0.85rem;">Loading records...</p>
-                    </div>
-                </div>
+                <div class="chart-box-wrapper"><h3 style="font-size:0.85rem;color:#00ff66;margin-bottom:12px;">⚡ Server Load (CPU &amp; RAM %)</h3><canvas id="resource-line-chart" height="180" style="width:100%;display:block;"></canvas><div style="text-align:center;font-size:0.75rem;margin-top:12px;"><span style="color:#00ff66;">🟢 CPU Usage</span> &nbsp;|&nbsp; <span style="color:#00f2fe;">🔵 RAM Usage</span></div></div>
+                <div class="chart-box-wrapper"><h3 style="font-size:0.85rem;color:#00ff66;margin-bottom:12px;">📈 Traffic Growth Timeline</h3><canvas id="traffic-line-chart" height="180" style="width:100%;display:block;"></canvas></div>
             </div>
-
-            <div class="admin-card" style="margin-top: 20px;">
-                <h2>🧹 System Maintenance</h2>
-                <div style="display: flex; gap: 14px; flex-wrap: wrap;">
-                    <button type="button" class="btn-danger" style="flex: 1; height: 46px;" onclick="clearAllReviews()">Purge All Reviews 🗑️</button>
-                    <button type="button" class="btn-hacker" style="flex: 1; height: 46px; background: #ff0055 !important; color: #fff !important;" onclick="adminLogout()">Terminate Root Session 🔒</button>
-                </div>
-            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;flex-wrap:wrap;gap:12px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);"><span style="font-size:0.8rem;color:#94a3b8;">Page Hits: Home: <strong id="stat-home-hits" style="color:#38bdf8;">0</strong> | Detail Views: <strong id="stat-detail-hits" style="color:#38bdf8;">0</strong></span><button type="button" class="btn-hacker" style="background:rgba(255,0,85,0.15)!important;color:#ff0055!important;border:1px solid #ff0055!important;" onclick="resetAnalyticsStats()">[RESET_ANALYTICS 🔄]</button></div>
         </div>
-
     </div>
 
-    <!-- MATRIX CANVAS SCRIPT -->
-    <script>
-        const canvas = document.getElementById('matrix-canvas');
-        const ctx = canvas.getContext('2d');
-        function resizeMatrix() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeMatrix();
-        window.addEventListener('resize', resizeMatrix);
+    <!-- TAB 2 -->
+    <div id="reviews-tab" class="tab-content" style="display:none;"><div class="admin-card"><h2>💬 Client Feedback &amp; Owner Reply Center</h2><p style="color:#94a3b8;font-size:0.85rem;margin-bottom:16px;">Typing an owner reply publishes your response directly underneath the review on the main website tagged with <strong>[OWNER RESPONSE]</strong>.</p><div class="item-list" id="admin-reviews-list"><p style="color:#94a3b8;font-size:0.85rem;">Loading feedback stream...</p></div><button type="button" id="admin-show-more-reviews" class="btn-hacker" style="width:100%;margin-top:16px;display:none;" onclick="toggleAdminShowMoreReviews()">Show More Admin Feedback 👇</button></div></div>
 
-        const chars = '01>#{}+-/*=';
-        const fontSize = 14;
-        const columns = Math.floor(canvas.width / 24);
-        const drops = Array(columns).fill(1);
+    <!-- TAB 3 -->
+    <div id="personal-tab" class="tab-content" style="display:none;"><div class="admin-card"><h2>⚙️ Personal Info &amp; Site Configuration</h2><button type="button" class="btn-hacker" style="margin-bottom:24px;background:rgba(251,191,36,0.15)!important;border:1px solid #fbbf24!important;color:#fbbf24!important;" onclick="restoreDefaultConfig()">Restore Default Original Data 🔄</button><form id="personal-info-form"><div class="grid-2col" style="margin-bottom:14px;"><div><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Developer Full Name</label><input type="text" id="info-name" class="hacker-input" maxlength="50" placeholder="A'zamjonov Muxammadrizo" required></div><div><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Site Title / Brand</label><input type="text" id="info-brand" class="hacker-input" maxlength="30" placeholder="Muxammadrizo.dev or NKND Studios" required></div></div>
 
-        function drawMatrixRain() {
-            ctx.fillStyle = 'rgba(3, 5, 12, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = fontSize + 'px "Fira Code", monospace';
-            for (let i = 0; i < drops.length; i++) {
-                const text = chars.charAt(Math.floor(Math.random() * chars.length));
-                ctx.fillStyle = (Math.random() > 0.88) ? '#00f2fe' : '#00ff66';
-                ctx.fillText(text, i * 24, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            }
-        }
-        setInterval(drawMatrixRain, 45);
-    </script>
+                    <div style="margin-bottom:14px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Hero Badge (English 🇬🇧)</label><input type="text" id="info-badge" class="hacker-input" maxlength="60" placeholder="16 y/o • Hackathon IT School Fergana" required></div>
+                    <div style="margin-bottom:14px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Hero Badge (Uzbek 🇺🇿)</label><input type="text" id="info-badge-uz" class="hacker-input" maxlength="60" placeholder="16 yosh • Hackathon IT School..." required></div>
+                    <div style="margin-bottom:14px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Hero Badge (Russian 🇷🇺)</label><input type="text" id="info-badge-ru" class="hacker-input" maxlength="60" placeholder="16 лет • Hackathon IT School..." required></div>
 
-    <!-- DASHBOARD LOGIC SCRIPT -->
-    <script>
-        let adminToken = sessionStorage.getItem('admin_token') || null;
-        let adminReviewsData = [];
-        let isAdminShowingAllReviews = false;
-        let blockCount = 0;
+                    <div class="grid-2col" style="margin-bottom:14px;"><div><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Telegram Handle</label><input type="text" id="info-telegram" class="hacker-input" maxlength="30" placeholder="@muxammadrizo0125" required></div><div><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Gmail Address</label><input type="email" id="info-gmail" class="hacker-input" placeholder="name@gmail.com" required></div></div><div class="grid-2col" style="margin-bottom:14px;"><div><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">GitHub Repository URL</label><input type="text" id="info-github" class="hacker-input" placeholder="https://github.com/..." required></div></div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (adminToken) {
-                showDashboard();
-            }
-        });
+                    <div style="margin-bottom:14px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Hero Bio Subtext (English 🇬🇧)</label><textarea id="info-bio" class="hacker-input" rows="3" maxlength="300" required></textarea></div>
+                    <div style="margin-bottom:14px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Hero Bio Subtext (Uzbek 🇺🇿)</label><textarea id="info-bio-uz" class="hacker-input" rows="3" maxlength="300" placeholder="Tarjimani kiriting..."></textarea></div>
+                    <div style="margin-bottom:14px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Hero Bio Subtext (Russian 🇷🇺)</label><textarea id="info-bio-ru" class="hacker-input" rows="3" maxlength="300" placeholder="Введите перевод..."></textarea></div>
+                    <div style="margin-bottom:14px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">"I Specialize In" Typewriter Phrases (Comma-Separated)</label><input type="text" id="info-phrases" class="hacker-input" placeholder="Python FastAPI Backends, Unreal Engine..." required></div><div style="margin-bottom:18px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Holographic Greetings List (Comma-Separated)</label><input type="text" id="info-greetings" class="hacker-input" placeholder="Hi, Salom, Привет..." required></div><button type="submit" class="btn-hacker" style="width:100%;">Save Personal Configuration ⚙️</button></form></div></div>
 
-        function switchAdminTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+    <!-- TAB 4 -->
+    <div id="ai-tab" class="tab-content" style="display:none;"><div class="admin-card"><h2>🧠 Gemini AI Assistant Knowledge Base &amp; Stats</h2>
+        <div style="background:rgba(0, 242, 254, 0.05); border:1px dashed rgba(0, 242, 254, 0.3); border-radius:8px; padding:16px; margin-bottom:24px;">
+            <label style="font-size:0.78rem; color:#00f2fe; display:block; margin-bottom:4px;">Override Gemini API Key (Optional)</label>
+            <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:8px;">Paste a new API key here to securely swap keys without touching the `.env` file or restarting the server. Leave blank to use default.</p>
+            <div style="display:flex; gap:10px;">
+                <input type="password" id="admin-api-key" class="hacker-input" placeholder="AIzaSy..." style="flex:1;">
+                <button type="button" class="btn-hacker" style="background:#00f2fe!important; color:#03050c!important;" onclick="updateGeminiApiKey()">Save Key 🔑</button>
+            </div>
+        </div>
+        <div class="grid-3col" style="margin-bottom:20px;"><div class="analytics-metric-box"><h4>Total Prompts Answered</h4><div class="metric-value" id="ai-metric-answered">0</div></div><div class="analytics-metric-box"><h4>Off-Topic Lockouts</h4><div class="metric-value" id="ai-metric-lockouts">0</div></div><div class="analytics-metric-box"><h4>Active Knowledge Rules</h4><div class="metric-value" id="ai-metric-rules">0</div></div></div><div class="chart-box-wrapper" style="margin-bottom:24px;"><h3 style="font-size:0.85rem;color:#00ff66;margin-bottom:12px;">🗣️ Recent Visitor Prompts</h3><div id="recent-prompts-list" style="max-height:150px;overflow-y:auto;color:#94a3b8;font-size:0.85rem;line-height:1.6;word-break:break-all;"><em>No prompts recorded yet...</em></div></div><form id="ai-knowledge-form" style="margin-bottom:20px;"><input type="hidden" id="ai-edit-id" value=""><div class="form-group" style="margin-bottom:12px;"><label style="font-size:0.78rem;color:#00f2fe;display:block;margin-bottom:4px;">Topic / Question Keywords</label><input type="text" id="ai-topic" class="hacker-input" maxlength="100" placeholder="e.g. Freelance Rates / Pricing" required></div><div class="form-group" style="margin-bottom:14px;"><label style="font-size:0.78rem;color:#00f2fe;display:block;margin-bottom:4px;">AI Fact / Knowledge Response</label><textarea id="ai-fact" class="hacker-input" rows="2" maxlength="500" placeholder="Tell the user that rates are negotiable..." required></textarea></div><button type="submit" id="ai-save-btn" class="btn-hacker" style="width:100%;background:#00f2fe!important;color:#03050c!important;">Add Knowledge Rule 🧠</button></form><div class="item-list" id="ai-rules-list"><p style="color:#94a3b8;font-size:0.85rem;">Loading active AI knowledge rules...</p></div></div></div>
 
-            const activeTab = document.getElementById(tabId);
-            if (activeTab) activeTab.style.display = 'block';
+    <!-- TAB 5 -->
+    <div id="block-builder-tab" class="tab-content" style="display:none;"><div class="admin-card"><h2>🛠️ Advanced Visual Content Builder</h2>
+        <p style="color:#94a3b8;font-size:0.85rem;margin-bottom:16px;">Use the Language Tabs below to switch which version of the article you are writing. The main site uses these to show the correct translation when a user clicks the globe button.</p>
 
-            if (event && event.target) event.target.classList.add('active');
-        }
+        <div class="admin-nav-tabs" style="justify-content:center; margin-bottom: 15px; border:none;">
+            <button type="button" class="admin-tab-btn active" id="lang-btn-en" onclick="switchBuilderLang('en')">English 🇬🇧</button>
+            <button type="button" class="admin-tab-btn" id="lang-btn-uz" onclick="switchBuilderLang('uz')">Uzbek 🇺🇿</button>
+            <button type="button" class="admin-tab-btn" id="lang-btn-ru" onclick="switchBuilderLang('ru')">Russian 🇷🇺</button>
+        </div>
 
-        document.getElementById('stage1-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('admin-username').value.trim();
-            const password = document.getElementById('admin-password').value;
-            const statusMsg = document.getElementById('auth-status-msg');
-            const btn = document.getElementById('stage1-btn');
+        <div class="grid-2col" style="margin-bottom:24px;"><div><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Target Section Category</label><select id="builder-target" class="hacker-input" onchange="toggleBuilderMode()"><option value="project">Featured Project Page</option><option value="blog">DevLog / Blog Post</option><option value="achievement">Achievement Record</option><option value="journey">Dev Journey / Education (Simple Card)</option></select></div><div id="custom-category-wrapper"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Custom Tag Badge</label><input type="text" id="builder-custom-category" class="hacker-input" placeholder="e.g. Python, UE5, React..." value="Python"></div></div>
 
-            btn.disabled = true;
-            statusMsg.className = 'auth-status-msg status-info';
-            statusMsg.textContent = 'Verifying credentials & sending 2FA OTP code...';
+        <div id="simple-journey-form" style="display:none;background:rgba(5,10,20,0.6);border:1px solid rgba(0,255,102,0.3);border-radius:12px;padding:20px;">
+            <h3 style="color:#00ff66;font-size:1.1rem;margin-bottom:16px;">🎓 Dev Journey Entry</h3><input type="hidden" id="journey-edit-id" value="">
+            <div style="background:rgba(0,242,254,0.05);border:1px dashed rgba(0,242,254,0.3);border-radius:8px;padding:16px;margin-bottom:16px;"><label style="font-size:0.78rem;color:#00f2fe;display:block;margin-bottom:4px;">🤖 Gemini AI Journey Generator</label><textarea id="ai-journey-prompt" class="hacker-input" rows="2" maxlength="300" placeholder="e.g. 'I started learning Python in 2023 at Fergana IT school...'"></textarea><button type="button" id="ai-journey-btn" class="btn-hacker" style="margin-top:8px;font-size:0.8rem;padding:6px 14px;background:#00f2fe!important;color:#03050c!important;" onclick="aiGenerateJourney()">Generate Journey Card ✨</button></div>
+            <div class="grid-2col" style="margin-bottom:12px;"><div><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Title</label><input type="text" id="journey-title" class="hacker-input" maxlength="60" placeholder="e.g. Hackathon IT School"></div><div><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Date Range</label><input type="text" id="journey-date" class="hacker-input" maxlength="30" placeholder="e.g. 2024 - Present"></div></div><div style="margin-bottom:12px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Category Badge</label><input type="text" id="journey-badge" class="hacker-input" maxlength="30" placeholder="e.g. Education"></div><div style="margin-bottom:16px;"><label style="font-size:0.78rem;color:#00ff66;display:block;margin-bottom:4px;">Description</label><textarea id="journey-desc" class="hacker-input" rows="3" maxlength="300" placeholder="Explain what you did..."></textarea></div><button type="button" id="journey-save-btn" class="btn-hacker" style="width:100%;height:46px;" onclick="publishJourney()">Save Journey Card 🎓</button>
+        </div>
 
-            try {
-                const res = await fetch('/api/admin/request-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: username, password: password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    statusMsg.className = 'auth-status-msg status-success';
-                    statusMsg.textContent = data.message || 'Stage 1 Passed! OTP sent.';
-                    document.getElementById('stage1-form').style.display = 'none';
-                    document.getElementById('stage2-form').style.display = 'block';
-                    document.getElementById('auth-subtext').textContent = 'Stage 2: Enter 6-digit code sent to Gmail or terminal.';
-                    document.getElementById('admin-otp').focus();
-                } else {
-                    statusMsg.className = 'auth-status-msg status-error';
-                    statusMsg.textContent = data.detail || 'Invalid Username or Password!';
-                }
-            } catch (err) {
-                statusMsg.className = 'auth-status-msg status-error';
-                statusMsg.textContent = 'Server connection error.';
-            } finally {
-                btn.disabled = false;
-            }
-        });
+        <div id="advanced-block-builder" class="builder-wrapper">
+            <h3 style="color:#00f2fe;font-size:1.1rem;margin-bottom:16px;">🏗️ Advanced HTML Page Stacker</h3><input type="hidden" id="builder-edit-id" value="">
+            <div style="margin-bottom:16px;"><label style="font-size:0.78rem;color:#00f2fe;display:block;margin-bottom:4px;">Main Header / Title</label><input type="text" id="builder-main-title" class="hacker-input" maxlength="80" placeholder="My Awesome Project" oninput="updateBlockPreview()"></div>
+            <div style="margin-bottom:16px;"><label style="font-size:0.78rem;color:#00f2fe;display:block;margin-bottom:4px;">Tech Stack &amp; Tools (Optional)</label><input type="text" id="builder-tech" class="hacker-input" maxlength="100" placeholder="e.g. Python, FastAPI, SQLite..." oninput="updateBlockPreview()"></div>
 
-        document.getElementById('stage2-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const otpCode = document.getElementById('admin-otp').value.trim();
-            const statusMsg = document.getElementById('auth-status-msg');
-            const btn = document.getElementById('stage2-btn');
-
-            btn.disabled = true;
-            statusMsg.className = 'auth-status-msg status-info';
-            statusMsg.textContent = 'Validating OTP code...';
-
-            try {
-                const res = await fetch('/api/admin/verify-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ otp_code: otpCode })
-                });
-                const data = await res.json();
-                if (res.ok && data.admin_token) {
-                    adminToken = data.admin_token;
-                    sessionStorage.setItem('admin_token', adminToken);
-                    showDashboard();
-                } else {
-                    statusMsg.className = 'auth-status-msg status-error';
-                    statusMsg.textContent = data.detail || 'Invalid OTP code!';
-                }
-            } catch (err) {
-                statusMsg.className = 'auth-status-msg status-error';
-                statusMsg.textContent = 'Verification error.';
-            } finally {
-                btn.disabled = false;
-            }
-        });
-
-        function showDashboard() {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('dashboard-section').style.display = 'block';
-            document.getElementById('logged-status').style.display = 'inline';
-            loadDashboardData();
-        }
-
-        function adminLogout() {
-            sessionStorage.removeItem('admin_token');
-            adminToken = null;
-            location.reload();
-        }
-
-        async function loadDashboardData() {
-            fetchAdminProjects();
-            fetchAdminReviews();
-            fetchAdminAchievements();
-            fetchServerStats();
-            fetchPersonalConfig();
-            fetchAiKnowledgeRules();
-            connectAdminWebSocket();
-        }
-
-        // ==========================================
-        // ADVANCED ANALYTICS & DIAGRAM DRAWING
-        // ==========================================
-        async function fetchServerStats() {
-            try {
-                const res = await fetch('/api/stats');
-                if (res.ok) {
-                    const data = await res.json();
-
-                    // Top Cards
-                    document.getElementById('metric-total-visits').textContent = data.total_visits || 0;
-                    document.getElementById('metric-total-time').textContent = `${Math.floor((data.total_time_seconds || 0) / 60)}m ${(data.total_time_seconds || 0) % 60}s`;
-                    document.getElementById('stat-home-hits').textContent = data.page_views ? data.page_views.home : 0;
-                    document.getElementById('stat-detail-hits').textContent = data.page_views ? data.page_views.detail : 0;
-
-                    // Hardware & OS Values
-                    const cpuLoad = data.system_diagnostics ? data.system_diagnostics.cpu_load_percent : 0;
-                    const ramUse = data.system_diagnostics ? data.system_diagnostics.ram_allocated_mb : 0;
-                    document.getElementById('metric-cpu-load').textContent = `${cpuLoad}%`;
-                    document.getElementById('metric-ram-use').textContent = `${ramUse} MB`;
-
-                    // AI Metrics
-                    document.getElementById('ai-metric-answered').textContent = data.ai_metrics ? data.ai_metrics.answered : 0;
-                    document.getElementById('ai-metric-lockouts').textContent = data.ai_metrics ? data.ai_metrics.lockouts : 0;
-
-                    // Draw the 4 Canvas Charts
-                    drawDonutChart('content-pie-chart', 'content-pie-legend', data.content_views || { "projects": 1, "achievements": 0, "blogs": 0, "journey": 0 }, {
-                        "projects": "#ff0055", // Red
-                        "achievements": "#00f2fe", // Cyan
-                        "blogs": "#00ff66", // Green
-                        "journey": "#fbbf24" // Yellow
-                    });
-
-                    drawDonutChart('os-pie-chart', 'os-pie-legend', data.os_breakdown || { "Windows": 1, "Android": 0, "iOS": 0, "Mac": 0, "Linux": 0 }, {
-                        "Windows": "#38bdf8",
-                        "Android": "#00ff66",
-                        "iOS": "#00f2fe",
-                        "Mac": "#a855f7",
-                        "Linux": "#f97316",
-                        "Unknown": "#64748b"
-                    });
-
-                    drawDualLineChart('resource-line-chart',
-                        data.system_diagnostics ? data.system_diagnostics.cpu_history : [0,0,0,0],
-                        data.system_diagnostics ? data.system_diagnostics.ram_history : [0,0,0,0],
-                        '#00ff66', '#00f2fe'
-                    );
-
-                    drawTrafficChart(data.traffic_history || [0, 0, 0, 0, 0, 0, 0]);
-                }
-            } catch (e) {}
-        }
-
-        // UNIVERSAL DONUT CHART DRAWING
-        function drawDonutChart(canvasId, legendId, dataMap, colorMap) {
-            const chartCanvas = document.getElementById(canvasId);
-            const legendBox = document.getElementById(legendId);
-            if (!chartCanvas || !legendBox) return;
-
-            const ctx = chartCanvas.getContext('2d');
-            const width = chartCanvas.width = 180;
-            const height = chartCanvas.height = 180;
-            ctx.clearRect(0, 0, width, height);
-
-            const total = Object.values(dataMap).reduce((a, b) => a + b, 0) || 1;
-            let startAngle = 0;
-            legendBox.innerHTML = '';
-
-            for (const [key, count] of Object.entries(dataMap)) {
-                const sliceAngle = (count / total) * 2 * Math.PI;
-                const color = colorMap[key.toLowerCase()] || colorMap[key] || "#64748b";
-                const displayKey = key.charAt(0).toUpperCase() + key.slice(1);
-
-                if (count > 0 || total === 1) { // Draw at least a grey circle if empty
-                    ctx.beginPath();
-                    ctx.arc(width / 2, height / 2, 70, startAngle, startAngle + sliceAngle);
-                    ctx.arc(width / 2, height / 2, 35, startAngle + sliceAngle, startAngle, true);
-                    ctx.closePath();
-                    ctx.fillStyle = (count === 0) ? "#1e293b" : color;
-                    ctx.fill();
-
-                    if (count > 0) {
-                        legendBox.innerHTML += `
-                            <span style="color:${color}; display:inline-flex; align-items:center; gap:4px;">
-                                <span style="width:8px; height:8px; background:${color}; border-radius:50%; display:inline-block;"></span>
-                                ${displayKey}: ${count}
-                            </span>
-                        `;
-                    }
-                }
-                startAngle += sliceAngle;
-            }
-        }
-
-        // UNIVERSAL SINGLE LINE CHART (TRAFFIC)
-        function drawTrafficChart(historyPoints) {
-            const chartCanvas = document.getElementById('traffic-line-chart');
-            if (!chartCanvas) return;
-            const c = chartCanvas.getContext('2d');
-            const width = chartCanvas.width = chartCanvas.offsetWidth;
-            const height = chartCanvas.height = 180;
-
-            c.clearRect(0, 0, width, height);
-
-            const maxVal = Math.max(...historyPoints, 5);
-            const stepX = width / (historyPoints.length - 1 || 1);
-
-            // Gradient Fill
-            c.beginPath();
-            c.moveTo(0, height);
-            historyPoints.forEach((val, idx) => {
-                c.lineTo(idx * stepX, height - (val / maxVal) * (height - 30) - 10);
-            });
-            c.lineTo(width, height);
-            c.closePath();
-
-            const grad = c.createLinearGradient(0, 0, 0, height);
-            grad.addColorStop(0, 'rgba(0, 255, 102, 0.35)');
-            grad.addColorStop(1, 'rgba(0, 255, 102, 0.0)');
-            c.fillStyle = grad;
-            c.fill();
-
-            // Line stroke
-            c.beginPath();
-            historyPoints.forEach((val, idx) => {
-                const y = height - (val / maxVal) * (height - 30) - 10;
-                if (idx === 0) c.moveTo(idx * stepX, y);
-                else c.lineTo(idx * stepX, y);
-            });
-            c.strokeStyle = '#00ff66';
-            c.lineWidth = 3;
-            c.stroke();
-        }
-
-        // UNIVERSAL DUAL LINE CHART (CPU & RAM)
-        function drawDualLineChart(canvasId, data1, data2, color1, color2) {
-            const chartCanvas = document.getElementById(canvasId);
-            if (!chartCanvas) return;
-            const c = chartCanvas.getContext('2d');
-            const width = chartCanvas.width = chartCanvas.offsetWidth;
-            const height = chartCanvas.height = 180;
-
-            c.clearRect(0, 0, width, height);
-
-            const maxVal = 100; // % based
-            const stepX = width / (data1.length - 1 || 1);
-
-            function drawLine(dataArr, color) {
-                c.beginPath();
-                dataArr.forEach((val, idx) => {
-                    const y = height - (val / maxVal) * (height - 30) - 10;
-                    if (idx === 0) c.moveTo(idx * stepX, y);
-                    else c.lineTo(idx * stepX, y);
-                });
-                c.strokeStyle = color;
-                c.lineWidth = 2.5;
-                c.stroke();
-            }
-
-            drawLine(data2, color2); // Draw RAM
-            drawLine(data1, color1); // Draw CPU
-        }
-
-        // RESET ALL ANALYTICS
-        async function resetAnalyticsStats() {
-            if (!confirm("Reset all server traffic counters, OS pie charts, and history back to 0?")) return;
-            try {
-                const res = await fetch('/api/admin/reset-stats', {
-                    method: 'POST',
-                    headers: { 'x-admin-key': adminToken }
-                });
-                if (res.ok) {
-                    fetchServerStats();
-                    alert("🔄 Server analytics stats reset to 0!");
-                } else {
-                    alert("Error resetting stats. Check session authorization.");
-                }
-            } catch(e) {
-                alert("Network error.");
-            }
-        }
-
-        // REAL-TIME WEBSOCKET PING
-        function connectAdminWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            try {
-                const ws = new WebSocket(`${protocol}//${window.location.host}/ws/status`);
-                ws.onmessage = (event) => {
-                    if(event.data === "update_stats" || event.data.startsWith("{")) {
-                        fetchServerStats();
-                    } else {
-                        document.getElementById('metric-online-users').textContent = Math.floor(Math.random() * 2) + 1;
-                    }
-                };
-            } catch(e) {}
-        }
-
-        // ==========================================
-        // PERSONAL CONFIG, AI KNOWLEDGE & REVIEWS
-        // ==========================================
-        async function fetchPersonalConfig() {
-            try {
-                const res = await fetch('/api/config');
-                if (res.ok) {
-                    const cfg = await res.json();
-                    if (cfg.dev_name) document.getElementById('info-name').value = cfg.dev_name;
-                    if (cfg.site_brand) document.getElementById('info-brand').value = cfg.site_brand;
-                    if (cfg.hero_badge) document.getElementById('info-badge').value = cfg.hero_badge;
-                    if (cfg.telegram_handle) document.getElementById('info-telegram').value = cfg.telegram_handle;
-                    if (cfg.github_url) document.getElementById('info-github').value = cfg.github_url;
-                    if (cfg.gmail_address) document.getElementById('info-gmail').value = cfg.gmail_address;
-                    if (cfg.hero_bio) document.getElementById('info-bio').value = cfg.hero_bio;
-                    if (cfg.typewriter_phrases) document.getElementById('info-phrases').value = cfg.typewriter_phrases.join(', ');
-                    if (cfg.holo_greetings) document.getElementById('info-greetings').value = cfg.holo_greetings.join(', ');
-                }
-            } catch(e) {}
-        }
-
-        document.getElementById('personal-info-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const configPayload = {
-                dev_name: document.getElementById('info-name').value.trim(),
-                site_brand: document.getElementById('info-brand').value.trim(),
-                hero_badge: document.getElementById('info-badge').value.trim(),
-                telegram_handle: document.getElementById('info-telegram').value.trim(),
-                github_url: document.getElementById('info-github').value.trim(),
-                gmail_address: document.getElementById('info-gmail').value.trim(),
-                hero_bio: document.getElementById('info-bio').value.trim(),
-                typewriter_phrases: document.getElementById('info-phrases').value.split(',').map(s => s.trim()).filter(Boolean),
-                holo_greetings: document.getElementById('info-greetings').value.split(',').map(s => s.trim()).filter(Boolean)
-            };
-
-            try {
-                const res = await fetch('/api/admin/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminToken },
-                    body: JSON.stringify(configPayload)
-                });
-                if (res.ok) {
-                    alert("⚙️ Personal site configuration saved live!");
-                } else {
-                    alert("Failed to save site configuration.");
-                }
-            } catch(e) {
-                alert("Network error saving configuration.");
-            }
-        });
-
-        async function fetchAiKnowledgeRules() {
-            const list = document.getElementById('ai-rules-list');
-            try {
-                const res = await fetch('/api/ai-knowledge');
-                if (res.ok) {
-                    const rules = await res.json();
-                    document.getElementById('ai-metric-rules').textContent = rules.length;
-                    if (rules.length === 0) {
-                        list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">No custom knowledge rules added.</p>`;
-                        return;
-                    }
-                    list.innerHTML = rules.map(r => `
-                        <div class="item-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong style="color: #00f2fe;">Topic: ${escapeHTML(r.topic)}</strong>
-                                <span style="color: #94a3b8; font-size: 0.8rem;">Fact: "${escapeHTML(r.fact)}"</span>
-                            </div>
-                            <button class="btn-danger" onclick="deleteAiRule(${r.id})">Delete 🗑️</button>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) {}
-        }
-
-        document.getElementById('ai-knowledge-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = {
-                topic: document.getElementById('ai-topic').value.trim(),
-                fact: document.getElementById('ai-fact').value.trim()
-            };
-            const res = await fetch('/api/admin/ai-knowledge', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-admin-key': adminToken },
-                body: JSON.stringify(data)
-            });
-            if (res.ok) {
-                alert("🧠 AI Knowledge Rule added!");
-                document.getElementById('ai-knowledge-form').reset();
-                fetchAiKnowledgeRules();
-            }
-        });
-
-        async function deleteAiRule(id) {
-            if (!confirm("Delete AI rule?")) return;
-            const res = await fetch(`/api/admin/ai-knowledge/${id}`, {
-                method: 'DELETE',
-                headers: { 'x-admin-key': adminToken }
-            });
-            if (res.ok) fetchAiKnowledgeRules();
-        }
-
-        async function fetchAdminReviews() {
-            const list = document.getElementById('admin-reviews-list');
-            try {
-                const res = await fetch('/api/reviews');
-                if (res.ok) {
-                    const data = await res.json();
-                    adminReviewsData = data.reviews || [];
-                    renderAdminReviewsList();
-                }
-            } catch(e) {
-                list.innerHTML = `<p style="color: #ff0055; font-size: 0.85rem;">Error loading review feedback.</p>`;
-            }
-        }
-
-        function renderAdminReviewsList() {
-            const list = document.getElementById('admin-reviews-list');
-            const showMoreBtn = document.getElementById('admin-show-more-reviews');
-            if (!list) return;
-
-            if (adminReviewsData.length === 0) {
-                list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">No reviews submitted yet.</p>`;
-                showMoreBtn.style.display = 'none';
-                return;
-            }
-
-            const limit = isAdminShowingAllReviews ? adminReviewsData.length : 3;
-            const reviewsToRender = adminReviewsData.slice(0, limit);
-
-            list.innerHTML = reviewsToRender.map(r => `
-                <div class="item-row">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <div>
-                            <strong style="color:#00f2fe;">${escapeHTML(r.name)}</strong>
-                            <span style="color: #94a3b8; font-size: 0.82rem; display: block; margin-top: 2px;">"${escapeHTML(r.message)}"</span>
-                            ${r.admin_reply ? `<div style="color: #00ff66; font-size: 0.78rem; margin-top: 4px;">✔ Current Reply: "${escapeHTML(r.admin_reply)}"</div>` : ''}
-                        </div>
-                        <span style="font-size: 0.75rem; color: #fbbf24; white-space: nowrap;">⭐ ${r.rating}/5</span>
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
-                        <input type="text" id="reply-input-${r.id}" class="hacker-input" placeholder="Type response to ${escapeHTML(r.name)}..." value="${escapeHTML(r.admin_reply || '')}" style="font-size: 0.82rem; padding: 6px 10px; flex: 1; min-width: 200px;">
-                        <button class="btn-hacker" style="font-size: 0.75rem; padding: 6px 12px; white-space: nowrap;" onclick="sendOwnerReply(${r.id})">Post Reply 💬</button>
-                        ${r.admin_reply ? `<button class="btn-danger" style="font-size: 0.75rem; padding: 6px 12px; white-space: nowrap;" onclick="deleteOwnerReply(${r.id})">Remove Reply 🗑️</button>` : ''}
-                    </div>
+            <div style="background:rgba(0,242,254,0.05);border:1px dashed rgba(0,242,254,0.3);border-radius:8px;padding:16px;margin-bottom:24px;"><label style="font-size:0.78rem;color:#00f2fe;display:block;margin-bottom:4px;">🤖 Gemini AI Content Generator & Translator</label><textarea id="ai-builder-prompt" class="hacker-input" rows="2" maxlength="500" placeholder="Prompt the AI to write the page content..."></textarea>
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="button" id="ai-builder-btn" class="btn-hacker" style="font-size:0.8rem;padding:6px 14px;background:#00f2fe!important;color:#03050c!important;" onclick="aiGenerateBlocks()">Auto-Generate Blocks ✨</button>
+                    <!-- PERFECTED AUTO-TRANSLATE LOGIC -->
+                    <button type="button" id="ai-translate-all-btn" class="btn-hacker" style="font-size:0.8rem;padding:6px 14px;background:#a855f7!important;color:#fff!important;box-shadow:0 0 15px rgba(168,85,247,0.4)!important;" onclick="aiAutoTranslateAll()">🤖 Auto-Translate to UZ & RU</button>
                 </div>
-            `).join('');
+            </div>
 
-            if (adminReviewsData.length > 3) {
-                showMoreBtn.style.display = 'block';
-                showMoreBtn.textContent = isAdminShowingAllReviews ? 'Show Less Admin Feedback 👆' : `Show More Feedback (${adminReviewsData.length - 3}) 👇`;
-            } else {
-                showMoreBtn.style.display = 'none';
-            }
+            <div id="blocks-stack-container" class="block-container"></div>
+            <div class="grid-2col" style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);"><div><label style="font-size:0.78rem;color:#00f2fe;display:block;margin-bottom:4px;">GitHub Source URL (Optional)</label><input type="text" id="builder-git" class="hacker-input" placeholder="https://github.com/..." oninput="updateBlockPreview()"></div><div><label style="font-size:0.78rem;color:#00f2fe;display:block;margin-bottom:4px;">Live Site URL (Optional)</label><input type="text" id="builder-live" class="hacker-input" placeholder="https://..." oninput="updateBlockPreview()"></div></div>
+            <h4 style="color:#00f2fe;font-size:0.85rem;margin:24px 0 10px;">👁️ Live Detail Page Preview</h4><div id="live-block-preview" class="live-preview-box"><em style="color:#64748b;">Start adding blocks to see the preview...</em></div>
+            <button type="button" id="builder-save-btn" class="btn-hacker" style="width:100%;height:46px;margin-top:24px;" onclick="publishBlockContent()">Publish Custom Page 🚀</button>
+        </div>
+    </div></div>
+
+    <!-- TAB 6 -->
+    <div id="content-tab" class="tab-content" style="display:none;">
+        <div class="admin-card" style="margin-bottom:20px;"><h2>📊 Hologram Skills Manager</h2><p style="color:#94a3b8;font-size:0.85rem;margin-bottom:16px;">Add dynamic skills to your 3D Holographic Chart on the main page.</p><form id="add-skill-form" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;"><input type="text" id="skill-name" class="hacker-input" maxlength="20" placeholder="Skill Name (e.g. Docker)" style="flex:2;" required><input type="number" id="skill-percent" class="hacker-input" placeholder="%" min="1" max="100" style="flex:1;min-width:60px;" required><input type="text" id="skill-category" class="hacker-input" placeholder="Category" value="Technical" style="flex:1;display:none;" required><button type="submit" class="btn-hacker" style="flex:1;white-space:nowrap;">Add Skill +</button></form><div class="item-list" id="skills-list-admin" style="max-height:200px;"><p style="color:#94a3b8;font-size:0.85rem;">Loading skills...</p></div></div>
+        <div class="grid-2col">
+            <div class="admin-card"><h2>📁 Live Projects</h2><div class="item-list" id="projects-list-admin"><p style="color:#94a3b8;font-size:0.85rem;">Loading projects...</p></div></div>
+            <div class="admin-card"><h2>🏆 Live Achievements &amp; Dev Journey</h2><div class="item-list" id="achievements-list-admin" style="max-height:200px;"><p style="color:#94a3b8;font-size:0.85rem;">Loading records...</p></div><div class="item-list" id="journey-list-admin" style="margin-top:20px;border-top:1px dashed rgba(255,255,255,0.2);padding-top:10px;max-height:200px;"><p style="color:#94a3b8;font-size:0.85rem;">Loading journey...</p></div></div>
+        </div>
+        <div class="admin-card" style="margin-top:20px;"><h2>🧹 System Maintenance</h2><div style="display:flex;gap:14px;flex-wrap:wrap;"><button type="button" class="btn-danger" style="flex:1;height:46px;" onclick="clearAllReviews()">Purge All Reviews 🗑️</button><button type="button" class="btn-hacker" style="flex:1;height:46px;background:#ff0055!important;color:#fff!important;" onclick="adminLogout()">Terminate Root Session 🔒</button></div></div>
+    </div>
+</div>
+
+<div id="insert-block-modal" class="modal-overlay" style="z-index:3000;"><div class="modal-content" style="max-width:400px;padding:24px;text-align:center;"><button class="modal-close" onclick="closeInsertMenu()">&times;</button><h3 style="color:#00f2fe;margin-bottom:20px;font-size:1.2rem;">Add Content Block</h3><div style="display:flex;flex-direction:column;gap:12px;"><button class="btn-secondary" onclick="executeInsert('header')" style="background:rgba(18,26,43,0.9);">Mini Header (H3)</button><button class="btn-secondary" onclick="executeInsert('text')" style="background:rgba(18,26,43,0.9);">Text Paragraph</button><button class="btn-secondary" onclick="executeInsert('media')" style="background:rgba(18,26,43,0.9);">Image / YouTube Video URL</button></div></div></div>
+
+<script>
+const canvas=document.getElementById('matrix-canvas');const ctx=canvas.getContext('2d');function resizeMatrix(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}resizeMatrix();window.addEventListener('resize',resizeMatrix);const chars='01>#{}+-/*=';const fontSize=14;const columns=Math.floor(canvas.width/24);const drops=Array(columns).fill(1);function drawMatrixRain(){ctx.fillStyle='rgba(3,5,12,0.1)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.font=fontSize+'px "Fira Code", monospace';for(let i=0;i<drops.length;i++){const text=chars.charAt(Math.floor(Math.random()*chars.length));ctx.fillStyle=(Math.random()>0.88)?'#00f2fe':'#00ff66';ctx.fillText(text,i*24,drops[i]*fontSize);if(drops[i]*fontSize>canvas.height&&Math.random()>0.975)drops[i]=0;drops[i]++}}setInterval(drawMatrixRain,45);
+let adminToken=sessionStorage.getItem('admin_token')||null;let adminReviewsData=[];let isAdminShowingAllReviews=false;let builderBlocks=[];let targetInsertIndex=0;
+let adminProjectsData = []; let adminAchievementsData = []; let adminJourneyData = [];
+document.addEventListener('DOMContentLoaded',()=>{if(adminToken)showDashboard()});function escapeHTML(str){return str?String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'):''}function switchAdminTab(tabId){document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');document.querySelectorAll('.admin-tab-btn').forEach(btn=>btn.classList.remove('active'));const activeTab=document.getElementById(tabId);if(activeTab)activeTab.style.display='block';if(event&&event.target)event.target.classList.add('active')}
+document.getElementById('stage1-form').addEventListener('submit',async(e)=>{e.preventDefault();const u=document.getElementById('admin-username').value.trim();const p=document.getElementById('admin-password').value;const sm=document.getElementById('auth-status-msg');const b=document.getElementById('stage1-btn');b.disabled=true;sm.className='auth-status-msg status-info';sm.textContent='Verifying...';try{const r=await fetch('/api/admin/request-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});const d=await r.json();if(r.ok){sm.className='auth-status-msg status-success';sm.textContent=d.message;document.getElementById('stage1-form').style.display='none';document.getElementById('stage2-form').style.display='block';document.getElementById('admin-otp').focus()}else{sm.className='auth-status-msg status-error';sm.textContent=d.detail||'Invalid Credentials!'}}catch(err){sm.className='auth-status-msg status-error';sm.textContent='Server error.'}finally{b.disabled=false}});
+document.getElementById('stage2-form').addEventListener('submit',async(e)=>{e.preventDefault();const o=document.getElementById('admin-otp').value.trim();const sm=document.getElementById('auth-status-msg');const b=document.getElementById('stage2-btn');b.disabled=true;sm.className='auth-status-msg status-info';sm.textContent='Validating...';try{const r=await fetch('/api/admin/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({otp_code:o})});const d=await r.json();if(r.ok&&d.admin_token){adminToken=d.admin_token;sessionStorage.setItem('admin_token',adminToken);showDashboard()}else{sm.className='auth-status-msg status-error';sm.textContent=d.detail||'Invalid OTP!'}}catch(err){sm.className='auth-status-msg status-error';sm.textContent='Verification error.'}finally{b.disabled=false}});
+function showDashboard(){document.getElementById('login-section').style.display='none';document.getElementById('dashboard-section').style.display='block';document.getElementById('logged-status').style.display='inline';loadDashboardData()}function adminLogout(){sessionStorage.removeItem('admin_token');adminToken=null;location.reload()}
+async function loadDashboardData(){fetchAdminProjects();fetchAdminAchievements();fetchAdminJourney();fetchAdminSkills();fetchAdminReviews();fetchServerStats();fetchPersonalConfig();fetchAiKnowledgeRules();connectAdminWebSocket()}
+async function fetchServerStats(){try{const res=await fetch('/api/stats');if(res.ok){const data=await res.json();document.getElementById('metric-total-visits').textContent=data.total_visits||0;document.getElementById('metric-total-time').textContent=`${Math.floor((data.total_time_seconds||0)/60)}m ${(data.total_time_seconds||0)%60}s`;document.getElementById('stat-home-hits').textContent=data.page_views?data.page_views.home:0;document.getElementById('stat-detail-hits').textContent=data.page_views?data.page_views.detail:0;document.getElementById('metric-api-latency').textContent=`${Math.floor(Math.random()*10)+8}ms`;document.getElementById('ai-metric-answered').textContent=data.ai_metrics?data.ai_metrics.answered:0;document.getElementById('ai-metric-lockouts').textContent=data.ai_metrics?data.ai_metrics.lockouts:0;const pl=document.getElementById('recent-prompts-list');if(data.recent_ai_prompts&&data.recent_ai_prompts.length>0){pl.innerHTML=data.recent_ai_prompts.map(p=>`<div style="margin-bottom:6px;"><span style="color:#38bdf8;">></span> ${escapeHTML(p)}</div>`).join('')}else if(pl){pl.innerHTML=`<em>No prompts recorded yet...</em>`}drawDonutChart('content-pie-chart','content-pie-legend',data.content_views||{"projects":1,"achievements":0,"blogs":0,"journey":0},{"projects":"#ff0055","achievements":"#00f2fe","blogs":"#00ff66","journey":"#fbbf24"});drawDonutChart('os-pie-chart','os-pie-legend',data.os_breakdown||{"Windows":1,"Android":0,"iOS":0,"Mac":0,"Linux":0,"Unknown":0},{"Windows":"#38bdf8","Android":"#00ff66","iOS":"#00f2fe","Mac":"#a855f7","Linux":"#f97316","Unknown":"#64748b"});drawDualLineChart('resource-line-chart',data.system_diagnostics?data.system_diagnostics.cpu_history:[0,0,0,0],data.system_diagnostics?data.system_diagnostics.ram_history:[0,0,0,0],'#00ff66','#00f2fe');drawTrafficChart(data.traffic_history||[0,0,0,0,0,0,0])}}catch(e){}}
+function drawDonutChart(cid,lid,dm,cm){const cc=document.getElementById(cid);const lb=document.getElementById(lid);if(!cc||!lb)return;const c=cc.getContext('2d');const s=cc.parentElement.clientWidth-32;cc.width=s;cc.height=180;c.clearRect(0,0,s,180);const t=Object.values(dm).reduce((a,b)=>a+b,0)||1;let sa=0;lb.innerHTML='';const cx=s/2;const cy=90;const r=70;for(const[k,cnt]of Object.entries(dm)){const sla=(cnt/t)*2*Math.PI;const col=cm[k]||cm[k.toLowerCase()]||"#64748b";const dk=k.charAt(0).toUpperCase()+k.slice(1);if(cnt>0||t===1){c.beginPath();c.arc(cx,cy,r,sa,sa+sla);c.arc(cx,cy,r/2,sa+sla,sa,true);c.closePath();c.fillStyle=(cnt===0)?"#1e293b":col;c.fill();if(cnt>0)lb.innerHTML+=`<span style="color:${col};display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:${col};border-radius:50%;display:inline-block;"></span>${dk}: ${cnt}</span>`}sa+=sla}}
+function drawTrafficChart(hp){const cc=document.getElementById('traffic-line-chart');if(!cc)return;const c=cc.getContext('2d');const w=cc.width=cc.offsetWidth;const h=cc.height=180;c.clearRect(0,0,w,h);const mv=Math.max(...hp,5);const sx=w/(hp.length-1||1);c.beginPath();c.moveTo(0,h);hp.forEach((v,i)=>{c.lineTo(i*sx,h-(v/mv)*(h-30)-10)});c.lineTo(w,h);c.closePath();const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(0,255,102,0.35)');g.addColorStop(1,'rgba(0,255,102,0.0)');c.fillStyle=g;c.fill();c.beginPath();hp.forEach((v,i)=>{const y=h-(v/mv)*(h-30)-10;if(i===0)c.moveTo(i*sx,y);else c.lineTo(i*sx,y)});c.strokeStyle='#00ff66';c.lineWidth=3;c.stroke()}
+function drawDualLineChart(cid,d1,d2,c1,c2){const cc=document.getElementById(cid);if(!cc)return;const c=cc.getContext('2d');const w=cc.width=cc.offsetWidth;const h=cc.height=180;c.clearRect(0,0,w,h);const mv=100;const sx=w/(d1.length-1||1);function dl(da,col){c.beginPath();da.forEach((v,i)=>{const y=h-(v/mv)*(h-30)-10;if(i===0)c.moveTo(i*sx,y);else c.lineTo(i*sx,y)});c.strokeStyle=col;c.lineWidth=2.5;c.stroke()}dl(d2,c2);dl(d1,c1)}
+async function resetAnalyticsStats(){if(!confirm("Reset server analytics to 0?"))return;try{const r=await fetch('/api/admin/reset-stats',{method:'POST',headers:{'x-admin-key':adminToken}});if(r.ok){fetchServerStats();alert("🔄 Stats reset!")}}catch(e){}}
+
+function connectAdminWebSocket(){
+    const p=window.location.protocol==='https:'?'wss:':'ws:';
+    function connect() {
+        try{
+            const ws=new WebSocket(`${p}//${window.location.host}/ws/status`);
+            ws.onmessage=(e)=>{
+                if(e.data==="update_stats"||e.data.startsWith("{")) fetchServerStats();
+                else if(e.data==="update_reviews") fetchAdminReviews();
+                else if(e.data==="update_projects") fetchAdminProjects();
+                else if(e.data==="update_achievements") fetchAdminAchievements();
+                else if(e.data==="update_journey") fetchAdminJourney();
+                else if(e.data==="update_skills") fetchAdminSkills();
+                else document.getElementById('metric-online-users').textContent=Math.floor(Math.random()*2)+1
+            };
+            ws.onclose = () => { setTimeout(connect, 3000); };
+        }catch(e){}
+    }
+    connect();
+}
+
+async function fetchPersonalConfig(){try{const r=await fetch('/api/config');if(r.ok){const c=await r.json();if(c.dev_name)document.getElementById('info-name').value=c.dev_name;if(c.site_brand)document.getElementById('info-brand').value=c.site_brand;if(c.hero_badge)document.getElementById('info-badge').value=c.hero_badge;if(c.hero_badge_uz)document.getElementById('info-badge-uz').value=c.hero_badge_uz;if(c.hero_badge_ru)document.getElementById('info-badge-ru').value=c.hero_badge_ru;if(c.telegram_handle)document.getElementById('info-telegram').value=c.telegram_handle;if(c.github_url)document.getElementById('info-github').value=c.github_url;if(c.gmail_address)document.getElementById('info-gmail').value=c.gmail_address;if(c.hero_bio)document.getElementById('info-bio').value=c.hero_bio;if(c.hero_bio_uz)document.getElementById('info-bio-uz').value=c.hero_bio_uz;if(c.hero_bio_ru)document.getElementById('info-bio-ru').value=c.hero_bio_ru;if(c.typewriter_phrases)document.getElementById('info-phrases').value=c.typewriter_phrases.join(', ');if(c.holo_greetings)document.getElementById('info-greetings').value=c.holo_greetings.join(', ')}}catch(e){}}
+document.getElementById('personal-info-form').addEventListener('submit',async(e)=>{e.preventDefault();const c={dev_name:document.getElementById('info-name').value.trim(),site_brand:document.getElementById('info-brand').value.trim(),hero_badge:document.getElementById('info-badge').value.trim(),hero_badge_uz:document.getElementById('info-badge-uz').value.trim(),hero_badge_ru:document.getElementById('info-badge-ru').value.trim(),telegram_handle:document.getElementById('info-telegram').value.trim(),github_url:document.getElementById('info-github').value.trim(),gmail_address:document.getElementById('info-gmail').value.trim(),hero_bio:document.getElementById('info-bio').value.trim(),hero_bio_uz:document.getElementById('info-bio-uz').value.trim(),hero_bio_ru:document.getElementById('info-bio-ru').value.trim(),typewriter_phrases:document.getElementById('info-phrases').value.split(',').map(s=>s.trim()).filter(Boolean),holo_greetings:document.getElementById('info-greetings').value.split(',').map(s=>s.trim()).filter(Boolean)};try{const r=await fetch('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminToken},body:JSON.stringify(c)});if(r.ok)alert("⚙️ Config saved!")}catch(e){}});
+async function restoreDefaultConfig(){if(!confirm("Wipe current text and restore original?"))return;try{const r=await fetch('/api/admin/restore-defaults',{method:'POST',headers:{'x-admin-key':adminToken}});if(r.ok){alert("✅ Restored!");fetchPersonalConfig()}}catch(e){}}
+
+async function updateGeminiApiKey() { const k = document.getElementById('admin-api-key').value.trim(); try { const r = await fetch('/api/admin/update-apikey', { method: 'POST', headers: { 'Content-Type':'application/json', 'x-admin-key':adminToken }, body: JSON.stringify({ api_key: k }) }); if(r.ok) { alert("🔑 API Key Updated Successfully!"); document.getElementById('admin-api-key').value = ''; } } catch(e) { alert("Error saving key."); } }
+
+async function fetchAiKnowledgeRules(){const l=document.getElementById('ai-rules-list');try{const r=await fetch('/api/ai-knowledge');if(r.ok){const ru=await r.json();document.getElementById('ai-metric-rules').textContent=ru.length;if(ru.length===0){l.innerHTML=`<p style="color:#94a3b8;font-size:0.85rem;">No custom rules.</p>`;return}l.innerHTML=ru.map(x=>`<div class="ai-rule-card"><div class="ai-rule-topic">${escapeHTML(x.topic)}</div><div class="ai-rule-fact">"${escapeHTML(x.fact)}"</div><div class="ai-rule-actions"><button class="btn-edit" style="font-size:0.7rem;padding:4px 10px;" onclick="editAiRule(${x.id}, '${escapeHTML(x.topic.replace(/'/g,"\\'"))}', '${escapeHTML(x.fact.replace(/'/g,"\\'"))}')">Edit ✏️</button><button class="btn-danger" style="font-size:0.7rem;padding:4px 10px;" onclick="deleteAiRule(${x.id})">Delete 🗑️</button></div></div>`).join('')}}catch(e){}}
+document.getElementById('ai-knowledge-form').addEventListener('submit',async(e)=>{e.preventDefault();const ei=document.getElementById('ai-edit-id').value;const d={topic:document.getElementById('ai-topic').value.trim(),fact:document.getElementById('ai-fact').value.trim()};const m=ei?'PUT':'POST';const u=ei?`/api/admin/ai-knowledge/${ei}`:'/api/admin/ai-knowledge';const r=await fetch(u,{method:m,headers:{'Content-Type':'application/json','x-admin-key':adminToken},body:JSON.stringify(d)});if(r.ok){alert(ei?"🧠 Updated!":"🧠 Added!");document.getElementById('ai-knowledge-form').reset();document.getElementById('ai-edit-id').value='';document.getElementById('ai-save-btn').textContent="Add Knowledge Rule 🧠";fetchAiKnowledgeRules()}});
+window.editAiRule=function(id,t,f){document.getElementById('ai-edit-id').value=id;document.getElementById('ai-topic').value=t;document.getElementById('ai-fact').value=f;document.getElementById('ai-save-btn').textContent="Save Changes 💾";document.getElementById('ai-knowledge-form').scrollIntoView({behavior:'smooth'})};async function deleteAiRule(id){if(!confirm("Delete?"))return;const r=await fetch(`/api/admin/ai-knowledge/${id}`,{method:'DELETE',headers:{'x-admin-key':adminToken}});if(r.ok)fetchAiKnowledgeRules()}
+async function fetchAdminReviews(){const l=document.getElementById('admin-reviews-list');try{const r=await fetch('/api/admin/reviews',{headers:{'x-admin-key':adminToken}});if(r.status===401){alert("Session expired.");adminLogout();return}if(r.ok){const d=await r.json();adminReviewsData=d.reviews||[];renderAdminReviewsList()}}catch(e){l.innerHTML=`<p style="color:#ff0055;font-size:0.85rem;">Error loading feedback.</p>`}}
+function renderAdminReviewsList(){const l=document.getElementById('admin-reviews-list');const s=document.getElementById('admin-show-more-reviews');if(!l)return;if(adminReviewsData.length===0){l.innerHTML=`<p style="color:#94a3b8;font-size:0.85rem;">No reviews yet.</p>`;s.style.display='none';return}const lim=isAdminShowingAllReviews?adminReviewsData.length:3;const rtr=adminReviewsData.slice(0,lim);l.innerHTML=rtr.map(r=>`<div class="item-row"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div><strong style="color:#00f2fe;">${escapeHTML(r.name)}</strong><span style="color:#94a3b8;font-size:0.82rem;display:block;margin-top:2px;overflow-wrap:anywhere;word-break:break-word;">"${escapeHTML(r.message)}"</span>${r.admin_reply?`<div style="color:#00ff66;font-size:0.78rem;margin-top:4px;">✔ Current Reply: "${escapeHTML(r.admin_reply)}"</div>`:''}</div><span style="font-size:0.75rem;color:#fbbf24;white-space:nowrap;">⭐ ${r.rating}/5</span></div><div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;"><input type="text" id="reply-input-${r.id}" class="hacker-input" placeholder="Type response..." value="${escapeHTML(r.admin_reply||'')}" style="font-size:0.82rem;padding:6px 10px;flex:1;min-width:200px;"><button class="btn-hacker" style="font-size:0.75rem;padding:6px 12px;white-space:nowrap;" onclick="sendOwnerReply(${r.id})">Post Reply 💬</button>${r.admin_reply?`<button class="btn-danger" style="font-size:0.75rem;padding:6px 12px;white-space:nowrap;" onclick="deleteOwnerReply(${r.id})">Remove Reply 🗑️</button>`:''}</div></div>`).join('');if(adminReviewsData.length>3){s.style.display='block';s.textContent=isAdminShowingAllReviews?'Show Less 👆':`Show More (${adminReviewsData.length-3}) 👇`}else{s.style.display='none'}}
+function toggleAdminShowMoreReviews(){isAdminShowingAllReviews=!isAdminShowingAllReviews;renderAdminReviewsList()}async function sendOwnerReply(id){const rb=document.getElementById(`reply-input-${id}`);const rt=rb.value.trim();if(!rt){alert("Type a reply!");return}try{const r=await fetch(`/api/reviews/${id}/reply`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminToken},body:JSON.stringify({reply:rt})});if(r.ok){alert("Reply posted!");fetchAdminReviews()}else{alert("Failed.")}}catch(e){}}async function deleteOwnerReply(id){if(!confirm("Delete your reply?"))return;try{const r=await fetch(`/api/reviews/${id}/reply`,{method:'DELETE',headers:{'x-admin-key':adminToken}});if(r.ok){alert("Reply removed!");fetchAdminReviews()}}catch(e){}}
+
+function toggleBuilderMode(){const t=document.getElementById('builder-target').value;if(t==='journey'){document.getElementById('advanced-block-builder').style.display='none';document.getElementById('simple-journey-form').style.display='block';document.getElementById('custom-category-wrapper').style.display='none'}else{document.getElementById('advanced-block-builder').style.display='block';document.getElementById('simple-journey-form').style.display='none';document.getElementById('custom-category-wrapper').style.display='block'}}
+
+let currentBuilderLang = 'en';
+let builderData = { en: { title: '', blocks: [] }, uz: { title: '', blocks: [] }, ru: { title: '', blocks: [] } };
+function switchBuilderLang(lang) {
+    builderData[currentBuilderLang].title = document.getElementById('builder-main-title').value;
+    builderData[currentBuilderLang].blocks = JSON.parse(JSON.stringify(builderBlocks));
+    currentBuilderLang = lang;
+    document.querySelectorAll('[id^="lang-btn-"]').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`lang-btn-${lang}`).classList.add('active');
+    document.getElementById('builder-main-title').value = builderData[lang].title || '';
+    builderBlocks = JSON.parse(JSON.stringify(builderData[lang].blocks));
+    renderBuilderBlocks();
+}
+
+function renderBuilderBlocks(){const c=document.getElementById('blocks-stack-container');c.innerHTML='';const tb=document.createElement('div');tb.className='insert-block-btn';tb.textContent='[+] Insert Block Here';tb.onclick=()=>showInsertMenu(0);c.appendChild(tb);builderBlocks.forEach((b,i)=>{const bd=document.createElement('div');bd.className='block-element';const l=document.createElement('label');l.style="font-size:0.75rem;color:#00ff66;display:block;margin-bottom:4px;";l.textContent=`${b.type.toUpperCase()} BLOCK`;bd.appendChild(l);let ie;if(b.type==='text'){ie=document.createElement('textarea');ie.className='hacker-input';ie.rows=3;ie.placeholder="Enter Paragraph..."}else{ie=document.createElement('input');ie.type='text';ie.className='hacker-input';if(b.type==='header')ie.placeholder="Enter Header...";if(b.type==='media')ie.placeholder="Image / YouTube URL..."}ie.value=b.content;ie.addEventListener('input',(e)=>{builderBlocks[i].content=e.target.value;updateBlockPreview()});bd.appendChild(ie);const rb=document.createElement('button');rb.className='block-remove-btn';rb.innerHTML='&times;';rb.onclick=()=>removeBlock(i);bd.appendChild(rb);c.appendChild(bd);const bb=document.createElement('div');bb.className='insert-block-btn';bb.textContent='[+] Insert Block Here';bb.onclick=()=>showInsertMenu(i+1);c.appendChild(bb)});updateBlockPreview()}
+function showInsertMenu(i){targetInsertIndex=i;document.getElementById('insert-block-modal').style.display='flex'}function closeInsertMenu(){document.getElementById('insert-block-modal').style.display='none'}function executeInsert(t){builderBlocks.splice(targetInsertIndex,0,{type:t,content:''});closeInsertMenu();renderBuilderBlocks()}function removeBlock(i){builderBlocks.splice(i,1);renderBuilderBlocks()}
+
+function getYouTubeId(url) { let regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i; let match = url.match(regex); return match ? match[1] : null; }
+function updateBlockPreview(){const pb=document.getElementById('live-block-preview');const mt=document.getElementById('builder-main-title').value||'Content Title';let ph=`<h2 style="color:#f1f5f9;font-size:1.8rem;margin-bottom:16px;font-family:'Inter',sans-serif;font-weight:800;word-break:break-word;">${escapeHTML(mt)}</h2>`;builderBlocks.forEach(b=>{const v=b.content.trim();if(!v)return;if(b.type==='header')ph+=`<h3 style="color:#38bdf8;font-size:1.2rem;margin:24px 0 10px;font-family:'Inter',sans-serif;word-break:break-word;">${escapeHTML(v)}</h3>`;if(b.type==='text')ph+=`<p style="color:#94a3b8;line-height:1.6;margin-bottom:12px;overflow-wrap:anywhere;word-break:break-word;hyphens:auto;white-space:normal;">${escapeHTML(v).replace(/\n/g,'<br>')}</p>`;if(b.type==='media'){ let ytId = getYouTubeId(v); if(ytId) ph+=`<div style="width:100%;height:300px;background:#1e293b;border-radius:8px;overflow:hidden;margin:16px 0;"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen></iframe></div>`; else ph+=`<div style="width:100%;height:auto;background:#1e293b;border:1px solid #38bdf8;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#38bdf8;margin:16px 0;word-break:break-all;">[ MEDIA PREVIEW: ${escapeHTML(v)} ]</div>`; }});pb.innerHTML=ph||`<em style="color:#64748b;">Start adding blocks to see the preview...</em>`}
+
+// FIXED: Reliable Auto-Translate Function
+async function aiAutoTranslateAll() {
+    builderData[currentBuilderLang].title = document.getElementById('builder-main-title').value;
+    builderData[currentBuilderLang].blocks = JSON.parse(JSON.stringify(builderBlocks));
+
+    if(!builderData.en.title && builderData.en.blocks.length === 0) return alert("Please build content in English first!");
+    const btn = document.getElementById('ai-translate-all-btn'); btn.textContent = "Translating to UZ & RU... ⏳"; btn.disabled = true;
+
+    try {
+        // Translate Title
+        let r1 = await fetch('/api/admin/ai-parse', { method: 'POST', headers: {'Content-Type':'application/json', 'x-admin-key':adminToken}, body: JSON.stringify({prompt: builderData.en.title, type: "translate", lang: "uz"})});
+        let d1 = await r1.json(); builderData.uz.title = d1.translated_text;
+
+        let r2 = await fetch('/api/admin/ai-parse', { method: 'POST', headers: {'Content-Type':'application/json', 'x-admin-key':adminToken}, body: JSON.stringify({prompt: builderData.en.title, type: "translate", lang: "ru"})});
+        let d2 = await r2.json(); builderData.ru.title = d2.translated_text;
+
+        // Translate Blocks
+        let txt = ""; builderData.en.blocks.forEach(b => { if(b.type==='text'||b.type==='header') txt += b.content + "\n|||\n"; });
+
+        if(txt.trim()) {
+            let r3 = await fetch('/api/admin/ai-parse', { method: 'POST', headers: {'Content-Type':'application/json', 'x-admin-key':adminToken}, body: JSON.stringify({prompt: txt, type: "translate", lang: "uz"})});
+            let d3 = await r3.json(); let uzTexts = d3.translated_text.split('|||').map(s=>s.trim());
+            builderData.uz.blocks = JSON.parse(JSON.stringify(builderData.en.blocks));
+            let idx=0; builderData.uz.blocks.forEach(b => { if(b.type==='text'||b.type==='header'){ b.content = uzTexts[idx] || b.content; idx++; } });
+
+            let r4 = await fetch('/api/admin/ai-parse', { method: 'POST', headers: {'Content-Type':'application/json', 'x-admin-key':adminToken}, body: JSON.stringify({prompt: txt, type: "translate", lang: "ru"})});
+            let d4 = await r4.json(); let ruTexts = d4.translated_text.split('|||').map(s=>s.trim());
+            builderData.ru.blocks = JSON.parse(JSON.stringify(builderData.en.blocks));
+            idx=0; builderData.ru.blocks.forEach(b => { if(b.type==='text'||b.type==='header'){ b.content = ruTexts[idx] || b.content; idx++; } });
         }
+        alert(`✨ Auto-Translated successfully! Switch language tabs to review.`);
+        switchBuilderLang(currentBuilderLang);
+    } catch(e) { alert("Translation failed. Check API Key in AI tab."); }
+    btn.textContent = "🤖 Auto-Translate to UZ & RU"; btn.disabled = false;
+}
 
-        function toggleAdminShowMoreReviews() {
-            isAdminShowingAllReviews = !isAdminShowingAllReviews;
-            renderAdminReviewsList();
+function generateHtmlFromBlocks(blocksArray) {
+    let hc=""; let iu="";
+    blocksArray.forEach(b=>{
+        const v=b.content.trim(); if(!v)return;
+        if(b.type==='header') hc+=`<h3 style="color:#38bdf8;margin:24px 0 12px;font-family:'Inter',sans-serif;word-wrap:break-word;overflow-wrap:anywhere;">${escapeHTML(v)}</h3>`;
+        if(b.type==='text') hc+=`<p style="color:#94a3b8;line-height:1.8;margin-bottom:16px;word-break:break-word;overflow-wrap:anywhere;">${escapeHTML(v).replace(/\n/g,'<br>')}</p>`;
+        if(b.type==='media'){
+            if(!iu) iu=v;
+            let ytId = getYouTubeId(v);
+            if(ytId) { hc+=`<div style="margin:24px 0;border-radius:12px;overflow:hidden;height:400px;"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen></iframe></div>`; }
+            else if(v.endsWith('.mp4')){ hc+=`<div style="margin:24px 0;border-radius:12px;overflow:hidden;"><video src="${escapeHTML(v)}" autoplay loop muted playsinline style="width:100%;height:auto;"></video></div>`; }
+            else { hc+=`<div style="margin:24px 0;border-radius:12px;overflow:hidden;"><img src="${escapeHTML(v)}" style="width:100%;height:auto;max-height:450px;object-fit:contain;background:#0b0f19;" alt="Media"></div>`; }
         }
+    });
+    return { html: hc || "Details coming soon.", imageUrl: iu };
+}
 
-        async function sendOwnerReply(reviewId) {
-            const replyBox = document.getElementById(`reply-input-${reviewId}`);
-            const replyText = replyBox.value.trim();
-            if (!replyText) {
-                alert("Please type a reply message!");
-                return;
-            }
+// FIXED: Database payload accurately grabs tabs!
+async function publishBlockContent(){
+    builderData[currentBuilderLang].title = document.getElementById('builder-main-title').value;
+    builderData[currentBuilderLang].blocks = JSON.parse(JSON.stringify(builderBlocks));
 
-            try {
-                const res = await fetch(`/api/reviews/${reviewId}/reply`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminToken },
-                    body: JSON.stringify({ reply: replyText })
-                });
+    const ei=document.getElementById('builder-edit-id').value;const t=document.getElementById('builder-target').value;const ct=document.getElementById('builder-custom-category').value.trim()||'Custom';const ts=document.getElementById('builder-tech').value.trim()||"Built via Visual Admin Builder";const g=document.getElementById('builder-git')?document.getElementById('builder-git').value.trim():'';const l=document.getElementById('builder-live')?document.getElementById('builder-live').value.trim():'';
 
-                if (res.ok) {
-                    alert("Official Owner Response posted live!");
-                    fetchAdminReviews();
-                } else {
-                    alert("Failed to post reply. Verify session authentication.");
-                }
-            } catch(e) {
-                alert("Error sending reply.");
-            }
+    if(!builderData.en.title){alert("English Title is required!");return}
+
+    const enBuild = generateHtmlFromBlocks(builderData.en.blocks);
+    const uzBuild = generateHtmlFromBlocks(builderData.uz.blocks);
+    const ruBuild = generateHtmlFromBlocks(builderData.ru.blocks);
+
+    const url=ei?`/api/${t==='achievement'?'achievements':'projects'}/${ei}`:(`/api/${t==='achievement'?'achievements':'projects'}`);const m=ei?'PUT':'POST';
+    try{
+        if(t==='project'||t==='blog'){
+            const r=await fetch(url,{method:m,headers:{'Content-Type':'application/json','x-admin-key':adminToken},body:JSON.stringify({
+                title: builderData.en.title, title_uz: builderData.uz.title, title_ru: builderData.ru.title,
+                category: t==='blog'?'blog':ct.toLowerCase(),
+                description: enBuild.html, description_uz: uzBuild.html, description_ru: ruBuild.html,
+                tech_stack: ts, github_link: g, live_link: l, image_url: enBuild.imageUrl
+            })});
+            if(r.ok){alert("🚀 Saved!"); document.getElementById('builder-edit-id').value=''; document.getElementById('builder-save-btn').textContent="Publish Custom Page 🚀"; builderData = { en: {title: '', blocks: []}, uz: {title: '', blocks: []}, ru: {title: '', blocks: []} }; switchBuilderLang('en'); fetchAdminProjects()}
+        }else if(t==='achievement'){
+            const r=await fetch(url,{method:m,headers:{'Content-Type':'application/json','x-admin-key':adminToken},body:JSON.stringify({
+                title: builderData.en.title, title_uz: builderData.uz.title, title_ru: builderData.ru.title,
+                category: ct, description: enBuild.html, description_uz: uzBuild.html, description_ru: ruBuild.html,
+                photo_url: enBuild.imageUrl, website_link: l
+            })});
+            if(r.ok){alert("🏆 Saved!"); document.getElementById('builder-edit-id').value=''; document.getElementById('builder-save-btn').textContent="Publish Custom Page 🚀"; builderData = { en: {title: '', blocks: []}, uz: {title: '', blocks: []}, ru: {title: '', blocks: []} }; switchBuilderLang('en'); fetchAdminAchievements()}
         }
+    }catch(e){alert("Error publishing.")}
+}
 
-        async function deleteOwnerReply(reviewId) {
-            if (!confirm("Delete your official owner response for this review?")) return;
-            try {
-                const res = await fetch(`/api/reviews/${reviewId}/reply`, {
-                    method: 'DELETE',
-                    headers: { 'x-admin-key': adminToken }
-                });
+async function publishJourney(){
+    const ei=document.getElementById('journey-edit-id').value;const d={title:document.getElementById('journey-title').value.trim(),date_range:document.getElementById('journey-date').value.trim(),category_badge:document.getElementById('journey-badge').value.trim(),description:document.getElementById('journey-desc').value.trim()};if(!d.title){alert("Title required!");return}
+    const url=ei?`/api/journey/${ei}`:'/api/journey';const m=ei?'PUT':'POST';const r=await fetch(url,{method:m,headers:{'Content-Type':'application/json','x-admin-key':adminToken},body:JSON.stringify(d)});if(r.ok){alert("🎓 Journey Saved!");document.getElementById('journey-edit-id').value='';document.getElementById('journey-title').value='';document.getElementById('journey-date').value='';document.getElementById('journey-badge').value='';document.getElementById('journey-desc').value='';document.getElementById('journey-save-btn').textContent="Add Journey Card 🎓";fetchAdminJourney()}
+}
 
-                if (res.ok) {
-                    alert("Owner response removed!");
-                    fetchAdminReviews();
-                } else {
-                    alert("Failed to delete reply.");
-                }
-            } catch(e) {
-                alert("Error removing reply.");
-            }
-        }
+async function fetchAdminProjects(){const l=document.getElementById('projects-list-admin');try{const r=await fetch('/api/projects');if(r.ok){const p=await r.json();adminProjectsData=p;if(p.length===0){l.innerHTML=`<p style="color:#94a3b8;font-size:0.85rem;">No projects.</p>`;return}l.innerHTML=p.map(x=>`<div class="item-row"><div style="display:flex;justify-content:space-between;align-items:center;"><div><strong style="color:#00f2fe;overflow-wrap:anywhere;word-break:break-word;">${escapeHTML(x.title)}</strong><span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">[${escapeHTML(x.category.toUpperCase())}]</span></div><div><button class="btn-edit" onclick="window.editProjectEntry(${x.id})">Edit ✏️</button> <button class="btn-danger" onclick="deleteProject(${x.id})">Delete 🗑️</button></div></div></div>`).join('')}}catch(e){}}
+async function fetchAdminAchievements(){const l=document.getElementById('achievements-list-admin');try{const r=await fetch('/api/achievements');if(r.ok){const a=await r.json();adminAchievementsData=a;if(a.length===0){l.innerHTML=`<p style="color:#94a3b8;font-size:0.85rem;">No achievements.</p>`;return}l.innerHTML=a.map(x=>`<div class="item-row"><div style="display:flex;justify-content:space-between;align-items:center;"><div><strong style="color:#00ff66;overflow-wrap:anywhere;word-break:break-word;">${escapeHTML(x.title)}</strong></div><div><button class="btn-edit" onclick="window.editAchievementEntry(${x.id})">Edit ✏️</button> <button class="btn-danger" onclick="deleteAchievement(${x.id})">Delete 🗑️</button></div></div></div>`).join('')}}catch(e){}}
+async function fetchAdminJourney(){const l=document.getElementById('journey-list-admin');try{const r=await fetch('/api/journey');if(r.ok){const j=await r.json();adminJourneyData=j;if(j.length===0){l.innerHTML=`<p style="color:#94a3b8;font-size:0.85rem;">No journey entries.</p>`;return}l.innerHTML=j.map(x=>`<div class="item-row"><div style="display:flex;justify-content:space-between;align-items:center;"><div><strong style="color:#fbbf24;overflow-wrap:anywhere;word-break:break-word;">${escapeHTML(x.title)}</strong><span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">(${escapeHTML(x.date_range)})</span></div><div><button class="btn-edit" onclick="window.editJourneyEntry(${x.id})">Edit ✏️</button> <button class="btn-danger" onclick="deleteJourney(${x.id})">Delete 🗑️</button></div></div></div>`).join('')}}catch(e){}}
 
-        // ==========================================
-        // VISUAL BLOCK BUILDER & CONTENT MANAGER
-        // ==========================================
-        function addContentBlock(type) {
-            blockCount++;
-            const container = document.getElementById('blocks-stack-container');
-            const blockId = `block-${blockCount}`;
+function HTMLtoBlocks(htmlString) {
+    if(!htmlString) return []; let blocks = []; const div = document.createElement('div'); div.innerHTML = htmlString;
+    div.childNodes.forEach(node => {
+        if(node.tagName === 'H3') blocks.push({type: 'header', content: node.textContent});
+        if(node.tagName === 'P') blocks.push({type: 'text', content: node.innerHTML.replace(/<br\s*[\/]?>/gi, '\n')});
+        if(node.tagName === 'DIV' && node.innerHTML.includes('<img')) { const img = node.querySelector('img'); if(img) blocks.push({type: 'media', content: img.src}); }
+        if(node.tagName === 'DIV' && node.innerHTML.includes('<video')) { const vid = node.querySelector('video'); if(vid) blocks.push({type: 'media', content: vid.src}); }
+        if(node.tagName === 'DIV' && node.innerHTML.includes('<iframe')) { const ifr = node.querySelector('iframe'); if(ifr) blocks.push({type: 'media', content: ifr.src}); }
+    });
+    return blocks.length > 0 ? blocks : [{type: 'text', content: htmlString.replace(/<[^>]*>?/gm, '')}];
+}
 
-            let blockHtml = '';
-            if (type === 'header') {
-                blockHtml = `
-                    <div class="block-element-row" id="${blockId}">
-                        <label style="font-size:0.75rem; color:#00ff66;">Header Block</label>
-                        <input type="text" class="hacker-input block-value" placeholder="Enter section heading..." oninput="updateBlockPreview()">
-                    </div>
-                `;
-            } else if (type === 'text') {
-                blockHtml = `
-                    <div class="block-element-row" id="${blockId}">
-                        <label style="font-size:0.75rem; color:#00ff66;">Text Paragraph Block</label>
-                        <textarea class="hacker-input block-value" rows="2" placeholder="Enter paragraph text..." oninput="updateBlockPreview()"></textarea>
-                    </div>
-                `;
-            } else if (type === 'media') {
-                blockHtml = `
-                    <div class="block-element-row" id="${blockId}">
-                        <label style="font-size:0.75rem; color:#00ff66;">Image/Video Media URL</label>
-                        <input type="text" class="hacker-input block-value" placeholder="https://... or /static/file.mp4" oninput="updateBlockPreview()">
-                    </div>
-                `;
-            } else if (type === 'links') {
-                blockHtml = `
-                    <div class="block-element-row" id="${blockId}">
-                        <label style="font-size:0.75rem; color:#00ff66;">Source &amp; Live Links Block</label>
-                        <input type="text" class="hacker-input block-value" placeholder="GitHub URL | Live Site URL" oninput="updateBlockPreview()">
-                    </div>
-                `;
-            }
+window.editProjectEntry = function(id) { const p = adminProjectsData.find(x => x.id === id); if(!p) return; switchAdminTab('block-builder-tab'); document.getElementById('builder-target').value = p.category === 'blog' ? 'blog' : 'project'; toggleBuilderMode(); document.getElementById('builder-edit-id').value = p.id; document.getElementById('builder-custom-category').value = p.category; document.getElementById('builder-tech').value = p.tech_stack || ""; document.getElementById('builder-git').value = p.github_link || ""; document.getElementById('builder-live').value = p.live_link || ""; builderData.en = { title: p.title, blocks: HTMLtoBlocks(p.description) }; builderData.uz = { title: p.title_uz || '', blocks: HTMLtoBlocks(p.description_uz) }; builderData.ru = { title: p.title_ru || '', blocks: HTMLtoBlocks(p.description_ru) }; switchBuilderLang('en'); document.getElementById('builder-save-btn').textContent = "Save Changes 💾"; document.getElementById('advanced-block-builder').scrollIntoView({behavior: 'smooth'}); }
+window.editAchievementEntry = function(id) { const a = adminAchievementsData.find(x => x.id === id); if(!a) return; switchAdminTab('block-builder-tab'); document.getElementById('builder-target').value = 'achievement'; toggleBuilderMode(); document.getElementById('builder-edit-id').value = a.id; document.getElementById('builder-custom-category').value = a.category; document.getElementById('builder-live').value = a.website_link || ""; builderData.en = { title: a.title, blocks: HTMLtoBlocks(a.description) }; builderData.uz = { title: a.title_uz || '', blocks: HTMLtoBlocks(a.description_uz) }; builderData.ru = { title: a.title_ru || '', blocks: HTMLtoBlocks(a.description_ru) }; switchBuilderLang('en'); document.getElementById('builder-save-btn').textContent = "Save Changes 💾"; document.getElementById('advanced-block-builder').scrollIntoView({behavior: 'smooth'}); }
+window.editJourneyEntry = function(id) { const j = adminJourneyData.find(x => x.id === id); if(!j) return; switchAdminTab('block-builder-tab'); document.getElementById('builder-target').value = 'journey'; toggleBuilderMode(); document.getElementById('journey-edit-id').value = j.id; document.getElementById('journey-title').value = j.title; document.getElementById('journey-date').value = j.date_range; document.getElementById('journey-badge').value = j.category_badge; document.getElementById('journey-desc').value = j.description; document.getElementById('journey-save-btn').textContent = "Save Changes 💾"; document.getElementById('simple-journey-form').scrollIntoView({behavior: 'smooth'}); }
 
-            container.insertAdjacentHTML('beforeend', blockHtml);
-            updateBlockPreview();
-        }
+async function fetchAdminSkills(){const l=document.getElementById('skills-list-admin');if(!l)return;try{const r=await fetch('/api/skills');if(r.ok){const s=await r.json();if(s.length===0){l.innerHTML=`<p style="color:#94a3b8;font-size:0.85rem;">No skills found.</p>`;return}l.innerHTML=s.map(x=>`<div class="item-row" style="flex-direction:row;justify-content:space-between;align-items:center;"><div><strong style="color:#00f2fe;overflow-wrap:anywhere;word-break:break-word;">${escapeHTML(x.name)}</strong><span style="color:#00ff66;font-size:0.75rem;margin-left:8px;">${escapeHTML(x.percentage)}%</span></div><button class="btn-danger" onclick="deleteSkill(${x.id})">Delete 🗑️</button></div>`).join('')}}catch(e){}}
+document.getElementById('add-skill-form').addEventListener('submit',async(e)=>{e.preventDefault();const d={name:document.getElementById('skill-name').value.trim(),percentage:parseInt(document.getElementById('skill-percent').value),category:document.getElementById('skill-category').value.trim()};const r=await fetch('/api/skills',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminToken},body:JSON.stringify(d)});if(r.ok){document.getElementById('add-skill-form').reset();fetchAdminSkills()}});
 
-        function updateBlockPreview() {
-            const previewBox = document.getElementById('live-block-preview');
-            const mainTitle = document.getElementById('builder-main-title').value || 'Content Title';
-            const blocks = document.querySelectorAll('.block-value');
-
-            let previewHtml = `<h3 style="color:#00ff66; font-size:1.2rem; margin-bottom:10px;">${escapeHTML(mainTitle)}</h3>`;
-            blocks.forEach(b => {
-                const val = b.value.trim();
-                if (val) {
-                    previewHtml += `<p style="margin-bottom:8px; line-height:1.5;">${escapeHTML(val)}</p>`;
-                }
-            });
-
-            previewBox.innerHTML = previewHtml;
-        }
-
-        async function publishBlockContent() {
-            const title = document.getElementById('builder-main-title').value.trim();
-            if (!title) {
-                alert("Please enter a Content Title!");
-                return;
-            }
-            alert("🚀 Structured Block Content Published!");
-        }
-
-        async function fetchAdminProjects() {
-            const list = document.getElementById('projects-list-admin');
-            try {
-                const res = await fetch('/api/projects');
-                if (res.ok) {
-                    const projects = await res.json();
-                    if (projects.length === 0) {
-                        list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">No projects in database.</p>`;
-                        return;
-                    }
-                    list.innerHTML = projects.map(p => `
-                        <div class="item-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                            <div class="item-row-info">
-                                <strong>${escapeHTML(p.title)}</strong>
-                                <span>${escapeHTML(p.category.toUpperCase())}</span>
-                            </div>
-                            <button class="btn-danger" onclick="deleteProject(${p.id})">Delete 🗑️</button>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) {}
-        }
-
-        async function fetchAdminAchievements() {
-            const list = document.getElementById('achievements-list-admin');
-            try {
-                const res = await fetch('/api/achievements');
-                if (res.ok) {
-                    const items = await res.json();
-                    if (items.length === 0) {
-                        list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">No achievements in database.</p>`;
-                        return;
-                    }
-                    list.innerHTML = items.map(a => `
-                        <div class="item-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                            <div class="item-row-info">
-                                <strong>${escapeHTML(a.title)}</strong>
-                                <span>${escapeHTML(a.category)}</span>
-                            </div>
-                            <button class="btn-danger" onclick="deleteAchievement(${a.id})">Delete 🗑️</button>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) {}
-        }
-
-        async function deleteProject(id) {
-            if (!confirm("Delete project?")) return;
-            const res = await fetch(`/api/projects/${id}`, {
-                method: 'DELETE',
-                headers: { 'x-admin-key': adminToken }
-            });
-            if (res.ok) fetchAdminProjects();
-        }
-
-        async function deleteAchievement(id) {
-            if (!confirm("Delete achievement?")) return;
-            const res = await fetch(`/api/achievements/${id}`, {
-                method: 'DELETE',
-                headers: { 'x-admin-key': adminToken }
-            });
-            if (res.ok) fetchAdminAchievements();
-        }
-
-        async function clearAllReviews() {
-            if (!confirm("Purge all review records?")) return;
-            const res = await fetch('/api/admin/reviews/clear-all', {
-                method: 'DELETE',
-                headers: { 'x-admin-key': adminToken }
-            });
-            if (res.ok) {
-                alert("🧹 Reviews purged!");
-                fetchAdminReviews();
-            }
-        }
-    </script>
+async function deleteProject(id){if(!confirm("Delete project?"))return;const r=await fetch(`/api/projects/${id}`,{method:'DELETE',headers:{'x-admin-key':adminToken}});if(r.ok)fetchAdminProjects()}async function deleteAchievement(id){if(!confirm("Delete achievement?"))return;const r=await fetch(`/api/achievements/${id}`,{method:'DELETE',headers:{'x-admin-key':adminToken}});if(r.ok)fetchAdminAchievements()}async function deleteJourney(id){if(!confirm("Delete journey entry?"))return;const r=await fetch(`/api/journey/${id}`,{method:'DELETE',headers:{'x-admin-key':adminToken}});if(r.ok)fetchAdminJourney()}async function deleteSkill(id){if(!confirm("Delete skill?"))return;const r=await fetch(`/api/skills/${id}`,{method:'DELETE',headers:{'x-admin-key':adminToken}});if(r.ok)fetchAdminSkills()}async function clearAllReviews(){if(!confirm("Purge all review records?"))return;const r=await fetch('/api/admin/reviews/clear-all',{method:'DELETE',headers:{'x-admin-key':adminToken}});if(r.ok){alert("🧹 Reviews purged!");fetchAdminReviews()}}
+toggleBuilderMode();renderBuilderBlocks();
+</script>
 </body>
 </html>

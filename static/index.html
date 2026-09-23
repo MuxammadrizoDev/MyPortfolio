@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title id="site-page-title">Muxammadrizo.dev | Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=72.0">
+    <link rel="stylesheet" href="/static/style.css?v=74.0">
 </head>
 <body class="no-scroll">
 
@@ -92,6 +92,8 @@
 
     <!-- 4. DEV JOURNEY -->
     <h2 class="section-title" id="journey" data-i18n="titleJourney">Dev Journey & Education</h2>
+
+    <!-- Dynamic Container: Falls back to hardcoded items if API fails/is empty -->
     <div class="horizontal-scroll-row" id="journey-container">
         <div class="journey-card h-card">
             <span class="journey-badge" data-i18n="journeyTagEducation">Education</span>
@@ -399,6 +401,40 @@
         </button>
     </div>
 
+    <!-- Inline script to fetch Journey data natively on index.html load -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('journey-container');
+            if (!container) return;
+            try {
+                const res = await fetch('/api/journey');
+                if (res.ok) {
+                    const journeys = await res.json();
+                    if (journeys && journeys.length > 0) {
+                        container.innerHTML = journeys.map(j => `
+                            <div class="journey-card h-card">
+                                <span class="journey-badge">${escapeHTML(j.category_badge)}</span>
+                                <div class="journey-date">${escapeHTML(j.date_range)}</div>
+                                <h3>${escapeHTML(j.title)}</h3>
+                                <p>${escapeHTML(j.description)}</p>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (e) {}
+        });
+
+        // Re-usable HTML escaping function for inline scripts
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
     <script src="/static/script.js"></script>
 </body>
 </html>
